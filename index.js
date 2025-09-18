@@ -9,11 +9,18 @@ const client = new Client({
 
 // Fires once when the gateway is ready
 client.once(Events.ClientReady, c => {
-  console.log(`✅ Logged in as ${c.user.tag}. Standing by, doing absolutely nothing.`);
+  console.log('Logged in as %s. Standing by, doing absolutely nothing.', c.user.tag);
 });
 
+const token = (process.env.DISCORD_TOKEN || '').trim();
+
+if (!token) {
+  console.error('DISCORD_TOKEN is not set. Skipping Discord login.');
+  process.exit(1);
+}
+
 // Log in using your token from .env
-client.login(process.env.DISCORD_TOKEN);
+client.login(token);
 
 // Optional: keep things tidy
 process.on('unhandledRejection', err => console.error('Unhandled promise rejection:', err));
