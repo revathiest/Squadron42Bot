@@ -1,6 +1,7 @@
 // index.js
 require('dotenv/config');
 const { Client, GatewayIntentBits, Events } = require('discord.js');
+const { testConnection } = require('./database');
 
 // Minimal intents: we just want to connect and exist
 const client = new Client({
@@ -19,8 +20,24 @@ if (!token) {
   process.exit(1);
 }
 
-// Log in using your token from .env
-client.login(token);
+async function bootstrap() {
+  try {
+    await testConnection();
+    console.log('Database connection established.');
+  } catch (err) {
+    console.error('Unable to connect to the database:', err.message);
+    process.exit(1);
+  }
+
+  try {
+    await client.login(token);
+  } catch (err) {
+    console.error('Failed to log into Discord:', err);
+    process.exit(1);
+  }
+}
+
+bootstrap();
 
 // Optional: keep things tidy
 process.on('unhandledRejection', err => console.error('Unhandled promise rejection:', err));
