@@ -54,7 +54,16 @@ Create a `.env` file. Add or remove as your design solidifies.
 ```bash
 DISCORD_TOKEN=your_bot_token
 APPLICATION_ID=your_application_id
-GUILD_ID=primary_guild_id   # optional if global commands
-DATABASE_URL=postgres://user:pass@host:5432/dbname  # or sqlite path
+GUILD_ID=primary_guild_id          # optional if global commands
+
+# Database configuration (MySQL/MariaDB)
+DB_SERVER=host
+DB_PORT=3306
+DB_USER=username
+DB_PASS=super_secret_password
+DB_NAME=database_name              # optional if you connect without selecting a schema
+DB_POOL_LIMIT=5                    # optional, concurrent connections in the pool
+
 LOG_LEVEL=info
 PUBLIC_COMMANDS=true
+```
