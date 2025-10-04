@@ -36,7 +36,13 @@ All agents import shared utilities (command manager, database pool, validation h
   - Tear down temporary rooms when empty and reconcile orphaned records on startup.
 - **Commands**: `/voice-rooms set-template|clear-template|list` (guild scoped, administrators only).
 
-### 3. Spoiler Sentinel
+### 3. Hangar Support (IMPLEMENTED)
+- **Purpose**: manage user support tickets via Discord buttons/modals.
+- **Triggers**: lobby button press `ticket:create`, modal submissions, ticket channel button presses.
+- **Key Tasks**: create private ticket channels, persist ticket metadata/status, allow moderators to claim/close tickets, archive closed channels.
+- **Commands**: `/ticket set-channel`, `/ticket set-archive`, `/ticket roles add|remove|list`.
+
+### 4. Spoiler Sentinel
 - **Purpose**: protect story-sensitive discussion by tagging and isolating content.
 - **Triggers**: `messageCreate`, `/spoiler` commands, scheduled expiry checks.
 - **Key Tasks**:
@@ -46,7 +52,7 @@ All agents import shared utilities (command manager, database pool, validation h
 - **Data Needs**: tables `spoiler_flags`, `spoiler_roles`, optional keyword corpus.
 - **Observability**: log every auto-flag with message link and outcome.
 
-### 4. Event Quartermaster
+### 5. Event Quartermaster
 - **Purpose**: coordinate watch parties, Q&As, and play sessions.
 - **Triggers**: `/event` command group, button interactions for RSVP, scheduled reminders.
 - **Key Tasks**:
@@ -56,7 +62,7 @@ All agents import shared utilities (command manager, database pool, validation h
 - **Data Needs**: table `events` with recurrence metadata, occupant link table for RSVPs.
 - **Scheduling**: maintain in-memory queue seeded at startup and refreshed on change.
 
-### 5. Announcement Courier
+### 6. Announcement Courier
 - **Purpose**: disseminate official updates, patch notes, dev tracker highlights.
 - **Triggers**: `/announce` slash command, webhook ingestion (future), publish timers.
 - **Key Tasks**:
@@ -65,7 +71,7 @@ All agents import shared utilities (command manager, database pool, validation h
   - Archive announcements to DB for audit.
 - **Data Needs**: table `announcements` plus history log.
 
-### 6. Onboarding Quarterdeck
+### 7. Onboarding Quarterdeck
 - **Purpose**: welcome new members and shepherd them through roles/rules.
 - **Triggers**: `guildMemberAdd`, `/welcome` admin command.
 - **Key Tasks**:
@@ -74,7 +80,7 @@ All agents import shared utilities (command manager, database pool, validation h
   - Track completion metrics to refine onboarding copy.
 - **Data Needs**: table `onboarding_sessions` capturing timestamps & selections.
 
-### 7. Moderation Sentry
+### 8. Moderation Sentry
 - **Purpose**: augment mod team with lightweight automation.
 - **Triggers**: message events, `/mod` command shortcuts, scheduled sweeps.
 - **Key Tasks**:
@@ -84,7 +90,7 @@ All agents import shared utilities (command manager, database pool, validation h
 - **Data Needs**: `moderation_actions`, `rule_violations` tables.
 - **Integration**: coordinate with Spoiler Sentinel to avoid double-handling.
 
-### 8. Lore Archivist
+### 9. Lore Archivist
 - **Purpose**: provide quick access to Squadron 42 lore, FAQs, and key links.
 - **Triggers**: `/faq`, `/links`, `/lore`, context menu commands.
 - **Key Tasks**:

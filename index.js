@@ -4,8 +4,9 @@ const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { testConnection } = require('./database');
 const commandManager = require('./commandManager');
 const voiceRooms = require('./voiceRooms');
+const tickets = require('./tickets');
 
-const commandModules = [voiceRooms];
+const commandModules = [voiceRooms, tickets];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -26,6 +27,12 @@ client.once(Events.ClientReady, async c => {
     await voiceRooms.onReady(c);
   } catch (err) {
     console.error('Failed to finalize voice room setup:', err);
+  }
+
+  try {
+    await tickets.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize tickets module:', err);
   }
 });
 
@@ -49,6 +56,13 @@ async function bootstrap() {
     await voiceRooms.initialize(client);
   } catch (err) {
     console.error('Failed to initialize voice room module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await tickets.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize tickets module:', err);
     process.exit(1);
   }
 

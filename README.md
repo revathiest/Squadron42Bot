@@ -76,6 +76,16 @@ LOG_LEVEL=info
 - Coverage reports output to `reports/coverage/unit/` (open `reports/coverage/unit/lcov-report/index.html`).
 - The suite enforces minimum coverage: 92% statements/lines, 90% functions, 80% branches across command modules.
 
+## Ticketing System
+
+- Configure the lobby with `/ticket set-channel` (optionally specify an archive category).
+- Manage moderator roles with `/ticket roles add|remove|list`.
+- The bot posts a persistent embed + button panel; users click **Open Ticket** to submit a modal.
+- Tickets spawn private channels named `ticket-<username>-<id>` visible to the reporter and moderators.
+- Claim/close tickets via the buttons inside each ticket; closing moves the channel to the configured archive category and locks it.
+- Ticket metadata, moderator roles, and channel mappings are stored in MySQL for persistence.
+
+
 ## Dynamic Voice Rooms
 
 - Mark a lobby channel with `/voice-rooms set-template` (administrators only).

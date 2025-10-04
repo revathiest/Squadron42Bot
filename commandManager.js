@@ -7,14 +7,21 @@ function collectCommands(modules) {
   const global = [];
   const guild = [];
 
-  for (const mod of modules) {
-    if (typeof mod.getSlashCommandDefinitions !== 'function') {
-      continue;
+  modules.forEach((mod, index) => {
+    if (!mod || typeof mod.getSlashCommandDefinitions !== 'function') {
+      return;
     }
 
-    const definitions = mod.getSlashCommandDefinitions();
+    let definitions;
+    try {
+      definitions = mod.getSlashCommandDefinitions();
+    } catch (err) {
+      console.error(`commandManager: Failed to read command definitions from module #${index}`, err);
+      return;
+    }
+
     if (!definitions || typeof definitions !== 'object') {
-      continue;
+      return;
     }
 
     if (Array.isArray(definitions.global)) {
@@ -24,9 +31,14 @@ function collectCommands(modules) {
     if (Array.isArray(definitions.guild)) {
       guild.push(...definitions.guild);
     }
-  }
+  });
 
   return { global, guild };
+}
+
+function logCommandList(label, commands) {
+  const names = commands.map(cmd => cmd?.name ?? '(unknown)').join(', ') || 'none';
+  console.log(`commandManager: ${label} => ${names}`);
 }
 
 async function registerAllCommands(token, modules) {
@@ -46,7 +58,11 @@ async function registerAllCommands(token, modules) {
   const rest = new REST({ version: '10' }).setToken(token);
   const { global: globalCommands, guild: guildCommands } = collectCommands(modules);
 
-  // Always clear existing definitions to avoid duplicates or stale commands.
+  logCommandList('requested global command set', globalCommands);
+  if (guildId) {
+    logCommandList(`requested guild(${guildId}) command set`, guildCommands);
+  }
+
   try {
     await rest.put(Routes.applicationCommands(applicationId), { body: [] });
     console.log('commandManager: Cleared global slash commands.');
@@ -69,18 +85,26 @@ async function registerAllCommands(token, modules) {
     try {
       await rest.put(Routes.applicationCommands(applicationId), { body: globalCommands });
       console.log(`commandManager: Registered ${globalCommands.length} global slash command(s).`);
+      logCommandList('registered global commands', globalCommands);
     } catch (err) {
       console.error('commandManager: Failed to register global slash commands', err);
+      logCommandList('failed global commands', globalCommands);
     }
+  } else {
+    console.log('commandManager: No global commands to register.');
   }
 
   if (guildCommands.length && guildId) {
     try {
       await rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: guildCommands });
       console.log(`commandManager: Registered ${guildCommands.length} guild slash command(s).`);
+      logCommandList(`registered guild(${guildId}) commands`, guildCommands);
     } catch (err) {
       console.error(`commandManager: Failed to register guild slash commands for guild ${guildId}`, err);
+      logCommandList(`failed guild(${guildId}) commands`, guildCommands);
     }
+  } else if (guildId) {
+    console.log(`commandManager: No guild commands to register for guild ${guildId}.`);
   }
 }
 
