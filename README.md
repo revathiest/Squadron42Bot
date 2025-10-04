@@ -2,59 +2,51 @@
 
 A Discord bot for the **Squadron 42** community server: event coordination, spoiler-safe discussion, announcements, and community utilities. Built to be simple to operate, easy to extend, and impossible to confuse with an actual Idris.
 
-> Status: **Planning**. No code has been harmed yet.
+> Status: **In development**. Core infrastructure, database connectivity, and dynamic voice rooms are live.
 
 ---
 
-## Goals
+## Current Feature Set
 
-- **Spoiler management**: automatic spoiler tagging, spoiler channels, and opt-in roles.
-- **Events**: create and manage watch parties, Q&A sessions, and play sessions with reminders.
-- **Announcements**: scheduled or manual server updates, patch notes, and dev post highlights.
-- **Roles & onboarding**: opt-in roles (platforms, regions, spoiler level), welcome flow, server rules acknowledgment.
-- **Utilities**: `/faq`, `/links`, `/lore`, `/rules`, `/report`, `/mod` shortcuts.
-- **Moderation helpers**: rate limits, anti-spam, link policies, quick actions for mods.
+- **Dynamic voice rooms**: designate lobby channels that spawn personal rooms on join, auto-cleaned when empty.
+- **Command registry**: startup regenerates both global and guild slash commands using `commandManager.js` for consistent deployments.
 
-> Tailor features to your server. Everything is optional, except the part where you read this file.
+Planned pillars still on the roadmap:
+- Spoiler management, event coordination, announcement scheduling, onboarding flows, and moderation helpers.
 
 ---
 
-## Tech Assumptions
+## Tech Stack
 
-Choose your stack when you actually start coding. This README assumes either of these paths:
-
-- **Node.js** with `discord.js` (v14+)
-- **Python** with `discord.py` (2.x+)
-
-Pick one and delete the other bits below when you commit real code.
+- **Runtime**: Node.js 20+
+- **Discord Client**: `discord.js` v14
+- **Database**: MySQL/MariaDB via `mysql2` pooled connector
+- **Configuration**: `.env` loaded with `dotenv`
 
 ---
 
 ## Requirements
 
-- Discord application and bot created in the [Developer Portal] (give it a name you will not regret).
+- Discord application and bot created in the Developer Portal (invite with the `applications.commands` scope).
 - Bot token with the right **Privileged Gateway Intents** enabled:
   - Server Members
   - Message Content (only if you truly need it; prefer slash commands)
-- One of:
-  - Node.js 20+ and npm/pnpm/yarn
-  - Python 3.11+ and `pip`
+- Node.js 20+ and npm (or pnpm/yarn)
 
-Optional, depending on features you adopt:
-- Postgres/SQLite for persistence
-- A job scheduler (cron, hosted scheduler, or library)
-- S3/Cloud storage for logs/attachments
+Optional, depending on future features:
+- Job scheduler (cron, PM2, or library)
+- Object storage for attachments/logs
 
 ---
 
 ## Environment Variables
 
-Create a `.env` file. Add or remove as your design solidifies.
+Create a `.env` file with the values your deployment needs.
 
 ```bash
 DISCORD_TOKEN=your_bot_token
 APPLICATION_ID=your_application_id
-GUILD_ID=primary_guild_id          # optional if global commands
+GUILD_ID=primary_guild_id          # optional; enables fast guild-scoped command updates
 
 # Database configuration (MySQL/MariaDB)
 DB_SERVER=host
@@ -65,8 +57,15 @@ DB_NAME=database_name              # optional if you connect without selecting a
 DB_POOL_LIMIT=5                    # optional, concurrent connections in the pool
 
 LOG_LEVEL=info
-PUBLIC_COMMANDS=true
 ```
+
+---
+
+## Slash Command Registration Strategy
+
+- Every module exports `getSlashCommandDefinitions()` and indicates whether each command is global or guild-scoped.
+- At startup `commandManager.registerAllCommands()` clears all existing global and guild commands, then re-registers only the current definitions. This prevents duplicate entries and ensures guild-specific commands become available immediately.
+- Set `GUILD_ID` when deploying to a single server so guild commands register instantly; omit it if you want global rollout and can tolerate propagation delays.
 
 ---
 
