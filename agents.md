@@ -98,6 +98,7 @@ All agents import shared utilities (command manager, database pool, validation h
 ## Cross-Agent Patterns
 - **Permission Model**: enforce Discord role checks in centralized helpers; log denials for visibility.
 - **Command Declaration**: each agent should expose `getSlashCommandDefinitions()` alongside its event handlers so the command manager can register the right scope.
+- **Interaction Replies**: prefer `MessageFlags.Ephemeral` for private responses (Discord deprecated the `ephemeral` option).
 - **Error Handling**: standardized ephemeral error responses with correlation IDs for logs.
 - **Localization**: plan for copy extraction once multiple languages become a priority.
 - **Testing**: unit-test command handlers with mocked `discord.js` objects; integration-test DB workflows via transactional fixtures.

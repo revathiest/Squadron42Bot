@@ -4,6 +4,7 @@
 const {
   ChannelType,
   Events,
+  MessageFlags,
   OverwriteType,
   PermissionFlagsBits,
   PermissionsBitField,
@@ -139,13 +140,13 @@ async function handleInteraction(interaction) {
   }
 
   if (!interaction.inGuild()) {
-    await interaction.reply({ content: 'This command can only be used in a server.', ephemeral: true });
+    await interaction.reply({ content: 'This command can only be used in a server.', flags: MessageFlags.Ephemeral });
     return;
   }
 
   const subcommand = interaction.options.getSubcommand();
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-    await interaction.reply({ content: 'Only administrators can use this command.', ephemeral: true });
+    await interaction.reply({ content: 'Only administrators can use this command.', flags: MessageFlags.Ephemeral });
     return;
   }
   const guildId = interaction.guildId;
@@ -156,7 +157,7 @@ async function handleInteraction(interaction) {
       const channel = interaction.options.getChannel('channel', true);
 
       if (channel.type !== ChannelType.GuildVoice) {
-        await interaction.reply({ content: 'Please choose a voice channel.', ephemeral: true });
+        await interaction.reply({ content: 'Please choose a voice channel.', flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -168,7 +169,7 @@ async function handleInteraction(interaction) {
 
       await interaction.reply({
         content: `Added ${channel.toString()} as a dynamic voice lobby.`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     } else if (subcommand === 'clear-template') {
       const channel = interaction.options.getChannel('channel', true);
@@ -181,30 +182,30 @@ async function handleInteraction(interaction) {
 
       await interaction.reply({
         content: `Removed ${channel.toString()} from the dynamic voice lobby list.`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     } else if (subcommand === 'list') {
       const templates = templateCache.get(guildId);
 
       if (!templates || templates.size === 0) {
-        await interaction.reply({ content: 'No dynamic voice lobbies are configured yet.', ephemeral: true });
+        await interaction.reply({ content: 'No dynamic voice lobbies are configured yet.', flags: MessageFlags.Ephemeral });
         return;
       }
 
       const lines = [];
       for (const channelId of templates) {
         const channel = interaction.guild.channels.cache.get(channelId);
-        lines.push(channel ? `? ${channel.toString()}` : `? Channel ID ${channelId}`);
+        lines.push(channel ? `- ${channel.toString()}` : `- Channel ID ${channelId}`);
       }
 
-      await interaction.reply({ content: `Configured lobbies:\n${lines.join('\n')}`, ephemeral: true });
+      await interaction.reply({ content: `Configured lobbies:\n${lines.join('\n')}`, flags: MessageFlags.Ephemeral });
     }
   } catch (err) {
     console.error('voiceRooms: interaction handler failed', err);
     if (interaction.deferred || interaction.replied) {
-      await interaction.followUp({ content: 'Something went wrong while processing that command.', ephemeral: true });
+      await interaction.followUp({ content: 'Something went wrong while processing that command.', flags: MessageFlags.Ephemeral });
     } else {
-      await interaction.reply({ content: 'Something went wrong while processing that command.', ephemeral: true });
+      await interaction.reply({ content: 'Something went wrong while processing that command.', flags: MessageFlags.Ephemeral });
     }
   }
 }
