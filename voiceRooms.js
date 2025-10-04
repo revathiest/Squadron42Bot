@@ -7,14 +7,12 @@ const {
   OverwriteType,
   PermissionFlagsBits,
   PermissionsBitField,
-  REST,
-  Routes,
   SlashCommandBuilder
 } = require('discord.js');
 const { getPool } = require('./database');
 
 const templateCache = new Map(); // guildId -> Set(templateChannelId)
-const tempChannelCache = new Map(); // channelId -> { guildId, ownerId, templateChannelId }
+const tempChannelCache = new Map(); // channelId -> { guildId, ownerId, template_channel_id }
 let clientRef;
 let initialized = false;
 
@@ -86,8 +84,8 @@ async function loadCacheFromDatabase(pool) {
   }
 }
 
-function buildCommandDefinitions() {
-  const voiceCommand = new SlashCommandBuilder()
+function buildCommandDefinition() {
+  return new SlashCommandBuilder()
     .setName('voice-rooms')
     .setDescription('Manage dynamic voice room templates for this server.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
@@ -120,29 +118,15 @@ function buildCommandDefinitions() {
       sub
         .setName('list')
         .setDescription('Show the current dynamic voice lobby channels.')
-    );
-
-  return [voiceCommand.toJSON()];
+    )
+    .toJSON();
 }
 
-async function registerCommands(token) {
-  const applicationId = process.env.APPLICATION_ID;
-  if (!applicationId) {
-    console.warn('voiceRooms: APPLICATION_ID is not set. Slash commands will not register.');
-    return;
-  }
-
-  const rest = new REST({ version: '10' }).setToken(token);
-  const commands = buildCommandDefinitions();
-  const guildId = process.env.GUILD_ID;
-
-  if (guildId) {
-    await rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: commands });
-    console.log('voiceRooms: Registered guild slash commands.');
-  } else {
-    await rest.put(Routes.applicationCommands(applicationId), { body: commands });
-    console.log('voiceRooms: Registered global slash commands.');
-  }
+function getSlashCommandDefinitions() {
+  return {
+    global: [],
+    guild: [buildCommandDefinition()]
+  };
 }
 
 async function handleInteraction(interaction) {
@@ -315,6 +299,7 @@ async function cleanupTemporaryChannel(channel, reason) {
 
   const pool = getPool();
   removeTemporaryChannelFromCache(channelId);
+
   await pool.query('DELETE FROM temporary_voice_channels WHERE channel_id = ?', [channelId]);
 
   if (typeof channel !== 'string') {
@@ -404,15 +389,10 @@ async function onReady(client) {
   }
 
   await cleanupOrphanedChannels();
-
-  try {
-    await registerCommands(client.token ?? process.env.DISCORD_TOKEN);
-  } catch (err) {
-    console.error('voiceRooms: Failed to register slash commands', err);
-  }
 }
 
 module.exports = {
+  getSlashCommandDefinitions,
   initialize,
   onReady
 };
