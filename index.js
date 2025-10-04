@@ -2,15 +2,22 @@
 require('dotenv/config');
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { testConnection } = require('./database');
+const voiceRooms = require('./voiceRooms');
 
-// Minimal intents: we just want to connect and exist
+// Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
 });
 
 // Fires once when the gateway is ready
-client.once(Events.ClientReady, c => {
+client.once(Events.ClientReady, async c => {
   console.log('Logged in as %s. Standing by, doing absolutely nothing.', c.user.tag);
+
+  try {
+    await voiceRooms.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize voice room setup:', err);
+  }
 });
 
 const token = (process.env.DISCORD_TOKEN || '').trim();
@@ -30,6 +37,13 @@ async function bootstrap() {
   }
 
   try {
+    await voiceRooms.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize voice room module:', err);
+    process.exit(1);
+  }
+
+  try {
     await client.login(token);
   } catch (err) {
     console.error('Failed to log into Discord:', err);
@@ -42,3 +56,4 @@ bootstrap();
 // Optional: keep things tidy
 process.on('unhandledRejection', err => console.error('Unhandled promise rejection:', err));
 process.on('SIGINT', () => { client.destroy(); process.exit(0); });
+process.on('SIGTERM', () => { client.destroy(); process.exit(0); });

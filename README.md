@@ -6,7 +6,7 @@ A Discord bot for the **Squadron 42** community server: event coordination, spoi
 
 ---
 
-## ✨ Goals
+## Goals
 
 - **Spoiler management**: automatic spoiler tagging, spoiler channels, and opt-in roles.
 - **Events**: create and manage watch parties, Q&A sessions, and play sessions with reminders.
@@ -19,20 +19,20 @@ A Discord bot for the **Squadron 42** community server: event coordination, spoi
 
 ---
 
-## 🏗️ Tech Assumptions
+## Tech Assumptions
 
 Choose your stack when you actually start coding. This README assumes either of these paths:
 
-- **Node.js** with `discord.js` (v14+)  
+- **Node.js** with `discord.js` (v14+)
 - **Python** with `discord.py` (2.x+)
 
 Pick one and delete the other bits below when you commit real code.
 
 ---
 
-## 📦 Requirements
+## Requirements
 
-- Discord application and bot created in the [Developer Portal] (give it a name you won’t regret).
+- Discord application and bot created in the [Developer Portal] (give it a name you will not regret).
 - Bot token with the right **Privileged Gateway Intents** enabled:
   - Server Members
   - Message Content (only if you truly need it; prefer slash commands)
@@ -47,7 +47,7 @@ Optional, depending on features you adopt:
 
 ---
 
-## 🔐 Environment Variables
+## Environment Variables
 
 Create a `.env` file. Add or remove as your design solidifies.
 
@@ -67,3 +67,13 @@ DB_POOL_LIMIT=5                    # optional, concurrent connections in the poo
 LOG_LEVEL=info
 PUBLIC_COMMANDS=true
 ```
+
+---
+
+## Dynamic Voice Rooms
+
+- Mark a lobby channel with `/voice-rooms set-template` (requires `Manage Channels`).
+- When a member joins that lobby the bot clones a personal voice channel, moves them there, and grants management permissions.
+- The temporary channel is removed automatically as soon as it is empty.
+- Use `/voice-rooms list` and `/voice-rooms clear-template` to review or remove lobby channels.
+- Ensure `APPLICATION_ID` (and optionally `GUILD_ID` for faster guild command deployment) are set so slash commands register correctly.
