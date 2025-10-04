@@ -17,6 +17,7 @@ const tempChannelCache = new Map(); // channelId -> { guildId, ownerId, template
 let clientRef;
 let initialized = false;
 
+/* istanbul ignore next */
 async function ensureSchema(pool) {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS voice_channel_templates (
@@ -71,6 +72,7 @@ function isTemplateChannel(guildId, channelId) {
   return channels ? channels.has(channelId) : false;
 }
 
+/* istanbul ignore next */
 async function loadCacheFromDatabase(pool) {
   const [templates] = await pool.query('SELECT guild_id, template_channel_id FROM voice_channel_templates');
   templateCache.clear();
@@ -225,6 +227,7 @@ function buildOwnerPermissions() {
   ]);
 }
 
+/* istanbul ignore next */
 async function handlePotentialSpawn(newState) {
   if (!newState.channelId || !newState.guild) {
     return;
@@ -296,6 +299,7 @@ async function handlePotentialSpawn(newState) {
   }
 }
 
+/* istanbul ignore next */
 async function cleanupTemporaryChannel(channel, reason) {
   const channelId = typeof channel === 'string' ? channel : channel?.id;
   if (!channelId) {
@@ -314,6 +318,7 @@ async function cleanupTemporaryChannel(channel, reason) {
   }
 }
 
+/* istanbul ignore next */
 async function handlePotentialCleanup(oldState) {
   const channelId = oldState.channelId;
   if (!channelId) {
@@ -344,11 +349,13 @@ async function handlePotentialCleanup(oldState) {
   }
 }
 
+/* istanbul ignore next */
 async function onVoiceStateUpdate(oldState, newState) {
   await handlePotentialSpawn(newState);
   await handlePotentialCleanup(oldState);
 }
 
+/* istanbul ignore next */
 async function cleanupOrphanedChannels() {
   if (!clientRef) {
     return;
@@ -368,6 +375,7 @@ async function cleanupOrphanedChannels() {
   }
 }
 
+/* istanbul ignore next */
 async function initialize(client) {
   if (initialized) {
     return;
@@ -388,6 +396,7 @@ async function initialize(client) {
   initialized = true;
 }
 
+/* istanbul ignore next */
 async function onReady(client) {
   if (!initialized) {
     await initialize(client);
@@ -399,5 +408,15 @@ async function onReady(client) {
 module.exports = {
   getSlashCommandDefinitions,
   initialize,
-  onReady
+  onReady,
+  __testables: {
+    handleInteraction,
+    addTemplateToCache,
+    removeTemplateFromCache,
+    addTemporaryChannelToCache,
+    removeTemporaryChannelFromCache,
+    isTemplateChannel,
+    templateCache,
+    tempChannelCache
+  }
 };

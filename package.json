@@ -1,19 +1,24 @@
 {
-  "name": "squadron42bot",
-  "version": "1.0.0",
-  "description": "A Discord bot for the **Squadron 42** community server: event coordination, spoiler-safe discussion, announcements, and community utilities. Built to be simple to operate, easy to extend, and impossible to confuse with an actual Idris.",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "Kenneth Hart",
-  "license": "MIT",
-  "dependencies": {
-    "discord.js": "^14.22.1",
-    "dotenv": "^17.2.2",
-    "mysql2": "^3.15.1"
-  }
+    "name":  "squadron42bot",
+    "version":  "1.0.0",
+    "description":  "A Discord bot for the **Squadron 42** community server: event coordination, spoiler-safe discussion, announcements, and community utilities. Built to be simple to operate, easy to extend, and impossible to confuse with an actual Idris.",
+    "main":  "index.js",
+    "scripts":  {
+                    "start":  "node index.js",
+                    "dev":  "node --watch index.js",
+                    "test":  "jest --coverage"
+                },
+    "keywords":  [
+
+                 ],
+    "author":  "Kenneth Hart",
+    "license":  "MIT",
+    "dependencies":  {
+                         "discord.js":  "^14.22.1",
+                         "dotenv":  "^17.2.2",
+                         "mysql2":  "^3.15.1"
+                     },
+    "devDependencies":  {
+                            "jest":  "^30.2.0"
+                        }
 }

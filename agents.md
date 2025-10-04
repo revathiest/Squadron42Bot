@@ -101,7 +101,7 @@ All agents import shared utilities (command manager, database pool, validation h
 - **Interaction Replies**: prefer `MessageFlags.Ephemeral` for private responses (Discord deprecated the `ephemeral` option).
 - **Error Handling**: standardized ephemeral error responses with correlation IDs for logs.
 - **Localization**: plan for copy extraction once multiple languages become a priority.
-- **Testing**: unit-test command handlers with mocked `discord.js` objects; integration-test DB workflows via transactional fixtures.
+- **Testing**: unit-test command handlers with mocked `discord.js` objects, enforce Jest coverage (92% statements/lines, 90% functions, 80% branches), and integration-test DB workflows via transactional fixtures.
 - **Deployment Flow**: CI pipeline to lint, run tests, regenerate slash commands, and restart the process manager (PM2/systemd/docker) used in production.
 
 ---

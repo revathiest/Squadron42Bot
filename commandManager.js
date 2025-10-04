@@ -85,5 +85,6 @@ async function registerAllCommands(token, modules) {
 }
 
 module.exports = {
-  registerAllCommands
+  registerAllCommands,
+  collectCommands
 };

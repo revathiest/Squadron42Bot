@@ -69,6 +69,13 @@ LOG_LEVEL=info
 
 ---
 
+
+## Testing
+
+- Run `npm test` to execute the Jest suite with coverage.
+- Coverage reports output to `coverage/` (open `coverage/lcov-report/index.html`).
+- The suite enforces minimum coverage: 92% statements/lines, 90% functions, 80% branches across command modules.
+
 ## Dynamic Voice Rooms
 
 - Mark a lobby channel with `/voice-rooms set-template` (administrators only).
