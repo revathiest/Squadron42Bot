@@ -416,6 +416,7 @@ module.exports = {
     addTemporaryChannelToCache,
     removeTemporaryChannelFromCache,
     isTemplateChannel,
+    onVoiceStateUpdate,
     templateCache,
     tempChannelCache
   }

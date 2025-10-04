@@ -1,9 +1,10 @@
 module.exports = {
   testEnvironment: 'node',
   collectCoverage: true,
-  coverageDirectory: 'coverage',
+  coverageDirectory: 'reports/coverage/unit',
   collectCoverageFrom: ['commandManager.js', 'voiceRooms.js'],
   coveragePathIgnorePatterns: ['/node_modules/'],
+  coverageReporters: ['text', 'text-summary', 'lcov', 'html'],
   coverageThreshold: {
     global: {
       statements: 92,
