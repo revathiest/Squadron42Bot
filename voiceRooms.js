@@ -88,7 +88,7 @@ function buildCommandDefinition() {
   return new SlashCommandBuilder()
     .setName('voice-rooms')
     .setDescription('Manage dynamic voice room templates for this server.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDMPermission(false)
     .addSubcommand(sub =>
       sub
@@ -144,6 +144,10 @@ async function handleInteraction(interaction) {
   }
 
   const subcommand = interaction.options.getSubcommand();
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({ content: 'Only administrators can use this command.', ephemeral: true });
+    return;
+  }
   const guildId = interaction.guildId;
   const pool = getPool();
 
@@ -163,7 +167,7 @@ async function handleInteraction(interaction) {
       addTemplateToCache(guildId, channel.id);
 
       await interaction.reply({
-        content: `? ${channel.toString()} will now spawn personal voice rooms when members join.`,
+        content: `Added ${channel.toString()} as a dynamic voice lobby.`,
         ephemeral: true
       });
     } else if (subcommand === 'clear-template') {
@@ -176,7 +180,7 @@ async function handleInteraction(interaction) {
       removeTemplateFromCache(guildId, channel.id);
 
       await interaction.reply({
-        content: `??? ${channel.toString()} is no longer a dynamic voice lobby.`,
+        content: `Removed ${channel.toString()} from the dynamic voice lobby list.`,
         ephemeral: true
       });
     } else if (subcommand === 'list') {

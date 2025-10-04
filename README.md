@@ -71,7 +71,7 @@ LOG_LEVEL=info
 
 ## Dynamic Voice Rooms
 
-- Mark a lobby channel with `/voice-rooms set-template` (requires `Manage Channels`).
+- Mark a lobby channel with `/voice-rooms set-template` (administrators only).
 - When a member joins that lobby the bot clones a personal voice channel, moves them there, and grants management permissions.
 - The temporary channel is removed automatically as soon as it is empty.
 - Use `/voice-rooms list` and `/voice-rooms clear-template` to review or remove lobby channels.

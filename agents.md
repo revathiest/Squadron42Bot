@@ -34,7 +34,7 @@ All agents import shared utilities (command manager, database pool, validation h
   - Persist lobby templates and temporary room metadata (`voice_channel_templates`, `temporary_voice_channels`).
   - Clone voice channels when members join a lobby, move them, and grant owner permissions.
   - Tear down temporary rooms when empty and reconcile orphaned records on startup.
-- **Commands**: `/voice-rooms set-template|clear-template|list` (guild scoped).
+- **Commands**: `/voice-rooms set-template|clear-template|list` (guild scoped, administrators only).
 
 ### 3. Spoiler Sentinel
 - **Purpose**: protect story-sensitive discussion by tagging and isolating content.
