@@ -392,10 +392,8 @@ async function handleRolesList(interaction) {
       return;
     }
 
-    const mentions = [...set].map(roleId => `<@&${roleId}>`).join('
-');
-    await interaction.editReply(`Current ticket moderator roles:
-${mentions}`);
+    const mentions = [...set].map(roleId => `<@&${roleId}>`).join('\n');
+    await interaction.editReply(`Current ticket moderator roles:\n${mentions}`);
   } catch (err) {
     console.error('tickets: Failed to list ticket roles', err);
     await interaction.editReply('Failed to fetch ticket moderator roles.');
