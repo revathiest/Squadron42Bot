@@ -9,6 +9,7 @@ const {
   EmbedBuilder,
   Events,
   ModalBuilder,
+  MessageFlags,
   PermissionFlagsBits,
   PermissionsBitField,
   SlashCommandBuilder,
@@ -97,12 +98,59 @@ async function loadCache(pool) {
       claimedBy: row.claimed_by || null,
       controlMessageId: row.control_message_id || null
     });
-
   }
 }
 
 function getModeratorRoles(guildId) {
   return rolesCache.get(guildId) || new Set();
+}
+
+function buildTicketChannelName(userDisplay, ticketId) {
+  const sanitized = sanitizeNameSegment(userDisplay);
+  return `ticket-${sanitized}-${ticketId}`;
+}
+
+function sanitizeNameSegment(value) {
+  if (!value) return 'user';
+  const collapsed = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return collapsed || 'user';
+}
+
+function buildLobbyEmbed(guildName) {
+  return new EmbedBuilder()
+    .setTitle('Need Assistance?')
+    .setDescription('Click the button below to open a private ticket with the moderation team.')
+    .addFields(
+      { name: 'How it works', value: '1. Press **Open Ticket**.\n2. Describe your issue in the form.\n3. A moderator will claim your ticket and follow up in a private channel.' },
+      { name: 'Reminder', value: guildName ? `Tickets in ${guildName} are for support questions and issue reporting.` : 'Tickets are intended for support questions and issue reporting.' }
+    )
+    .setColor(0x5865f2);
+}
+
+function buildLobbyComponents() {
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('ticket:create')
+        .setLabel('Open Ticket')
+        .setStyle(ButtonStyle.Primary)
+    )
+  ];
+}
+
+function buildTicketControls(ticketId, claimedBy) {
+  const claimButton = new ButtonBuilder()
+    .setCustomId(`ticket:claim:${ticketId}`)
+    .setLabel(claimedBy ? `Claimed by ${claimedBy}` : 'Claim Ticket')
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(Boolean(claimedBy));
+
+  const closeButton = new ButtonBuilder()
+    .setCustomId(`ticket:close:${ticketId}`)
+    .setLabel('Close Ticket')
+    .setStyle(ButtonStyle.Danger);
+
+  return [new ActionRowBuilder().addComponents(claimButton, closeButton)];
 }
 
 function getSlashCommandDefinitions() {
@@ -180,101 +228,46 @@ function getSlashCommandDefinitions() {
     guild: [ticketCommand.toJSON()]
   };
 }
-function buildLobbyEmbed(guildName) {
-  return new EmbedBuilder()
-    .setTitle('Need Assistance?')
-    .setDescription('Click the button below to open a private ticket with the moderation team.')
-    .addFields(
-      { name: 'How it works', value: '1. Press **Open Ticket**.\\n2. Describe your issue in the form.\\n3. A moderator will claim your ticket and follow up in a private channel.' },
-      { name: 'Reminder', value: guildName ? `Tickets in ${guildName} are for support questions and issue reporting.` : 'Tickets are intended for support questions and issue reporting.' }
-    )
-    .setColor(0x5865f2);
-}
-
-function buildLobbyComponents() {
-  return [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('ticket:create')
-        .setStyle(ButtonStyle.Primary)
-        .setLabel('Open Ticket')
-    )
-  ];
-}
-
-function buildTicketControls(ticketId, claimedBy) {
-  const claimButton = new ButtonBuilder()
-    .setCustomId(`ticket:claim:${ticketId}`)
-    .setLabel(claimedBy ? `Claimed by ${claimedBy}` : 'Claim Ticket')
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(Boolean(claimedBy));
-
-  const closeButton = new ButtonBuilder()
-    .setCustomId(`ticket:close:${ticketId}`)
-    .setLabel('Close Ticket')
-    .setStyle(ButtonStyle.Danger);
-
-  return [new ActionRowBuilder().addComponents(claimButton, closeButton)];
-}
-
-function sanitizeNameSegment(value) {
-  if (!value) return 'user';
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-)|(-$)/g, '').slice(0, 20) || 'user';
-}
-
-function buildTicketChannelName(userDisplay, ticketId) {
-  const segment = sanitizeNameSegment(userDisplay);
-  return `ticket-${segment}-${ticketId}`;
-}
 
 function isModerator(guild, member) {
   if (!guild || !member) return false;
   const roles = getModeratorRoles(guild.id);
   if (roles.size === 0) {
-    return member.permissions?.has(PermissionFlagsBits.ManageChannels) || false;
+    return member.permissions?.has(PermissionFlagsBits.ManageChannels) ?? false;
   }
-  return member.roles?.cache?.some(role => roles.has(role.id)) || false;
+
+  return member.roles?.cache?.some(role => roles.has(role.id)) ?? false;
 }
 
 /* istanbul ignore next */
 async function handleSetChannel(interaction) {
   const channel = interaction.options.getChannel('channel', true);
   const context = `tickets:set-channel[guild=${interaction.guildId},interaction=${interaction.id}]`;
-  console.log(`${context} received request for channel ${channel?.id ?? 'unknown'}`);
-
-  if (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement) {
+  
+  if (![ChannelType.GuildText, ChannelType.GuildAnnouncement].includes(channel.type)) {
     console.warn(`${context} rejected non-text channel type ${channel.type}`);
-    await interaction.reply({ content: 'Please choose a text channel for ticket creation.', ephemeral: true });
+    await interaction.reply({ content: 'Please choose a text channel for ticket creation.', flags: MessageFlags.Ephemeral });
     return;
   }
 
   const archiveCategoryOption = interaction.options.getChannel('archive_category');
   const archiveCategoryId = archiveCategoryOption ? archiveCategoryOption.id : null;
-  console.log(`${context} archive category ${archiveCategoryId ? `provided=${archiveCategoryId}` : 'not provided'}`);
-
-  await interaction.deferReply({ ephemeral: true });
-  console.log(`${context} deferred interaction reply`);
-
+  
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  
   try {
     const pool = getPool();
     const guildId = interaction.guildId;
     const existing = settingsCache.get(guildId);
-    console.log(`${context} loading existing settings => ${existing ? 'found' : 'none'}`);
-
+    
     if (existing) {
-      console.log(`${context} cleaning previous lobby message channel=${existing.channelId} message=${existing.messageId}`);
       try {
         const previousChannel = await interaction.guild.channels.fetch(existing.channelId);
         if (previousChannel) {
           const priorMessage = await previousChannel.messages.fetch(existing.messageId);
           if (priorMessage) {
             await priorMessage.delete().catch(() => null);
-            console.log(`${context} removed previous lobby message`);
-          } else {
-            console.log(`${context} no prior message found during cleanup`);
           }
-        } else {
-          console.log(`${context} no previous channel found during cleanup`);
         }
       } catch (cleanupErr) {
         console.warn('tickets: Failed to clean up previous lobby message', context, cleanupErr);
@@ -283,11 +276,8 @@ async function handleSetChannel(interaction) {
 
     const embed = buildLobbyEmbed(interaction.guild?.name || null);
     const components = buildLobbyComponents();
-    console.log(`${context} sending new lobby message to channel ${channel.id}`);
     const message = await channel.send({ embeds: [embed], components });
-    console.log(`${context} lobby message sent messageId=${message.id}`);
-
-    console.log(`${context} writing settings to database`);
+    
     await pool.query(
       'REPLACE INTO ticket_settings (guild_id, channel_id, message_id, archive_category_id) VALUES (?, ?, ?, ?)',
       [interaction.guildId, channel.id, message.id, archiveCategoryId]
@@ -298,9 +288,7 @@ async function handleSetChannel(interaction) {
       messageId: message.id,
       archiveCategoryId
     });
-    console.log(`${context} cached new settings`);
 
-    console.log('tickets: Lobby configured for guild ' + interaction.guildId + ' in channel ' + channel.id);
     await interaction.editReply('Ticket lobby channel configured successfully.');
   } catch (err) {
     console.error('tickets: Failed to configure ticket lobby', context, err);
@@ -312,28 +300,24 @@ async function handleSetChannel(interaction) {
 async function handleSetArchive(interaction) {
   const category = interaction.options.getChannel('category', true);
   const context = `tickets:set-archive[guild=${interaction.guildId},interaction=${interaction.id}]`;
-  console.log(`${context} received request for category ${category?.id ?? 'unknown'} type=${category?.type}`);
-
+  
   if (category.type !== ChannelType.GuildCategory) {
     console.warn(`${context} rejected non-category channel type ${category.type}`);
-    await interaction.reply({ content: 'Please choose a category channel for archives.', ephemeral: true });
+    await interaction.reply({ content: 'Please choose a category channel for archives.', flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
-  console.log(`${context} deferred interaction reply`);
-
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  
   try {
     const guildId = interaction.guildId;
     const settings = settingsCache.get(guildId);
-    console.log(`${context} loaded lobby settings => ${settings ? 'found' : 'missing'}`);
     if (!settings) {
       await interaction.editReply('Ticket lobby is not configured yet. Use /ticket set-channel first.');
       return;
     }
 
     const pool = getPool();
-    console.log(`${context} writing archive category ${category.id} to database`);
     await pool.query(
       'UPDATE ticket_settings SET archive_category_id = ? WHERE guild_id = ?',
       [category.id, guildId]
@@ -341,19 +325,15 @@ async function handleSetArchive(interaction) {
 
     settings.archiveCategoryId = category.id;
     settingsCache.set(guildId, settings);
-    console.log(`${context} updated cache with archive category`);
-
-    console.log('tickets: Archive category updated for guild ' + guildId + ' to ' + category.id);
+    
     await interaction.editReply('Ticket archive category set to ' + category.toString() + '.');
   } catch (err) {
-    console.error('tickets: Failed to update ticket archive category', context, err);
     await interaction.editReply('Failed to update the ticket archive category.');
   }
 }
 
 async function handleRolesAdd(interaction) {
-  console.log('tickets: handleRolesAdd invoked', { guildId: interaction.guildId ?? 'unknown', role: interaction.options?.getRole('role')?.id ?? null });
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const role = interaction.options.getRole('role', true);
@@ -368,7 +348,7 @@ async function handleRolesAdd(interaction) {
     }
     set.add(role.id);
 
-    await interaction.editReply('Added ' + role.toString() + ' as a ticket moderator role.');
+    await interaction.editReply(`Added ${role.toString()} as a ticket moderator role.`);
   } catch (err) {
     console.error('tickets: Failed to add ticket role', err);
     await interaction.editReply('Failed to add the ticket moderator role.');
@@ -376,8 +356,7 @@ async function handleRolesAdd(interaction) {
 }
 
 async function handleRolesRemove(interaction) {
-  console.log('tickets: handleRolesRemove invoked', { guildId: interaction.guildId ?? 'unknown', role: interaction.options?.getRole('role')?.id ?? null });
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const role = interaction.options.getRole('role', true);
@@ -390,7 +369,7 @@ async function handleRolesRemove(interaction) {
       set.delete(role.id);
     }
 
-    await interaction.editReply('Removed ' + role.toString() + ' from ticket moderator roles.');
+    await interaction.editReply(`Removed ${role.toString()} from ticket moderator roles.`);
   } catch (err) {
     console.error('tickets: Failed to remove ticket role', err);
     await interaction.editReply('Failed to remove the ticket moderator role.');
@@ -398,8 +377,7 @@ async function handleRolesRemove(interaction) {
 }
 
 async function handleRolesList(interaction) {
-  console.log('tickets: handleRolesList invoked', { guildId: interaction.guildId ?? 'unknown' });
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const guildId = interaction.guildId;
@@ -409,8 +387,8 @@ async function handleRolesList(interaction) {
       return;
     }
 
-    const mentions = [...set].map(roleId => '<@&' + roleId + '>').join('\\n');
-    await interaction.editReply('Current ticket moderator roles:\\n' + mentions);
+    const mentions = [...set].map(roleId => `<@&${roleId}>`).join('\n');
+    await interaction.editReply(`Current ticket moderator roles:\n${mentions}`);
   } catch (err) {
     console.error('tickets: Failed to list ticket roles', err);
     await interaction.editReply('Failed to fetch ticket moderator roles.');
@@ -418,12 +396,10 @@ async function handleRolesList(interaction) {
 }
 
 async function handleTicketCommand(interaction) {
-  console.log('tickets: handleTicketCommand invoked', { guildId: interaction.guildId ?? 'unknown', command: interaction.commandName, group: interaction.options?.getSubcommandGroup(false) ?? null });
   const subcommandGroup = interaction.options.getSubcommandGroup(false);
   /* istanbul ignore next */
   if (!subcommandGroup) {
     const subcommand = interaction.options.getSubcommand();
-    console.log('tickets: handleTicketCommand standalone subcommand', { subcommand, guildId: interaction.guildId ?? 'unknown' });
     if (subcommand === 'set-channel') {
       await handleSetChannel(interaction);
     } else if (subcommand === 'set-archive') {
@@ -432,10 +408,8 @@ async function handleTicketCommand(interaction) {
     return;
   }
 
-  /* istanbul ignore else */  if (subcommandGroup === 'roles') {
-    console.log('tickets: handleTicketCommand roles group', { guildId: interaction.guildId ?? 'unknown' });
+  if (subcommandGroup === 'roles') {
     const subcommand = interaction.options.getSubcommand();
-    console.log('tickets: handleTicketCommand roles subcommand', { subcommand, guildId: interaction.guildId ?? 'unknown' });
     if (subcommand === 'add') {
       await handleRolesAdd(interaction);
     } else if (subcommand === 'remove') {
@@ -532,7 +506,7 @@ function buildChannelOverwrites(guild, userId, moderatorRoles) {
 async function createTicket(interaction) {
   const guildSettings = settingsCache.get(interaction.guildId);
   if (!guildSettings) {
-    await interaction.reply({ content: 'Ticket system is not configured for this server.', ephemeral: true });
+    await interaction.reply({ content: 'Ticket system is not configured for this server.', flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -552,25 +526,39 @@ async function createTicket(interaction) {
   const channelName = buildTicketChannelName(displayName, ticketId);
   const lobbyChannel = await guild.channels.fetch(guildSettings.channelId).catch(() => null);
 
-  const channel = await guild.channels.create({
+  if (!lobbyChannel || !lobbyChannel.parent) {
+    await interaction.reply({ content: 'Unable to create the ticket channel. Please notify the moderators.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  const overwrites = buildChannelOverwrites(guild, interaction.user.id, moderatorRoles);
+  const ticketChannel = await guild.channels.create({
     name: channelName,
     type: ChannelType.GuildText,
-    parent: lobbyChannel?.parentId || null,
-    permissionOverwrites: buildChannelOverwrites(guild, interaction.user.id, moderatorRoles)
+    parent: lobbyChannel.parent,
+    permissionOverwrites: overwrites
   });
 
   const embed = buildTicketEmbed(interaction.user, description, ticketId);
-  const controlMessage = await channel.send({
-    content: `<@${interaction.user.id}>`,
+  const controls = buildTicketControls(ticketId, null);
+  const moderatorRoleIds = Array.from(moderatorRoles);
+  const mentionContent = [
+    `<@${interaction.user.id}>`,
+    ...moderatorRoleIds.map(roleId => `<@&${roleId}>`)
+  ].join(' ');
+  const controlMessage = await ticketChannel.send({
+    content: mentionContent,
     embeds: [embed],
-    components: buildTicketControls(ticketId, null)
+    components: controls,
+    allowedMentions: {
+      users: [interaction.user.id],
+      roles: moderatorRoleIds
+    }
   });
-  await pool.query(
-    'UPDATE tickets SET channel_id = ?, control_message_id = ? WHERE id = ?',
-    [channel.id, controlMessage.id, ticketId]
-  );
 
-  openTickets.set(channel.id, {
+  await pool.query('UPDATE tickets SET channel_id = ?, control_message_id = ? WHERE id = ?', [ticketChannel.id, controlMessage.id, ticketId]);
+
+  openTickets.set(ticketChannel.id, {
     id: ticketId,
     guildId: interaction.guildId,
     userId: interaction.user.id,
@@ -578,14 +566,15 @@ async function createTicket(interaction) {
     controlMessageId: controlMessage.id
   });
 
-  await interaction.reply({ content: `Ticket created: ${channel.toString()}`, ephemeral: true });
+  const lobbyComponents = buildLobbyComponents();
+  await interaction.reply({ content: `Ticket created: ${ticketChannel.toString()}`, flags: MessageFlags.Ephemeral });
 }
 
 /* istanbul ignore next */
 async function handleCreateButton(interaction) {
   const settings = settingsCache.get(interaction.guildId);
   if (!settings || settings.channelId !== interaction.channelId) {
-    await interaction.reply({ content: 'Tickets can only be opened from the designated ticket channel.', ephemeral: true });
+    await interaction.reply({ content: 'Tickets can only be opened from the designated ticket channel.', flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -614,17 +603,17 @@ async function updateControlMessage(channel, ticketData, claimedByLabel, disable
 async function handleClaim(interaction, ticketId) {
   const ticketData = [...openTickets.values()].find(ticket => ticket.id === ticketId);
   if (!ticketData) {
-    await interaction.reply({ content: 'Ticket could not be found or is already closed.', ephemeral: true });
+    await interaction.reply({ content: 'Ticket could not be found or is already closed.', flags: MessageFlags.Ephemeral });
     return;
   }
 
   if (!isModerator(interaction.guild, interaction.member)) {
-    await interaction.reply({ content: 'Only ticket moderators can claim tickets.', ephemeral: true });
+    await interaction.reply({ content: 'Only ticket moderators can claim tickets.', flags: MessageFlags.Ephemeral });
     return;
   }
 
   if (ticketData.claimedBy) {
-    await interaction.reply({ content: 'This ticket has already been claimed.', ephemeral: true });
+    await interaction.reply({ content: 'This ticket has already been claimed.', flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -634,20 +623,19 @@ async function handleClaim(interaction, ticketId) {
 
   await updateControlMessage(interaction.channel, ticketData, interaction.member?.displayName || interaction.user.username);
 
-  await interaction.reply({ content: `Ticket claimed by <@${interaction.user.id}>.`, ephemeral: false });
+  await interaction.reply({ content: `Ticket claimed by <@${interaction.user.id}>.` });
 }
-
 
 /* istanbul ignore next */
 async function handleClose(interaction, ticketId) {
   const ticketData = [...openTickets.values()].find(ticket => ticket.id === ticketId);
   if (!ticketData) {
-    await interaction.reply({ content: 'Ticket could not be found or is already closed.', ephemeral: true });
+    await interaction.reply({ content: 'Ticket could not be found or is already closed.', flags: MessageFlags.Ephemeral });
     return;
   }
 
   if (!isModerator(interaction.guild, interaction.member)) {
-    await interaction.reply({ content: 'Only ticket moderators can close tickets.', ephemeral: true });
+    await interaction.reply({ content: 'Only ticket moderators can close tickets.', flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -688,43 +676,45 @@ async function handleClose(interaction, ticketId) {
   const claimedUser = ticketData.claimedBy ? interaction.client.users.cache.get(ticketData.claimedBy) : null;
   const claimedLabel = claimedUser?.username || null;
   await updateControlMessage(channel, ticketData, claimedLabel, true);
-  await interaction.reply({ content: 'Ticket closed and archived.', ephemeral: false });
+  await interaction.reply({ content: 'Ticket closed and archived.' });
 }
 
-/* istanbul ignore next */
 async function handleButton(interaction) {
-  console.log('tickets: handleButton invoked', { customId: interaction.customId, guildId: interaction.guildId ?? 'unknown' });
   if (interaction.customId === 'ticket:create') {
     await handleCreateButton(interaction);
     return;
   }
 
   const parts = interaction.customId.split(':');
-  /* istanbul ignore else */  if (parts.length === 3 && parts[0] === 'ticket') {
-    const action = parts[1];
-    const ticketId = Number(parts[2]);
-    if (Number.isNaN(ticketId)) {
-      await interaction.reply({ content: 'Invalid ticket identifier.', ephemeral: true });
-      return;
-    }
+  /* istanbul ignore next */
+  if (parts.length !== 3 || parts[0] !== 'ticket') {
+    console.warn('tickets: handleButton unhandled customId', { customId: interaction.customId });
+    return;
+  }
 
-    if (action === 'claim') {
-      await handleClaim(interaction, ticketId);
-    } else if (action === 'close') {
-      await handleClose(interaction, ticketId);
-    } else {
-      console.warn('tickets: handleButton unexpected action', { action, customId: interaction.customId });
-    }
+  const action = parts[1];
+  const ticketId = Number(parts[2]);
+  /* istanbul ignore next */
+  if (Number.isNaN(ticketId)) {
+    await interaction.reply({ content: 'Invalid ticket identifier.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  if (action === 'claim') {
+    await handleClaim(interaction, ticketId);
+    return;
+  }
+
+  if (action === 'close') {
+    await handleClose(interaction, ticketId);
     return;
   }
 
   /* istanbul ignore next */
-  console.warn('tickets: handleButton unhandled customId', { customId: interaction.customId });
+  console.warn('tickets: handleButton unexpected action', { action, customId: interaction.customId });
 }
 
-/* istanbul ignore next */
 async function handleModalSubmit(interaction) {
-  console.log('tickets: handleModalSubmit invoked', { customId: interaction.customId, guildId: interaction.guildId ?? 'unknown' });
   if (interaction.customId === 'ticket:modal:create') {
     await createTicket(interaction);
     return;
@@ -734,9 +724,7 @@ async function handleModalSubmit(interaction) {
   console.warn('tickets: handleModalSubmit unhandled customId', { customId: interaction.customId });
 }
 
-/* istanbul ignore next */
 async function handleInteraction(interaction) {
-  console.log('tickets: handleInteraction start', { type: interaction.type, guildId: interaction.guildId ?? 'unknown', command: interaction.commandName ?? null });
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === 'ticket') {
       await handleTicketCommand(interaction);
@@ -760,9 +748,7 @@ async function handleInteraction(interaction) {
 
 /* istanbul ignore next */
 async function initialize(client) {
-  console.log('tickets: initialize invoked');
   if (initialized) {
-    console.log('tickets: initialize skipped (already initialized)');
     return;
   }
 
@@ -770,14 +756,12 @@ async function initialize(client) {
   const pool = getPool();
   await ensureSchema(pool);
   await loadCache(pool);
-  console.log('tickets: initialize completed schema + cache load');
-
+  
   client.on(Events.InteractionCreate, interaction => {
-    console.log('tickets: interaction received', { type: interaction.type, guildId: interaction.guildId ?? 'unknown', command: interaction.commandName ?? null });
     handleInteraction(interaction).catch(err => {
       console.error('tickets: Failed to process interaction', err);
       if (interaction.isRepliable() && !interaction.replied) {
-        interaction.reply({ content: 'An error occurred while handling that ticket action.', ephemeral: true }).catch(() => null);
+        interaction.reply({ content: 'An error occurred while handling that ticket action.', flags: MessageFlags.Ephemeral }).catch(() => null);
       }
     });
   });
@@ -786,8 +770,81 @@ async function initialize(client) {
 }
 
 /* istanbul ignore next */
+async function ensureLobbyMessage(guildId) {
+  const settings = settingsCache.get(guildId);
+  if (!settings) {
+    return;
+  }
+
+  if (!clientRef) {
+    console.warn('tickets: ensureLobbyMessage called before client is ready', { guildId });
+    return;
+  }
+
+  let guild;
+  try {
+    guild = await clientRef.guilds.fetch(guildId);
+  } catch (err) {
+    if (err?.code === 10004 || err?.status === 404) {
+      console.info('tickets: Skipping lobby message bootstrap; guild is unreachable for this bot. Remove stale ticket settings if this guild is handled elsewhere.', { guildId });
+    } else {
+      console.warn('tickets: Failed to fetch guild while ensuring lobby message', { guildId }, err);
+    }
+    return;
+  }
+
+  let channel;
+  try {
+    channel = await guild.channels.fetch(settings.channelId);
+  } catch (err) {
+    console.warn('tickets: Failed to fetch lobby channel during ensureLobbyMessage', { guildId, channelId: settings.channelId }, err);
+    return;
+  }
+
+  if (!channel || ![ChannelType.GuildText, ChannelType.GuildAnnouncement].includes(channel.type)) {
+    console.warn('tickets: Lobby channel missing or invalid during ensureLobbyMessage', { guildId, channelId: settings.channelId });
+    return;
+  }
+
+  const embed = buildLobbyEmbed(guild.name);
+  const components = buildLobbyComponents();
+
+  if (settings.messageId) {
+    try {
+      const existingMessage = await channel.messages.fetch(settings.messageId);
+      await existingMessage.edit({ embeds: [embed], components });
+      return;
+    } catch (err) {
+      console.warn('tickets: Failed to edit existing lobby message, creating new one', { guildId, messageId: settings.messageId }, err);
+    }
+  }
+
+  try {
+    const sentMessage = await channel.send({ embeds: [embed], components });
+    settings.messageId = sentMessage.id;
+    settingsCache.set(guildId, settings);
+    await getPool().query('UPDATE ticket_settings SET message_id = ? WHERE guild_id = ?', [sentMessage.id, guildId]);
+  } catch (err) {
+    console.error('tickets: Failed to create lobby message', { guildId, channelId: channel.id }, err);
+  }
+}
+
+/* istanbul ignore next */
 async function onReady(client) {
   clientRef = client;
+
+  const ensurePromises = [];
+  for (const guildId of settingsCache.keys()) {
+    ensurePromises.push(ensureLobbyMessage(guildId));
+  }
+
+  if (ensurePromises.length > 0) {
+    const results = await Promise.allSettled(ensurePromises);
+    const failures = results.filter(result => result.status === 'rejected');
+    if (failures.length) {
+      console.warn('tickets: Failed to ensure lobby messages for some guilds', failures);
+    }
+  }
 }
 
 module.exports = {
@@ -799,30 +856,11 @@ module.exports = {
     getModeratorRoles,
     isModerator,
     handleTicketCommand,
-    handleSetChannel,
     handleSetArchive,
-    handleRolesAdd,
-    handleRolesRemove,
-    handleRolesList,
     buildLobbyEmbed,
     buildTicketControls,
     buildLobbyComponents,
     settingsCache,
-    rolesCache,
-    openTickets
+    rolesCache
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-

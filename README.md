@@ -69,6 +69,12 @@ LOG_LEVEL=info
 
 ---
 
+## Interaction Responses
+
+- Always use `flags: MessageFlags.Ephemeral` for private replies or deferred responses; the legacy `ephemeral` option is deprecated in discord.js v14.
+- When adding shared interaction helpers, bake the flags option in so future agents inherit the correct behaviour.
+
+---
 
 ## Testing
 

@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, ChannelType } = require('discord.js');
+const { PermissionFlagsBits, ChannelType, MessageFlags } = require('discord.js');
 
 jest.mock('../database', () => {
   const pool = {
@@ -101,7 +101,7 @@ describe('ticket role commands', () => {
       ['guild-roles', 'role-1']
     );
     expect(rolesCache.get('guild-roles')?.has('role-1')).toBe(true);
-    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
     expect(interaction.editReply).toHaveBeenCalledWith('Added <@&role-1> as a ticket moderator role.');
   });
 
@@ -117,7 +117,7 @@ describe('ticket role commands', () => {
       ['guild-roles', 'role-1']
     );
     expect(rolesCache.get('guild-roles')?.has('role-1')).toBe(false);
-    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
     expect(interaction.editReply).toHaveBeenCalledWith('Removed <@&role-1> from ticket moderator roles.');
   });
 
@@ -135,7 +135,7 @@ describe('ticket role commands', () => {
 
     await handleTicketCommand(interaction);
 
-    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
     const message = interaction.editReply.mock.calls[0][0];
     expect(message).toContain('<@&role-1>');
     expect(message).toContain('<@&role-2>');
@@ -154,7 +154,7 @@ describe('ticket role commands', () => {
 
     await handleTicketCommand(interaction);
 
-    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
     expect(interaction.editReply).toHaveBeenCalledWith('No moderator roles configured. Use /ticket roles add to add one.');
   });
 
@@ -262,7 +262,7 @@ describe('ticket archive command', () => {
 
     await handleSetArchive(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith({ content: 'Please choose a category channel for archives.', ephemeral: true });
+    expect(interaction.reply).toHaveBeenCalledWith({ content: 'Please choose a category channel for archives.', flags: MessageFlags.Ephemeral });
     expect(interaction.deferReply).not.toHaveBeenCalled();
   });
 
