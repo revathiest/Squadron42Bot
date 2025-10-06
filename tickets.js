@@ -117,11 +117,15 @@ function sanitizeNameSegment(value) {
 }
 
 function buildLobbyEmbed(guildName) {
+  const howItWorks = `1. Press **Open Ticket**.
+2. Describe your issue in the form.
+3. A moderator will claim your ticket and follow up in a private channel.`;
+
   return new EmbedBuilder()
     .setTitle('Need Assistance?')
     .setDescription('Click the button below to open a private ticket with the moderation team.')
     .addFields(
-      { name: 'How it works', value: '1. Press **Open Ticket**.\n2. Describe your issue in the form.\n3. A moderator will claim your ticket and follow up in a private channel.' },
+      { name: 'How it works', value: howItWorks },
       { name: 'Reminder', value: guildName ? `Tickets in ${guildName} are for support questions and issue reporting.` : 'Tickets are intended for support questions and issue reporting.' }
     )
     .setColor(0x5865f2);
@@ -388,8 +392,10 @@ async function handleRolesList(interaction) {
       return;
     }
 
-    const mentions = [...set].map(roleId => `<@&${roleId}>`).join('\n');
-    await interaction.editReply(`Current ticket moderator roles:\n${mentions}`);
+    const mentions = [...set].map(roleId => `<@&${roleId}>`).join('
+');
+    await interaction.editReply(`Current ticket moderator roles:
+${mentions}`);
   } catch (err) {
     console.error('tickets: Failed to list ticket roles', err);
     await interaction.editReply('Failed to fetch ticket moderator roles.');
