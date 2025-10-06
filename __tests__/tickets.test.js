@@ -18,14 +18,19 @@ const {
   getModeratorRoles,
   isModerator,
   handleTicketCommand,
+  handleSetChannel,
   handleSetArchive,
+  handleCreateButton,
+  handleButton,
+  handleModalSubmit,
+  handleInteraction,
   buildLobbyEmbed,
   buildTicketControls,
   buildLobbyComponents,
   settingsCache,
-  rolesCache
+  rolesCache,
+  openTickets
 } = tickets.__testables;
-
 describe('tickets module helpers', () => {
   beforeEach(() => {
     rolesCache.clear();
@@ -68,6 +73,443 @@ describe('tickets module helpers', () => {
     };
 
     expect(isModerator(guild, member)).toBe(true);
+  });
+});
+
+
+describe('ticket set-channel command', () => {
+  beforeEach(() => {
+    settingsCache.clear();
+    database.__pool.query.mockClear().mockResolvedValue([]);
+  });
+
+  test('set channel rejects non-text channels', async () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const channel = { id: 'voice-channel', type: ChannelType.GuildVoice, toString: () => '<#voice-channel>' };
+    const interaction = {
+      id: 'interaction-set-voice',
+      guildId: 'guild-set',
+      options: {
+        getSubcommandGroup: () => null,
+        getSubcommand: () => 'set-channel',
+        getChannel: jest.fn(name => (name === 'channel' ? channel : null))
+      },
+      reply: jest.fn().mockResolvedValue(undefined),
+      guild: { channels: { fetch: jest.fn() } }
+    };
+
+    await handleTicketCommand(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith({
+      content: 'Please choose a text channel for ticket creation.',
+      flags: MessageFlags.Ephemeral
+    });
+    expect(database.__pool.query).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+  });
+
+  test('set channel configures lobby and updates cache', async () => {
+    const channel = {
+      id: 'text-channel',
+      type: ChannelType.GuildText,
+      toString: () => '#support',
+      send: jest.fn().mockResolvedValue({ id: 'message-1' })
+    };
+
+    const interaction = {
+      id: 'interaction-set-text',
+      guildId: 'guild-config',
+      guild: {
+        name: 'Support Guild',
+        channels: { fetch: jest.fn() }
+      },
+      options: {
+        getSubcommandGroup: () => null,
+        getSubcommand: () => 'set-channel',
+        getChannel: jest.fn(name => (name === 'channel' ? channel : null))
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined),
+      reply: jest.fn()
+    };
+
+    await handleTicketCommand(interaction);
+
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
+    expect(channel.send).toHaveBeenCalled();
+    expect(database.__pool.query).toHaveBeenCalledWith(
+      'REPLACE INTO ticket_settings (guild_id, channel_id, message_id, archive_category_id) VALUES (?, ?, ?, ?)',
+      ['guild-config', 'text-channel', 'message-1', null]
+    );
+
+    const settings = settingsCache.get('guild-config');
+    expect(settings).toEqual({
+      channelId: 'text-channel',
+      messageId: 'message-1',
+      archiveCategoryId: null
+    });
+    expect(interaction.editReply).toHaveBeenCalledWith('Ticket lobby channel configured successfully.');
+  });
+
+  test('set channel cleans up previous lobby message', async () => {
+    const previousDelete = jest.fn().mockResolvedValue(undefined);
+    const previousMessage = { delete: previousDelete };
+    const previousChannel = {
+      messages: {
+        fetch: jest.fn().mockResolvedValue(previousMessage)
+      }
+    };
+
+    settingsCache.set('guild-clean', {
+      channelId: 'old-channel',
+      messageId: 'old-message',
+      archiveCategoryId: null
+    });
+
+    const channel = {
+      id: 'new-channel',
+      type: ChannelType.GuildText,
+      toString: () => '#new-channel',
+      send: jest.fn().mockResolvedValue({ id: 'new-message' })
+    };
+    const archiveCategory = { id: 'archive-123' };
+
+    const interaction = {
+      id: 'interaction-clean',
+      guildId: 'guild-clean',
+      guild: {
+        name: 'Clean Guild',
+        channels: {
+          fetch: jest.fn(channelId => {
+            if (channelId === 'old-channel') {
+              return Promise.resolve(previousChannel);
+            }
+            return Promise.resolve(null);
+          })
+        }
+      },
+      options: {
+        getSubcommandGroup: () => null,
+        getSubcommand: () => 'set-channel',
+        getChannel: jest.fn(name => {
+          if (name === 'channel') return channel;
+          if (name === 'archive_category') return archiveCategory;
+          return null;
+        })
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined),
+      reply: jest.fn()
+    };
+
+    await handleTicketCommand(interaction);
+
+    expect(previousChannel.messages.fetch).toHaveBeenCalledWith('old-message');
+    expect(previousDelete).toHaveBeenCalled();
+    expect(database.__pool.query).toHaveBeenCalledWith(
+      'REPLACE INTO ticket_settings (guild_id, channel_id, message_id, archive_category_id) VALUES (?, ?, ?, ?)',
+      ['guild-clean', 'new-channel', 'new-message', 'archive-123']
+    );
+
+    const settings = settingsCache.get('guild-clean');
+    expect(settings).toEqual({
+      channelId: 'new-channel',
+      messageId: 'new-message',
+      archiveCategoryId: 'archive-123'
+    });
+  });
+
+  test('set channel logs cleanup failures but continues', async () => {
+    settingsCache.set('guild-warn', {
+      channelId: 'stale-channel',
+      messageId: 'stale-message',
+      archiveCategoryId: null
+    });
+
+    const channel = {
+      id: 'fresh-channel',
+      type: ChannelType.GuildText,
+      toString: () => '#fresh',
+      send: jest.fn().mockResolvedValue({ id: 'fresh-message' })
+    };
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const interaction = {
+      id: 'interaction-warn',
+      guildId: 'guild-warn',
+      guild: {
+        name: 'Warn Guild',
+        channels: {
+          fetch: jest.fn(() => Promise.reject(new Error('no access')))
+        }
+      },
+      options: {
+        getSubcommandGroup: () => null,
+        getSubcommand: () => 'set-channel',
+        getChannel: jest.fn(name => (name === 'channel' ? channel : null))
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined),
+      reply: jest.fn()
+    };
+
+    await handleTicketCommand(interaction);
+
+    expect(warnSpy).toHaveBeenCalled();
+    expect(database.__pool.query).toHaveBeenCalledWith(
+      'REPLACE INTO ticket_settings (guild_id, channel_id, message_id, archive_category_id) VALUES (?, ?, ?, ?)',
+      ['guild-warn', 'fresh-channel', 'fresh-message', null]
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  test('set channel surfaces configuration errors', async () => {
+    const channel = {
+      id: 'error-channel',
+      type: ChannelType.GuildText,
+      toString: () => '#error',
+      send: jest.fn().mockResolvedValue({ id: 'unused-message' })
+    };
+
+    database.__pool.query.mockRejectedValueOnce(new Error('db write failed'));
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const interaction = {
+      id: 'interaction-error',
+      guildId: 'guild-error',
+      guild: {
+        name: 'Error Guild',
+        channels: { fetch: jest.fn() }
+      },
+      options: {
+        getSubcommandGroup: () => null,
+        getSubcommand: () => 'set-channel',
+        getChannel: jest.fn(name => (name === 'channel' ? channel : null))
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined),
+      reply: jest.fn()
+    };
+
+    await handleTicketCommand(interaction);
+
+    expect(interaction.editReply).toHaveBeenCalledWith('Failed to configure the ticket lobby channel. Please check my permissions.');
+    expect(settingsCache.has('guild-error')).toBe(false);
+
+    errorSpy.mockRestore();
+  });
+});
+
+
+describe('ticket interaction router', () => {
+  beforeEach(() => {
+    settingsCache.clear();
+    rolesCache.clear();
+    openTickets.clear();
+    database.__pool.query.mockClear().mockResolvedValue([]);
+  });
+
+  test('handleButton rejects creation outside designated lobby', async () => {
+    settingsCache.set('guild-button', {
+      channelId: 'lobby-channel',
+      messageId: 'message-id',
+      archiveCategoryId: null
+    });
+
+    const interaction = {
+      customId: 'ticket:create',
+      guildId: 'guild-button',
+      channelId: 'other-channel',
+      reply: jest.fn().mockResolvedValue(undefined),
+      showModal: jest.fn()
+    };
+
+    await handleButton(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith({
+      content: 'Tickets can only be opened from the designated ticket channel.',
+      flags: MessageFlags.Ephemeral
+    });
+    expect(interaction.showModal).not.toHaveBeenCalled();
+  });
+
+  test('handleButton opens the ticket modal when lobby matches', async () => {
+    settingsCache.set('guild-button', {
+      channelId: 'lobby-channel',
+      messageId: 'message-id',
+      archiveCategoryId: null
+    });
+
+    const interaction = {
+      customId: 'ticket:create',
+      guildId: 'guild-button',
+      channelId: 'lobby-channel',
+      reply: jest.fn().mockResolvedValue(undefined),
+      showModal: jest.fn().mockResolvedValue(undefined)
+    };
+
+    await handleButton(interaction);
+
+    expect(interaction.showModal).toHaveBeenCalledTimes(1);
+    expect(interaction.reply).not.toHaveBeenCalled();
+  });
+
+  test('handleButton routes claim actions', async () => {
+    rolesCache.set('guild-claim', new Set(['mod-role']));
+    openTickets.set('channel-claim', {
+      id: 1,
+      guildId: 'guild-claim',
+      userId: 'reporter',
+      claimedBy: null,
+      controlMessageId: null
+    });
+
+    const interaction = {
+      customId: 'ticket:claim:1',
+      guildId: 'guild-claim',
+      channel: { id: 'channel-claim' },
+      guild: { id: 'guild-claim' },
+      member: {
+        roles: { cache: { some: fn => fn({ id: 'mod-role' }) } },
+        displayName: 'Mod'
+      },
+      user: { id: 'mod-user', username: 'Moderator' },
+      reply: jest.fn().mockResolvedValue(undefined)
+    };
+
+    await handleButton(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith({ content: 'Ticket claimed by <@mod-user>.' });
+  });
+
+  test('handleButton routes close actions', async () => {
+    rolesCache.set('guild-close', new Set(['mod-role']));
+    settingsCache.set('guild-close', {
+      channelId: 'channel-close',
+      messageId: 'message-id',
+      archiveCategoryId: 'archive-cat'
+    });
+    openTickets.set('channel-close', {
+      id: 2,
+      guildId: 'guild-close',
+      userId: 'reporter',
+      claimedBy: null,
+      controlMessageId: null
+    });
+
+    const permissionOverwrites = {
+      edit: jest.fn().mockResolvedValue(undefined)
+    };
+
+    const channel = {
+      id: 'channel-close',
+      permissionOverwrites,
+      setParent: jest.fn().mockResolvedValue(undefined)
+    };
+
+    const interaction = {
+      customId: 'ticket:close:2',
+      guildId: 'guild-close',
+      channel,
+      guild: { id: 'guild-close', roles: { everyone: { id: 'everyone-role' } } },
+      member: { roles: { cache: { some: fn => fn({ id: 'mod-role' }) } } },
+      user: { id: 'mod-user' },
+      client: { users: { cache: new Map() } },
+      reply: jest.fn().mockResolvedValue(undefined)
+    };
+
+    await handleButton(interaction);
+
+    expect(permissionOverwrites.edit).toHaveBeenCalled();
+    expect(channel.setParent).toHaveBeenCalledWith('archive-cat', { lockPermissions: false });
+    expect(interaction.reply).toHaveBeenCalledWith({ content: 'Ticket closed and archived.' });
+    expect(openTickets.has('channel-close')).toBe(false);
+  });
+
+  test('handleModalSubmit invokes ticket creation from modal submission', async () => {
+    const interaction = {
+      customId: 'ticket:modal:create',
+      guildId: 'guild-modal',
+      reply: jest.fn().mockResolvedValue(undefined),
+      fields: { getTextInputValue: jest.fn() }
+    };
+
+    await handleModalSubmit(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith({
+      content: 'Ticket system is not configured for this server.',
+      flags: MessageFlags.Ephemeral
+    });
+  });
+
+  test('handleInteraction routes chat input commands', async () => {
+    rolesCache.set('guild-router', new Set(['role-router']));
+
+    const interaction = {
+      guildId: 'guild-router',
+      options: {
+        getSubcommandGroup: () => 'roles',
+        getSubcommand: () => 'list'
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined),
+      isChatInputCommand: () => true,
+      commandName: 'ticket',
+      isButton: () => false,
+      isModalSubmit: () => false
+    };
+
+    await handleInteraction(interaction);
+
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
+    expect(interaction.editReply).toHaveBeenCalled();
+  });
+
+  test('handleInteraction routes button interactions', async () => {
+    settingsCache.set('guild-route', {
+      channelId: 'route-channel',
+      messageId: 'message-id',
+      archiveCategoryId: null
+    });
+
+    const interaction = {
+      guildId: 'guild-route',
+      channelId: 'route-channel',
+      customId: 'ticket:create',
+      showModal: jest.fn().mockResolvedValue(undefined),
+      reply: jest.fn().mockResolvedValue(undefined),
+      isChatInputCommand: () => false,
+      isButton: () => true,
+      isModalSubmit: () => false
+    };
+
+    await handleInteraction(interaction);
+
+    expect(interaction.showModal).toHaveBeenCalledTimes(1);
+    expect(interaction.reply).not.toHaveBeenCalled();
+  });
+
+  test('handleInteraction routes modal submissions', async () => {
+    const interaction = {
+      guildId: 'guild-modal-route',
+      customId: 'ticket:modal:create',
+      reply: jest.fn().mockResolvedValue(undefined),
+      fields: { getTextInputValue: jest.fn() },
+      isChatInputCommand: () => false,
+      isButton: () => false,
+      isModalSubmit: () => true
+    };
+
+    await handleInteraction(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith({
+      content: 'Ticket system is not configured for this server.',
+      flags: MessageFlags.Ephemeral
+    });
   });
 });
 
@@ -305,7 +747,3 @@ describe('ticket lobby UI', () => {
     expect(row.components[0].data.custom_id).toBe('ticket:create');
   });
 });
-
-
-
-

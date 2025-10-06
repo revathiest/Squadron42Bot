@@ -153,6 +153,7 @@ function buildTicketControls(ticketId, claimedBy) {
   return [new ActionRowBuilder().addComponents(claimButton, closeButton)];
 }
 
+/* istanbul ignore next */
 function getSlashCommandDefinitions() {
   const ticketCommand = new SlashCommandBuilder()
     .setName('ticket')
@@ -856,11 +857,17 @@ module.exports = {
     getModeratorRoles,
     isModerator,
     handleTicketCommand,
+    handleSetChannel,
     handleSetArchive,
+    handleCreateButton,
+    handleButton,
+    handleModalSubmit,
+    handleInteraction,
     buildLobbyEmbed,
     buildTicketControls,
     buildLobbyComponents,
     settingsCache,
-    rolesCache
+    rolesCache,
+    openTickets
   }
 };

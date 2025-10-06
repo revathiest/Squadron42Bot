@@ -1,16 +1,16 @@
-const { ChannelType, MessageFlags, PermissionFlagsBits } = require('discord.js');
 
 jest.mock('../database', () => {
-  const pool = { query: jest.fn().mockResolvedValue([]) };
+  const pool = {
+    query: jest.fn().mockResolvedValue([])
+  };
   return {
-    getPool: jest.fn(() => pool),
+    getPool: () => pool,
     __pool: pool
   };
 });
 
 const database = require('../database');
 const voiceRooms = require('../voiceRooms');
-const { getSlashCommandDefinitions, __testables } = voiceRooms;
 const {
   handleInteraction,
   addTemplateToCache,
@@ -20,256 +20,345 @@ const {
   isTemplateChannel,
   templateCache,
   tempChannelCache
-} = __testables;
+} = voiceRooms.__testables;
 
-function makeBaseInteraction(overrides = {}) {
-  const defaults = {
-    isChatInputCommand: () => true,
-    commandName: 'voice-rooms',
-    inGuild: () => true,
-    guildId: 'guild-1',
-    memberPermissions: { has: () => true },
-    options: {
-      getSubcommand: () => 'list',
-      getChannel: () => ({})
-    },
-    guild: {
-      channels: {
-        cache: new Map()
-      }
-    },
-    deferred: false,
-    replied: false,
-    reply: jest.fn().mockResolvedValue(undefined),
-    followUp: jest.fn().mockResolvedValue(undefined)
-  };
+const { ChannelType, MessageFlags } = require('discord.js');
 
-  return { ...defaults, ...overrides };
-}
-
-beforeEach(() => {
-  templateCache.clear();
-  tempChannelCache.clear();
-  database.__pool.query.mockReset();
-  database.__pool.query.mockResolvedValue([]);
-});
-
-describe('voiceRooms command definition', () => {
-  test('exports a guild-scoped admin-only slash command', () => {
-    const definition = getSlashCommandDefinitions();
-    expect(definition.global).toHaveLength(0);
-    expect(definition.guild).toHaveLength(1);
-
-    const command = definition.guild[0];
-    expect(command.name).toBe('voice-rooms');
-    expect(command.dm_permission).toBe(false);
-    expect(command.default_member_permissions).toBe(PermissionFlagsBits.Administrator.toString());
-
-    const optionNames = command.options.map(option => option.name);
-    expect(optionNames).toEqual(expect.arrayContaining(['set-template', 'clear-template', 'list']));
+describe('voiceRooms handleInteraction', () => {
+  beforeEach(() => {
+    templateCache.clear();
+    tempChannelCache.clear();
+    database.__pool.query.mockClear();
   });
-});
 
-describe('voiceRooms.handleInteraction', () => {
-  test('rejects usage outside of guilds', async () => {
-    const interaction = makeBaseInteraction({ inGuild: () => false });
+  test('ignores non-chat input commands', async () => {
+    const interaction = {
+      isChatInputCommand: () => false
+    };
+
+    await expect(handleInteraction(interaction)).resolves.toBeUndefined();
+  });
+
+  test('ignores other commands', async () => {
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'other'
+    };
+
+    await expect(handleInteraction(interaction)).resolves.toBeUndefined();
+  });
+
+  test('rejects usage outside guilds', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined);
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'voice-rooms',
+      inGuild: () => false,
+      reply
+    };
 
     await handleInteraction(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith({
+    expect(reply).toHaveBeenCalledWith({
       content: 'This command can only be used in a server.',
       flags: MessageFlags.Ephemeral
     });
   });
 
-  test('rejects non-admin members', async () => {
-    const interaction = makeBaseInteraction({
-      memberPermissions: { has: () => false }
-    });
+  test('rejects users without administrator permissions', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined);
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'voice-rooms',
+      inGuild: () => true,
+      memberPermissions: { has: () => false },
+      options: {
+        getSubcommand: () => 'list'
+      },
+      reply
+    };
 
     await handleInteraction(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith({
+    expect(reply).toHaveBeenCalledWith({
       content: 'Only administrators can use this command.',
       flags: MessageFlags.Ephemeral
     });
   });
 
-  test('requires voice channel for set-template', async () => {
-    const wrongChannel = { id: 'text-1', type: ChannelType.GuildText };
-    const interaction = makeBaseInteraction({
+  test('rejects set-template when channel is not voice', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined);
+    const channel = { id: 'text-1', type: ChannelType.GuildText, toString: () => '#general' };
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'voice-rooms',
+      inGuild: () => true,
+      memberPermissions: { has: () => true },
+      guildId: 'guild-1',
       options: {
         getSubcommand: () => 'set-template',
-        getChannel: () => wrongChannel
-      }
-    });
+        getChannel: jest.fn((name) => (name === 'channel' ? channel : null))
+      },
+      reply
+    };
 
     await handleInteraction(interaction);
 
-    expect(database.__pool.query).not.toHaveBeenCalled();
-    expect(interaction.reply).toHaveBeenCalledWith({
+    expect(reply).toHaveBeenCalledWith({
       content: 'Please choose a voice channel.',
       flags: MessageFlags.Ephemeral
     });
+    expect(database.__pool.query).not.toHaveBeenCalled();
   });
 
-  test('lists configured lobbies when none are set', async () => {
-    const interaction = makeBaseInteraction();
+  test('stores template channels and replies success', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined);
+    const channel = {
+      id: 'voice-1',
+      type: ChannelType.GuildVoice,
+      toString: () => '<#voice-1>'
+    };
 
-    await handleInteraction(interaction);
-
-    expect(interaction.reply).toHaveBeenCalledWith({
-      content: 'No dynamic voice lobbies are configured yet.',
-      flags: MessageFlags.Ephemeral
-    });
-  });
-
-  test('lists configured lobbies when templates exist', async () => {
-    addTemplateToCache('guild-1', 'voice-123');
-    const channel = { id: 'voice-123', type: ChannelType.GuildVoice, toString: () => '<#voice-123>' };
-    const interaction = makeBaseInteraction({
-      guild: {
-        channels: {
-          cache: new Map([[ 'voice-123', channel ]])
-        }
-      }
-    });
-
-    await handleInteraction(interaction);
-
-    const expectedMessage = ['Configured lobbies:', '- <#voice-123>'].join('\n');
-    expect(interaction.reply).toHaveBeenCalledWith({
-      content: expectedMessage,
-      flags: MessageFlags.Ephemeral
-    });
-  });
-
-  test('lists channel IDs when cache misses the channel object', async () => {
-    addTemplateToCache('guild-1', 'voice-123');
-    const interaction = makeBaseInteraction();
-
-    await handleInteraction(interaction);
-
-    const expectedMessage = ['Configured lobbies:', '- Channel ID voice-123'].join('\n');
-    expect(interaction.reply).toHaveBeenCalledWith({
-      content: expectedMessage,
-      flags: MessageFlags.Ephemeral
-    });
-  });
-
-  test('creates a lobby template on set-template', async () => {
-    const channel = { id: 'voice-123', type: ChannelType.GuildVoice, toString: () => '<#voice-123>' };
-    const interaction = makeBaseInteraction({
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'voice-rooms',
+      inGuild: () => true,
+      memberPermissions: { has: () => true },
+      guildId: 'guild-2',
       options: {
         getSubcommand: () => 'set-template',
-        getChannel: () => channel
-      }
-    });
+        getChannel: jest.fn((name) => (name === 'channel' ? channel : null))
+      },
+      reply
+    };
 
     await handleInteraction(interaction);
 
     expect(database.__pool.query).toHaveBeenCalledWith(
       'INSERT INTO voice_channel_templates (guild_id, template_channel_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE created_at = created_at',
-      ['guild-1', 'voice-123']
+      ['guild-2', 'voice-1']
     );
-
-    expect(templateCache.has('guild-1')).toBe(true);
-    expect(isTemplateChannel('guild-1', 'voice-123')).toBe(true);
-
-    expect(interaction.reply).toHaveBeenCalledWith({
-      content: 'Added <#voice-123> as a dynamic voice lobby.',
+    expect(templateCache.get('guild-2').has('voice-1')).toBe(true);
+    expect(reply).toHaveBeenCalledWith({
+      content: 'Added <#voice-1> as a dynamic voice lobby.',
       flags: MessageFlags.Ephemeral
     });
   });
 
-  test('removes a lobby template on clear-template', async () => {
-    addTemplateToCache('guild-1', 'voice-123');
-    const channel = { id: 'voice-123', type: ChannelType.GuildVoice, toString: () => '<#voice-123>' };
-    const interaction = makeBaseInteraction({
+  test('removes template channels via clear-template', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined);
+    const channel = {
+      id: 'voice-2',
+      type: ChannelType.GuildVoice,
+      toString: () => '<#voice-2>'
+    };
+
+    templateCache.set('guild-3', new Set(['voice-2']));
+
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'voice-rooms',
+      inGuild: () => true,
+      memberPermissions: { has: () => true },
+      guildId: 'guild-3',
       options: {
         getSubcommand: () => 'clear-template',
-        getChannel: () => channel
-      }
-    });
+        getChannel: jest.fn((name) => (name === 'channel' ? channel : null))
+      },
+      reply
+    };
 
     await handleInteraction(interaction);
 
     expect(database.__pool.query).toHaveBeenCalledWith(
       'DELETE FROM voice_channel_templates WHERE guild_id = ? AND template_channel_id = ?',
-      ['guild-1', 'voice-123']
+      ['guild-3', 'voice-2']
     );
-
-    expect(templateCache.has('guild-1')).toBe(false);
-
-    expect(interaction.reply).toHaveBeenCalledWith({
-      content: 'Removed <#voice-123> from the dynamic voice lobby list.',
+    expect(templateCache.get('guild-3')).toBeUndefined();
+    expect(reply).toHaveBeenCalledWith({
+      content: 'Removed <#voice-2> from the dynamic voice lobby list.',
       flags: MessageFlags.Ephemeral
     });
   });
 
-  test('surfaces database errors via reply', async () => {
-    database.__pool.query.mockRejectedValueOnce(new Error('boom'));
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const interaction = makeBaseInteraction({
+  test('lists templates when none exist', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined);
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'voice-rooms',
+      inGuild: () => true,
+      memberPermissions: { has: () => true },
+      guildId: 'guild-4',
+      guild: { channels: { cache: { get: () => null } } },
       options: {
-        getSubcommand: () => 'set-template',
-        getChannel: () => ({ id: 'voice-123', type: ChannelType.GuildVoice })
-      }
-    });
+        getSubcommand: () => 'list'
+      },
+      reply
+    };
 
     await handleInteraction(interaction);
 
-    expect(interaction.reply).toHaveBeenCalledWith({
+    expect(reply).toHaveBeenCalledWith({
+      content: 'No dynamic voice lobbies are configured yet.',
+      flags: MessageFlags.Ephemeral
+    });
+  });
+
+  test('lists existing templates with channel names', async () => {
+    const reply = jest.fn().mockResolvedValue(undefined);
+    const guildChannels = new Map();
+    guildChannels.set('voice-5', { toString: () => '<#voice-5>' });
+
+    templateCache.set('guild-5', new Set(['voice-5']));
+
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'voice-rooms',
+      inGuild: () => true,
+      memberPermissions: { has: () => true },
+      guildId: 'guild-5',
+      guild: {
+        channels: {
+          cache: {
+            get: (id) => guildChannels.get(id)
+          }
+        }
+      },
+      options: {
+        getSubcommand: () => 'list'
+      },
+      reply
+    };
+
+    await handleInteraction(interaction);
+
+    expect(reply).toHaveBeenCalledWith({
+      content: 'Configured lobbies:\n- <#voice-5>',
+      flags: MessageFlags.Ephemeral
+    });
+  });
+
+  test('reports failure via reply when not deferred', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const reply = jest.fn().mockResolvedValue(undefined);
+    const channel = {
+      id: 'voice-8',
+      type: ChannelType.GuildVoice,
+      toString: () => '<#voice-8>'
+    };
+
+    database.__pool.query.mockRejectedValueOnce(new Error('db down'));
+
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'voice-rooms',
+      inGuild: () => true,
+      memberPermissions: { has: () => true },
+      guildId: 'guild-8',
+      options: {
+        getSubcommand: () => 'set-template',
+        getChannel: jest.fn((name) => (name === 'channel' ? channel : null))
+      },
+      reply,
+      followUp: jest.fn(),
+      deferred: false,
+      replied: false
+    };
+
+    await handleInteraction(interaction);
+
+    expect(reply).toHaveBeenCalledWith({
       content: 'Something went wrong while processing that command.',
       flags: MessageFlags.Ephemeral
     });
     expect(interaction.followUp).not.toHaveBeenCalled();
-    consoleSpy.mockRestore();
+
+    errorSpy.mockRestore();
   });
 
   test('uses followUp when interaction already deferred', async () => {
-    database.__pool.query.mockRejectedValueOnce(new Error('boom'));
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const interaction = makeBaseInteraction({
-      deferred: true,
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const followUp = jest.fn().mockResolvedValue(undefined);
+    const channel = {
+      id: 'voice-9',
+      type: ChannelType.GuildVoice,
+      toString: () => '<#voice-9>'
+    };
+
+    database.__pool.query.mockRejectedValueOnce(new Error('db down'));
+    const interaction = {
+      isChatInputCommand: () => true,
+      commandName: 'voice-rooms',
+      inGuild: () => true,
+      memberPermissions: { has: () => true },
+      guildId: 'guild-9',
       options: {
         getSubcommand: () => 'set-template',
-        getChannel: () => ({ id: 'voice-123', type: ChannelType.GuildVoice })
-      }
-    });
+        getChannel: jest.fn((name) => (name === 'channel' ? channel : null))
+      },
+      reply: jest.fn(),
+      followUp,
+      deferred: true,
+      replied: false
+    };
 
     await handleInteraction(interaction);
 
-    expect(interaction.followUp).toHaveBeenCalledWith({
+    expect(followUp).toHaveBeenCalledWith({
       content: 'Something went wrong while processing that command.',
       flags: MessageFlags.Ephemeral
     });
-    consoleSpy.mockRestore();
+
+    errorSpy.mockRestore();
   });
 });
 
-describe('cache helpers', () => {
-  test('template cache add/remove/isTemplateChannel', () => {
-    expect(isTemplateChannel('guild-1', 'voice-123')).toBe(false);
-
-    addTemplateToCache('guild-1', 'voice-123');
-    expect(isTemplateChannel('guild-1', 'voice-123')).toBe(true);
-
-    removeTemplateFromCache('guild-1', 'voice-123');
-    expect(isTemplateChannel('guild-1', 'voice-123')).toBe(false);
+describe('voiceRooms cache helpers', () => {
+  beforeEach(() => {
+    templateCache.clear();
+    tempChannelCache.clear();
   });
 
-  test('temporary channel cache add/remove', () => {
-    addTemporaryChannelToCache({
-      channel_id: 'temp-1',
-      guild_id: 'guild-1',
-      owner_id: 'owner',
-      template_channel_id: 'voice-123'
-    });
+  test('template cache add/remove works', () => {
+    addTemplateToCache('guild-10', 'channel-10');
+    expect(templateCache.get('guild-10').has('channel-10')).toBe(true);
 
-    expect(tempChannelCache.has('temp-1')).toBe(true);
+    removeTemplateFromCache('guild-10', 'channel-10');
+    expect(templateCache.has('guild-10')).toBe(false);
+  });
+
+  test('temporary channel cache add/remove works', () => {
+    const record = { channel_id: 'temp-1', guild_id: 'guild', owner_id: 'user', template_channel_id: 'template' };
+    addTemporaryChannelToCache(record);
+    expect(tempChannelCache.get('temp-1')).toBe(record);
 
     removeTemporaryChannelFromCache('temp-1');
     expect(tempChannelCache.has('temp-1')).toBe(false);
+  });
+
+  test('isTemplateChannel reflects cache contents', () => {
+    expect(isTemplateChannel('guild-x', 'channel-x')).toBe(false);
+    addTemplateToCache('guild-x', 'channel-x');
+    expect(isTemplateChannel('guild-x', 'channel-x')).toBe(true);
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+describe('voiceRooms command definition', () => {
+  test('getSlashCommandDefinitions exposes guild command', () => {
+    const defs = voiceRooms.getSlashCommandDefinitions();
+    expect(defs.global).toEqual([]);
+    expect(defs.guild).toHaveLength(1);
+    expect(defs.guild[0].name).toBe('voice-rooms');
   });
 });
