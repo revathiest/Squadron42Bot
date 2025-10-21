@@ -752,6 +752,48 @@ async function handleInteraction(interaction) {
 }
 
 /* istanbul ignore next */
+async function handleMessageCreate(message) {
+  if (!message || message.author?.bot) {
+    return;
+  }
+
+  const guild = message.guild;
+  if (!guild) {
+    return;
+  }
+
+  const settings = settingsCache.get(guild.id);
+  if (!settings || settings.channelId !== message.channelId) {
+    return;
+  }
+
+  if (message.member?.permissions?.has(PermissionFlagsBits.ManageChannels)) {
+    return;
+  }
+
+  await message.delete().catch(() => null);
+
+  const notice = 'This channel is reserved for opening new tickets. Please use the "Open Ticket" button to get started.';
+  const username = message.author.username ?? 'there';
+
+  try {
+    await message.author.send(`Hi ${username}! ${notice}`);
+  } catch (err) {
+    try {
+      const warning = await message.channel.send({ content: `<@${message.author.id}> ${notice}` });
+      setTimeout(() => {
+        warning.delete().catch(() => null);
+      }, 10000);
+    } catch (sendErr) {
+      console.warn('tickets: Failed to share lobby reminder with user', {
+        guildId: guild.id,
+        channelId: message.channelId,
+        userId: message.author.id
+      }, sendErr);
+    }
+  }
+}
+
 async function initialize(client) {
   if (initialized) {
     return;
@@ -761,13 +803,19 @@ async function initialize(client) {
   const pool = getPool();
   await ensureSchema(pool);
   await loadCache(pool);
-  
+
   client.on(Events.InteractionCreate, interaction => {
     handleInteraction(interaction).catch(err => {
       console.error('tickets: Failed to process interaction', err);
       if (interaction.isRepliable() && !interaction.replied) {
         interaction.reply({ content: 'An error occurred while handling that ticket action.', flags: MessageFlags.Ephemeral }).catch(() => null);
       }
+    });
+  });
+
+  client.on(Events.MessageCreate, message => {
+    handleMessageCreate(message).catch(err => {
+      console.error('tickets: lobby message handler failed', err);
     });
   });
 
@@ -867,6 +915,7 @@ module.exports = {
     handleButton,
     handleModalSubmit,
     handleInteraction,
+    handleMessageCreate,
     buildLobbyEmbed,
     buildTicketControls,
     buildLobbyComponents,
