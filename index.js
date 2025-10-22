@@ -5,8 +5,9 @@ const { testConnection } = require('./database');
 const commandManager = require('./commandManager');
 const voiceRooms = require('./voiceRooms');
 const tickets = require('./tickets');
+const moderation = require('./moderation');
 
-const commandModules = [voiceRooms, tickets];
+const commandModules = [voiceRooms, tickets, moderation];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -33,6 +34,12 @@ client.once(Events.ClientReady, async c => {
     await tickets.onReady(c);
   } catch (err) {
     console.error('Failed to finalize tickets module:', err);
+  }
+
+  try {
+    await moderation.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize moderation module:', err);
   }
 });
 
@@ -63,6 +70,13 @@ async function bootstrap() {
     await tickets.initialize(client);
   } catch (err) {
     console.error('Failed to initialize tickets module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await moderation.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize moderation module:', err);
     process.exit(1);
   }
 

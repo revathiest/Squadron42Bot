@@ -1,4 +1,4 @@
-const { PermissionFlagsBits, ChannelType, MessageFlags } = require('discord.js');
+const { PermissionFlagsBits, ChannelType, MessageFlags, Events } = require('discord.js');
 
 jest.mock('../database', () => {
   const pool = {
@@ -745,5 +745,38 @@ describe('ticket lobby UI', () => {
     expect(rows).toHaveLength(1);
     const row = rows[0];
     expect(row.components[0].data.custom_id).toBe('ticket:create');
+  });
+});
+
+describe('tickets initialize', () => {
+  beforeEach(() => {
+    database.__pool.query.mockReset();
+    database.__pool.query.mockImplementation(() => Promise.resolve([[]]));
+  });
+
+  afterEach(() => {
+    database.__pool.query.mockReset();
+    database.__pool.query.mockResolvedValue([]);
+  });
+
+  test('initializes schema and listeners once', async () => {
+    const client = {
+      on: jest.fn()
+    };
+
+    await tickets.initialize(client);
+
+    // three schema queries + three cache queries
+    expect(database.__pool.query).toHaveBeenCalledTimes(6);
+    expect(client.on).toHaveBeenCalledWith(Events.InteractionCreate, expect.any(Function));
+    expect(client.on).toHaveBeenCalledWith(Events.MessageCreate, expect.any(Function));
+
+    const queryCount = database.__pool.query.mock.calls.length;
+    const onCount = client.on.mock.calls.length;
+
+    await tickets.initialize(client);
+
+    expect(database.__pool.query.mock.calls.length).toBe(queryCount);
+    expect(client.on.mock.calls.length).toBe(onCount);
   });
 });
