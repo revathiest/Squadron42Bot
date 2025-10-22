@@ -16,7 +16,7 @@ const client = new Client({
 
 // Fires once when the gateway is ready
 client.once(Events.ClientReady, async c => {
-  console.log('Logged in as %s. Standing by, doing absolutely nothing.', c.user.tag);
+  console.log('Logged in as %s.', c.user.tag);
 
   try {
     await commandManager.registerAllCommands(c.token ?? token, commandModules);
