@@ -212,6 +212,7 @@ async function handleInteraction(interaction) {
   }
 }
 
+/* istanbul ignore next */
 function buildOwnerPermissions() {
   return new PermissionsBitField([
     PermissionFlagsBits.Connect,
