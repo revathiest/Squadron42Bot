@@ -1,6 +1,7 @@
 const { MessageFlags } = require('discord.js');
 const { getPool } = require('../../database');
 const { ACTIONS } = require('../constants');
+const { handleTrapConfigCommand } = require('../autoBanTrap');
 const {
   roleCache,
   addRoleToCache,
@@ -20,7 +21,7 @@ function buildRoleList(guildId) {
       continue;
     }
     const mentions = Array.from(roles).map(roleId => `<@&${roleId}>`).join(', ');
-    lines.push(`• **${ACTIONS[action].label}** → ${mentions}`);
+    lines.push(`- **${ACTIONS[action].label}** -> ${mentions}`);
   }
 
   return lines.length ? lines.join('\n') : 'No moderation roles configured yet.';
@@ -131,6 +132,10 @@ async function handleModCommand(interaction) {
     }
   }
 
+  if (group === 'auto-ban') {
+    return handleTrapConfigCommand(interaction);
+  }
+
   return respondEphemeral(interaction, 'Unsupported moderation command.');
 }
 
@@ -142,3 +147,4 @@ module.exports = {
   handleRoleRemove,
   handleRoleList
 };
+

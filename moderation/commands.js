@@ -34,6 +34,32 @@ function buildSlashCommandDefinition() {
             .setName('list')
             .setDescription('List configured moderation roles.')
         )
+    )
+    .addSubcommandGroup(group =>
+      group
+        .setName('auto-ban')
+        .setDescription('Configure the trap role that triggers an automatic ban when assigned.')
+        .addSubcommand(sub =>
+          sub
+            .setName('set')
+            .setDescription('Set the trap role.')
+            .addRoleOption(option =>
+              option
+                .setName('role')
+                .setDescription('Role that should trigger an automatic ban when assigned.')
+                .setRequired(true)
+            )
+        )
+        .addSubcommand(sub =>
+          sub
+            .setName('clear')
+            .setDescription('Clear the configured trap role.')
+        )
+        .addSubcommand(sub =>
+          sub
+            .setName('status')
+            .setDescription('Show the configured trap role.')
+        )
     );
 
   return builder.toJSON();
@@ -84,3 +110,4 @@ module.exports = {
   buildPardonContextCommand,
   buildHistoryContextCommand
 };
+

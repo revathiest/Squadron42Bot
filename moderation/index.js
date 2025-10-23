@@ -5,6 +5,7 @@ const { roleCache, addRoleToCache, removeRoleFromCache, memberHasRole, hasAction
 const { ensureSchema, loadRoleCache } = require('./schema');
 const { getSlashCommandDefinitions } = require('./commands');
 const roleConfig = require('./roleConfig');
+const autoBanTrap = require('./autoBanTrap');
 const actionsContext = require('./actions/context');
 const actionsModals = require('./actions/modals');
 const actionHandlers = require('./actions/handlers');
@@ -26,6 +27,7 @@ async function initialize(client) {
   await loadRoleCache(pool);
 
   registerInteractionListener(client);
+  autoBanTrap.registerAutoBanTrap(client);
 
   initialized = true;
 }
@@ -65,6 +67,11 @@ module.exports = {
     handleModal: actionsModals.handleModal,
     handleInteraction,
     handleHistoryContext: historyContext.handleHistoryContext,
+    handleAutoBanRoleUpdate: autoBanTrap.handleGuildMemberUpdate,
+    handleTrapConfigCommand: autoBanTrap.handleTrapConfigCommand,
+    fetchTrapRoleId: autoBanTrap.fetchTrapRoleId,
+    isTrapRoleNewlyAssigned: autoBanTrap.isTrapRoleNewlyAssigned,
+    buildSyntheticTrapInteraction: autoBanTrap.buildSyntheticInteraction,
     logAction: actionHandlers.logAction,
     hasHistoryPermission: historyView.hasHistoryPermission,
     filterEntriesForModerators: historyView.filterEntriesForModerators,

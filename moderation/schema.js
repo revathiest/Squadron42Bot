@@ -29,6 +29,15 @@ async function ensureSchema(pool) {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS moderation_config (
+      guild_id VARCHAR(20) NOT NULL PRIMARY KEY,
+      trap_role_id VARCHAR(20) DEFAULT NULL,
+      updated_by VARCHAR(20) DEFAULT NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+
+  await pool.query(`
     ALTER TABLE moderation_actions
     MODIFY COLUMN action ENUM('warn', 'kick', 'ban', 'pardon') NOT NULL
   `).catch(err => {
