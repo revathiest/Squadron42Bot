@@ -2,9 +2,7 @@
 // Builds human readable descriptions for Spectrum embeds.
 
 function formatPlainText(text) {
-  if (!text) {
-    return '';
-  }
+  if (!text) return '';
 
   let cleaned = String(text)
     .replace(/<br\s*\/?>/gi, '\n')
@@ -13,45 +11,33 @@ function formatPlainText(text) {
     .replace(/\[\/?(?:b|i|u|quote|url|img|center|color|size)[^\]]*\]/gi, '')
     .replace(/<[^>]+>/g, '');
 
-  cleaned = cleaned.replace(/\r\n/g, '\n').trim();
-  return cleaned;
+  return cleaned.replace(/\r\n/g, '\n').trim();
 }
 
 function buildDescriptionFromBlocks(contentBlocks) {
-  if (!Array.isArray(contentBlocks)) {
-    return '';
-  }
+  if (!Array.isArray(contentBlocks)) return '';
 
   const lines = [];
   const orderedCounters = new Map();
 
   for (const block of contentBlocks) {
-    if (!block || block.type !== 'text') {
-      continue;
-    }
+    if (!block || block.type !== 'text') continue;
 
     const draftBlocks = block.data?.blocks;
-    if (!Array.isArray(draftBlocks)) {
-      continue;
-    }
+    if (!Array.isArray(draftBlocks)) continue;
 
     for (const node of draftBlocks) {
-      if (!node || typeof node.text !== 'string') {
-        continue;
-      }
+      if (!node || typeof node.text !== 'string') continue;
 
       const trimmed = node.text.trim();
-      if (!trimmed) {
-        continue;
-      }
+      if (!trimmed) continue;
 
       let prefix = '';
-      if (node.type === 'unordered-list-item') {
-        prefix = '- ';
-      } else if (node.type === 'ordered-list-item') {
-        const counterKey = block.id || 'ordered';
-        const next = (orderedCounters.get(counterKey) || 0) + 1;
-        orderedCounters.set(counterKey, next);
+      if (node.type === 'unordered-list-item') prefix = '• ';
+      else if (node.type === 'ordered-list-item') {
+        const key = block.id || 'ordered';
+        const next = (orderedCounters.get(key) || 0) + 1;
+        orderedCounters.set(key, next);
         prefix = `${next}. `;
       }
 
@@ -59,48 +45,75 @@ function buildDescriptionFromBlocks(contentBlocks) {
     }
   }
 
-  if (!lines.length) {
-    return '';
-  }
+  if (!lines.length) return '';
 
   const joined = lines.join('\n');
   return joined.length > 3900 ? `${joined.slice(0, 3900)}...` : joined;
 }
 
+// ---------- Fixed and improved version ----------
+
+const { load } = require('cheerio');
+
 function buildDescriptionFromThread(threadDetails) {
-  if (!threadDetails) {
-    return '*No content provided.*';
+  const blocks = threadDetails?.content_blocks?.[0]?.data?.blocks || [];
+  if (!Array.isArray(blocks) || blocks.length === 0) return null;
+
+  const lines = [];
+  const orderedCounters = new Map();
+
+  for (const node of blocks) {
+    if (!node?.text) continue;
+    const text = node.text.trim();
+    if (!text) continue;
+
+    switch (node.type) {
+      case 'header-one':
+        // Big section header — extra spacing & divider line
+        lines.push(`\n━━━━━━━━━━━━━━━━━━━━━━`);
+        lines.push(`**${text.replace(/\s+/g, ' ')}**`);
+        lines.push(''); // spacer line
+        break;
+
+      case 'header-two':
+      case 'header-three':
+        // Smaller subsection header
+        lines.push(`\n__${text.replace(/\s+/g, ' ')}__`);
+        break;
+
+      case 'unordered-list-item':
+        lines.push(`• ${text}`);
+        break;
+
+      case 'ordered-list-item': {
+        const key = 'ordered';
+        const next = (orderedCounters.get(key) || 0) + 1;
+        orderedCounters.set(key, next);
+        lines.push(`${next}. ${text}`);
+        break;
+      }
+
+      case 'blockquote':
+        lines.push(`> ${text}`);
+        break;
+
+      default:
+        lines.push(text);
+        break;
+    }
   }
 
-  const fromBlocks = buildDescriptionFromBlocks(threadDetails.content_blocks);
-  if (fromBlocks) {
-    return fromBlocks;
-  }
-
-  const fallback =
-    threadDetails.posts?.[0]?.body ||
-    threadDetails.post?.body ||
-    threadDetails.first_post?.body ||
-    threadDetails.body ||
-    threadDetails.content;
-
-  const cleaned = formatPlainText(fallback);
-  if (!cleaned) {
-    return '*No content provided.*';
-  }
-
-  return cleaned.length > 3900 ? `${cleaned.slice(0, 3900)}...` : cleaned;
+  const description = lines.join('\n');
+  return description.length ? description.slice(0, 4000) : null;
 }
 
+// ------------------------------------------------
+
 function extractImageUrl(contentBlocks) {
-  if (!Array.isArray(contentBlocks)) {
-    return null;
-  }
+  if (!Array.isArray(contentBlocks)) return null;
 
   for (const block of contentBlocks) {
-    if (!block || block.type !== 'image' || !Array.isArray(block.data)) {
-      continue;
-    }
+    if (!block || block.type !== 'image' || !Array.isArray(block.data)) continue;
 
     for (const entry of block.data) {
       const sizes = entry?.data?.sizes;
@@ -109,16 +122,12 @@ function extractImageUrl(contentBlocks) {
         sizes?.large?.url,
         sizes?.medium?.url,
         sizes?.small?.url,
-        direct
+        direct,
       ];
-
-      const url = candidates.find(candidate => typeof candidate === 'string' && candidate.trim());
-      if (url) {
-        return url;
-      }
+      const url = candidates.find(u => typeof u === 'string' && u.trim());
+      if (url) return url;
     }
   }
-
   return null;
 }
 
@@ -126,5 +135,5 @@ module.exports = {
   formatPlainText,
   buildDescriptionFromBlocks,
   buildDescriptionFromThread,
-  extractImageUrl
+  extractImageUrl,
 };

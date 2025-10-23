@@ -148,6 +148,63 @@ async function checkForNewThreads(client) {
   }
 }
 
+async function getLatestThreadSnapshot(guildId) {
+  const config = await spectrumConfig.fetchConfig(guildId);
+  if (!config) {
+    return { ok: false, message: 'Spectrum Watcher is not configured for this server.' };
+  }
+
+  if (!config.forumId) {
+    return { ok: false, message: 'No forum ID is configured for this server.', config };
+  }
+
+  const { threads, session } = await fetchThreadsWithSession(config.forumId);
+  if (!threads.length || !session) {
+    return { ok: false, message: 'Unable to retrieve threads from Spectrum at the moment.', config };
+  }
+
+  const sorted = threads
+    .map(thread => ({
+      raw: thread,
+      threadId: toThreadId(thread?.id ?? thread?.thread_id ?? thread?.threadId ?? thread?.post_id)
+    }))
+    .filter(entry => entry.threadId !== null)
+    .sort((a, b) => {
+      if (isThreadNewer(a.threadId, b.threadId)) {
+        return 1;
+      }
+      if (isThreadNewer(b.threadId, a.threadId)) {
+        return -1;
+      }
+      return 0;
+    });
+
+  if (!sorted.length) {
+    return { ok: false, message: 'No valid threads were returned by Spectrum.', config, threads };
+  }
+
+  const latest = sorted[sorted.length - 1];
+  const slug = latest.raw?.slug || latest.raw?.thread?.slug;
+  if (!slug) {
+    return { ok: false, message: 'The latest thread is missing a slug, so it cannot be fetched.', config, threads };
+  }
+
+  const details = await fetchThreadDetails(session, slug);
+  if (!details) {
+    return { ok: false, message: 'Unable to load the latest thread details from Spectrum.', config, threads, latest };
+  }
+
+  return {
+    ok: true,
+    config,
+    threads,
+    latestThread: latest.raw,
+    latestThreadId: latest.threadId.raw,
+    threadDetails: details,
+    threadUrl: buildThreadUrl(config.forumId, slug)
+  };
+}
+
 async function postLatestThreadForGuild(client, guildId) {
   const config = await spectrumConfig.fetchConfig(guildId);
   if (!config) {
@@ -276,6 +333,7 @@ module.exports = {
   checkForNewThreads,
   getLastSeenThread,
   setLastSeenThread,
+  getLatestThreadSnapshot,
   postLatestThreadForGuild,
   __testables: {
     ensureStateSchema,

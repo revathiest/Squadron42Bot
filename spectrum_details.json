@@ -1,0 +1,3381 @@
+{
+  "id": "497567",
+  "time_created": 1749580663,
+  "time_modified": 1760611094,
+  "channel_id": "190048",
+  "label_id": "",
+  "type": "discussion",
+  "slug": "star-citizen-alpha-4-2-ptu-patch-notes-11",
+  "subject": "[All Backer PTU] Star Citizen Alpha 4.2 PTU 9844762 Patch Notes",
+  "is_locked": false,
+  "is_reply_nesting_disabled": false,
+  "is_pinned": false,
+  "is_sinked": false,
+  "is_erased": false,
+  "erased_by": null,
+  "tracked_post_role_id": "2",
+  "content_reply_id": "8050433",
+  "annotation_plaintext": null,
+  "subscription_key": "community:1:forum_thread:497567:bea58ffc763802e13212571df5a7a703b2ceb07a",
+  "content_blocks": [
+    {
+      "id": 1,
+      "type": "text",
+      "data": {
+        "blocks": [
+          {
+            "key": "51oua",
+            "text": "Star Citizen Alpha Patch 4.2",
+            "type": "header-one",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "eaq9t",
+            "text": "Alpha Patch 4.2 has been released to All Backers!  Patch should now show: VERSION 4.2.0-PTU.9844762.",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "825qf",
+            "text": "Audience: All backers",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "fj84d",
+            "text": "Server Info: PTU Channel - US Only",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "uj1q",
+            "text": "Long Term Persistence: Enabled",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "bl0uk",
+            "text": "Mesh Configuration: 5:5 - 600 Players",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "3kldt",
+            "text": "Starting aUEC: 15,000,000",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "5f39i",
+            "text": "",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "8mo2m",
+            "text": "Testing/Feedback Focus",
+            "type": "header-one",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "6v8v",
+            "text": "Stability & Bugfixes",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "aefb4",
+            "text": "Storm Breaker All Phases",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "ebd18",
+            "text": "Lazarus Facility Freight Elevators",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "6eqn8",
+            "text": "Apex Valakkar",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "5v4ln",
+            "text": "Dynamic Rain",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "2l440",
+            "text": "Radiation",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "9rofd",
+            "text": "VOLT Laser \"Prism\" Shotgun",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "bp1bi",
+            "text": "ARGO ATLS IKTI, IKTI GEO, IKTI Rad (Version Found at Storm Breaker)",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "9g4aj",
+            "text": "New Wikelo Ship Additions",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "9tdg3",
+            "text": "New Hairstyles",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "ffdl3",
+            "text": "Sterling Exploration Suit",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "232v2",
+            "text": "",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "6hi45",
+            "text": "Known Issues",
+            "type": "header-one",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "etvsg",
+            "text": "Multivehicle - PU - Vehicles/ UI - Unable to Locate Ships or QT Back to Them After Bed Logging",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "39p9i",
+            "text": "PU - Orison - Locations / Transit - Some parts of the shuttle ramp has no collision",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "c19gs",
+            "text": "PU - Weapons / Reload - Audio / SFX - Permanent Ammo Repool Audio loop after spawning",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "21p29",
+            "text": "PU - FPS - Heart monitor beeping never stops after being revived",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "3p7kr",
+            "text": "PU - Storm Breaker - locations - Valakkar - Adult valakkar are spawning in the air the ground is sloped behind the tower",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "1he94",
+            "text": "Multivehicle - PU - Vehicles / Quantum Travel - Ships streaming in or streaming out locations on a quantum travel jump has performance drops and frame freezing",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "pb16",
+            "text": "Multivehicle - PU - Vehicles / Target lock - target lock is unlocked at random radar for targets is dropped",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "935rb",
+            "text": "Multivehicle - PU - Vehicles / Target lock - target attacker stops working when a target lock is lost due to locking range or radar dropped",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "fbunu",
+            "text": "PU - mobiGlas - Asset Manager / NikNax - mobiGlas / Inventory / UI - The Assets Manager / NikNax app gets stuck at infinite loading and never loads assets",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "712ii",
+            "text": "PU - Mining / Saddlebag / Cargo Grid - Argo and MISC Saddlebags do not snap to the Argo RAFT's Cargo Grid",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "6v7br",
+            "text": "PU - New Babbage / Brentworth Care Center - UI / Medical Screens - Check-in medical kiosk is stuck on “Checking availability” loading screen",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "2ubh0",
+            "text": "",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "7dola",
+            "text": "",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "c1s7q",
+            "text": "Features & Gameplay",
+            "type": "header-one",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "6l7om",
+            "text": "Gameplay",
+            "type": "blockquote",
+            "depth": 0,
+            "inlineStyleRanges": [
+              {
+                "offset": 0,
+                "length": 8,
+                "style": "BOLD"
+              }
+            ],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "609pf",
+            "text": "Storm Breaker and ASD Location Polish",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [
+              {
+                "offset": 0,
+                "length": 37,
+                "style": "BOLD"
+              },
+              {
+                "offset": 0,
+                "length": 37,
+                "style": "UNDERLINE"
+              }
+            ],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "2tijv",
+            "text": "Added one way freight elevators to Lazarus location allowing transfer of good from near the Apex Valakkar to outside at the transit facility. Further ASD location AI Pathing Polish. Apex Valakkar Arena Ground Polish.",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "5jqob",
+            "text": "Ships and Vehicles",
+            "type": "blockquote",
+            "depth": 0,
+            "inlineStyleRanges": [
+              {
+                "offset": 0,
+                "length": 18,
+                "style": "BOLD"
+              }
+            ],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "cq5r",
+            "text": "Adjusted Excessive Polaris Ground Turbulence",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "7n47i",
+            "text": "Added Missing C8 Pisces Armor Damage Reduction Modifier",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "8ha10",
+            "text": "Core Tech",
+            "type": "blockquote",
+            "depth": 0,
+            "inlineStyleRanges": [
+              {
+                "offset": 0,
+                "length": 9,
+                "style": "BOLD"
+              }
+            ],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "rgmf",
+            "text": "New Spawn Closet Subsumption logic to pause and reset auto spawn tasks. This will help limit locations to the amount of FPS AI we set for the area.",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "ca7hs",
+            "text": "Further Server Performance Optimizations",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "bgckq",
+            "text": "",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "21v3i",
+            "text": "",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "2mfqn",
+            "text": "Bug Fixes",
+            "type": "header-one",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "babl",
+            "text": "Potential Fix: PU - Pyro I - Storm Breaker - Locations / UI / Missions - Egg Pylon timer out of sync with location cooldown",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "a9sj1",
+            "text": "Potential Fix: PU - NPE / Tutorial - Mission / Location - There's a chance that the \"Take an elevator to the tutorial ship's hangar\" wouldn't update even after taking the elevator to tutorial ship's hangar",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "bj302",
+            "text": "Potential Fix: Multivehicle - PU - Vehicles / SFX - Dynamic Weather - The rain SFX inside ships are the same as being outside in the rain",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "32ra9",
+            "text": "Potential Fix: PU - Storm Breaker - Pyro - Creatures / Collision - The Apex Valakkar has no collision once killed",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "d0g3b",
+            "text": "Potential Fix: PU - Stanton - Performance - Mining / Game Code - Server and Client Performance drops when Shattering Large FPS Deposits",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "almfe",
+            "text": "Potential Fix: RSI Ursa Rover ALL Variants - PU - Vehicles / SFX / Audio - Missing audio on opening and closing ramps and doors (STARC-171363)",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "an32t",
+            "text": "Potential Fix: PU - Storm Breaker - locations - Valakkar - Adult valakkar are spawning in the air the ground is sloped behind the tower",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "2jooc",
+            "text": "Potential Fix: PU - Pyro - Storm Breaker - Locations - New safe codes do not open safes after streaming out / in if the safe has previously been opened",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "e1aco",
+            "text": "",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "fghh5",
+            "text": "Technical",
+            "type": "header-one",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "80ndm",
+            "text": "Fixed 5 Client Crash",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          },
+          {
+            "key": "f09h5",
+            "text": "Fixed 1 Server Crash",
+            "type": "unordered-list-item",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": []
+          }
+        ],
+        "entityMap": []
+      }
+    }
+  ],
+  "highlight_role_id": "2",
+  "community_id": "1",
+  "member": {
+    "id": "429390",
+    "displayname": "Wakapedia-CIG",
+    "nickname": "Wakapedia-CIG",
+    "avatar": "https://robertsspaceindustries.com/media/to3sa6d6ydkrsr/heap_infobox/Pacvinyl-Clear-600x600.png?v=1617059850",
+    "signature": "",
+    "meta": {
+      "badges": [
+        {
+          "name": "Developer",
+          "icon": "https://robertsspaceindustries.com/media/bkxsdklvwlhfqr/heap_thumb/Developer.png"
+        },
+        {
+          "name": "Evocati - NDA",
+          "icon": "/media/kjcz5umie01t7r/heap_thumb/AVOCADO-Logo.jpg",
+          "url": "https://robertsspaceindustries.com/orgs/AVOCADO"
+        }
+      ]
+    },
+    "isGM": false,
+    "spoken_languages": [
+      "en"
+    ],
+    "presence": {
+      "info": null,
+      "since": 1761246712,
+      "status": "offline"
+    },
+    "roles": {
+      "1": [
+        "11",
+        "2",
+        "3",
+        "4"
+      ],
+      "9711": [
+        "67972",
+        "67973",
+        "67974",
+        "67975"
+      ]
+    }
+  },
+  "replies_count": 106,
+  "views_count": 3774,
+  "latest": 8346329,
+  "latest_activity": {
+    "time_created": 1760611094,
+    "member": {
+      "id": "483002",
+      "displayname": "Khin",
+      "nickname": "Khin",
+      "avatar": "https://robertsspaceindustries.com/media/uh6jswkleva67r/heap_infobox/2.png?v=1701369249",
+      "signature": "Le Black Syndicate recrute tout homme/femme cherchant à vivre l'aventure ! Et parfois le combat !",
+      "meta": {
+        "badges": [
+          {
+            "name": "2953 Pirate Aggressor",
+            "icon": "https://media.robertsspaceindustries.com/ggj42ggozaqt1/heap_thumb.png"
+          },
+          {
+            "name": "Black Syndicate",
+            "icon": "/media/i9sl62wzyguk3r/heap_thumb/BLACKSYNDI-Logo.png",
+            "url": "https://robertsspaceindustries.com/orgs/BLACKSYNDI"
+          }
+        ]
+      },
+      "isGM": false,
+      "spoken_languages": [
+        "fr",
+        "ja",
+        "en"
+      ],
+      "roles": {
+        "1": [
+          "11",
+          "4"
+        ],
+        "42007": [
+          "292862"
+        ],
+        "45486": [
+          "317621",
+          "317625"
+        ],
+        "98795": [
+          "645514"
+        ]
+      }
+    },
+    "highlight_role_id": null
+  },
+  "votes": {
+    "count": 108,
+    "voted": 0
+  },
+  "reactions": [
+    {
+      "type": ":avocado:",
+      "count": 55,
+      "members": {
+        "24": "",
+        "74": "",
+        "143": "",
+        "230": "",
+        "231": "",
+        "5985": "",
+        "6142": "",
+        "8792": "",
+        "9494": "",
+        "9893": "",
+        "10711": "",
+        "14708": "",
+        "27602": "",
+        "27655": "",
+        "29382": "",
+        "34137": "",
+        "53575": "",
+        "62129": "",
+        "68683": "",
+        "117695": "",
+        "207740": "",
+        "208211": "",
+        "209926": "",
+        "234248": "",
+        "257217": "",
+        "284306": "",
+        "293276": "",
+        "302548": "",
+        "305996": "",
+        "321462": "",
+        "332455": "",
+        "332525": "",
+        "366446": "",
+        "380285": "",
+        "417957": "",
+        "436651": "",
+        "516996": "",
+        "521829": "",
+        "525656": "",
+        "531571": "",
+        "543201": "",
+        "551840": "",
+        "1035491": "",
+        "2110774": "",
+        "3022812": "",
+        "3124534": "",
+        "3207923": "",
+        "3249351": "",
+        "3755119": "",
+        "3763767": "",
+        "3927070": "",
+        "3990676": "",
+        "4495078": "",
+        "4941710": "",
+        "5102913": ""
+      }
+    },
+    {
+      "type": ":de:",
+      "count": 14,
+      "members": {
+        "7363": "",
+        "8112": "",
+        "10711": "",
+        "16353": "",
+        "22138": "",
+        "53575": "",
+        "68683": "",
+        "117695": "",
+        "234248": "",
+        "310293": "",
+        "3022812": "",
+        "3578327": "",
+        "4125216": "",
+        "4495078": ""
+      }
+    },
+    {
+      "type": ":fr:",
+      "count": 13,
+      "members": {
+        "8792": "",
+        "69536": "",
+        "436651": "",
+        "488974": "",
+        "513063": "",
+        "543201": "",
+        "1757118": "",
+        "2380615": "",
+        "2530868": "",
+        "3187534": "",
+        "3763767": "",
+        "4058609": "",
+        "4941710": ""
+      }
+    },
+    {
+      "type": ":heart_eyes:",
+      "count": 11,
+      "members": {
+        "143": "",
+        "9559": "",
+        "22138": "",
+        "62129": "",
+        "68683": "",
+        "105965": "",
+        "226642": "",
+        "417957": "",
+        "2392205": "",
+        "4084389": "",
+        "4941710": ""
+      }
+    },
+    {
+      "type": ":flag-eu:",
+      "count": 11,
+      "members": {
+        "8112": "",
+        "9559": "",
+        "10711": "",
+        "21895": "",
+        "22138": "",
+        "53575": "",
+        "302548": "",
+        "513063": "",
+        "2380615": "",
+        "2530868": "",
+        "2997534": ""
+      }
+    },
+    {
+      "type": ":us:",
+      "count": 5,
+      "members": {
+        "5985": "DKMan",
+        "17544": "Christopolis",
+        "34137": "Another Linux Pilot",
+        "332525": "Feydryn",
+        "531571": "RedSamurai08"
+      }
+    },
+    {
+      "type": ":gb:",
+      "count": 3,
+      "members": {
+        "19076": "B-21 Raider",
+        "62129": "Marcom ",
+        "214406": "Kurt Knipsel"
+      }
+    },
+    {
+      "type": ":flag-cp:",
+      "count": 3,
+      "members": {
+        "9893": "lordsith42",
+        "513063": "Falcoriders",
+        "1757118": "Ayanne"
+      }
+    },
+    {
+      "type": ":es:",
+      "count": 3,
+      "members": {
+        "9559": "-[LGVII]- Jose97",
+        "21895": "Rioku",
+        "293276": "[ARKANO] Xeon"
+      }
+    },
+    {
+      "type": ":+1:",
+      "count": 3,
+      "members": {
+        "143": "Smuggss",
+        "22138": "Urghfas",
+        "34137": "Another Linux Pilot"
+      }
+    },
+    {
+      "type": ":sunrise:",
+      "count": 2,
+      "members": {
+        "143": "Smuggss",
+        "16353": "S@uDepp"
+      }
+    },
+    {
+      "type": ":sparkling_heart:",
+      "count": 2,
+      "members": {
+        "398485": "_Aruinlav_",
+        "417957": "Wragah"
+      }
+    },
+    {
+      "type": ":pico:",
+      "count": 2,
+      "members": {
+        "143": "Smuggss",
+        "34137": "Another Linux Pilot"
+      }
+    },
+    {
+      "type": ":partying_face:",
+      "count": 2,
+      "members": {
+        "22138": "Urghfas",
+        "34137": "Another Linux Pilot"
+      }
+    },
+    {
+      "type": ":hugging_face:",
+      "count": 2,
+      "members": {
+        "143": "Smuggss",
+        "22138": "Urghfas"
+      }
+    },
+    {
+      "type": ":frances:",
+      "count": 2,
+      "members": {
+        "143": "Smuggss",
+        "302548": "rtdu24"
+      }
+    },
+    {
+      "type": ":finley:",
+      "count": 2,
+      "members": {
+        "143": "Smuggss",
+        "302548": "rtdu24"
+      }
+    },
+    {
+      "type": ":rocket:",
+      "count": 1,
+      "members": {
+        "302548": "rtdu24"
+      }
+    },
+    {
+      "type": ":pirate_flag:",
+      "count": 1,
+      "members": {
+        "2504155": "Skyborn"
+      }
+    },
+    {
+      "type": ":owl:",
+      "count": 1,
+      "members": {
+        "1386": "Godwin"
+      }
+    },
+    {
+      "type": ":flag-xk:",
+      "count": 1,
+      "members": {
+        "3348423": "Pac Muqaku"
+      }
+    },
+    {
+      "type": ":flag-rs:",
+      "count": 1,
+      "members": {
+        "398485": "_Aruinlav_"
+      }
+    },
+    {
+      "type": ":flag-mf:",
+      "count": 1,
+      "members": {
+        "1757118": "Ayanne"
+      }
+    },
+    {
+      "type": ":flag-be:",
+      "count": 1,
+      "members": {
+        "22152": "Pepere"
+      }
+    },
+    {
+      "type": ":flag-al:",
+      "count": 1,
+      "members": {
+        "3348423": "Pac Muqaku"
+      }
+    }
+  ],
+  "tracked_replies_references": [],
+  "children_replies_references": [],
+  "notification_subscription": "all",
+  "aspect": "full",
+  "timeline_replies_ids": [
+    "8346329",
+    "8061606",
+    "8059568",
+    "8058427",
+    "8058170",
+    "8057151",
+    "8056444",
+    "8056422",
+    "8056407",
+    "8054485",
+    "8053512",
+    "8053407",
+    "8053374",
+    "8053340",
+    "8053202",
+    "8052897",
+    "8052825",
+    "8052628",
+    "8052599",
+    "8052588",
+    "8052505",
+    "8052381",
+    "8052329",
+    "8052245",
+    "8052235",
+    "8052180",
+    "8052177",
+    "8052169",
+    "8051926",
+    "8051885",
+    "8051833",
+    "8051830",
+    "8051809",
+    "8051740",
+    "8051667",
+    "8051664",
+    "8051565",
+    "8051501",
+    "8051409",
+    "8051366",
+    "8051362",
+    "8051361",
+    "8051334",
+    "8051291",
+    "8051278",
+    "8051273",
+    "8051232",
+    "8051215",
+    "8051205",
+    "8051178",
+    "8051174",
+    "8051170",
+    "8051166",
+    "8051163",
+    "8051161",
+    "8051142",
+    "8051139",
+    "8051134",
+    "8051131",
+    "8051110",
+    "8051049",
+    "8051034",
+    "8051029",
+    "8051027",
+    "8051026",
+    "8051024",
+    "8051021",
+    "8051018",
+    "8051013",
+    "8051008",
+    "8051007",
+    "8051005",
+    "8050996",
+    "8050975",
+    "8050971",
+    "8050955",
+    "8050949",
+    "8050948",
+    "8050930",
+    "8050918",
+    "8050917",
+    "8050914",
+    "8050913",
+    "8050909",
+    "8050898",
+    "8050897",
+    "8050893",
+    "8050892",
+    "8050889",
+    "8050876",
+    "8050875",
+    "8050872",
+    "8050870",
+    "8050868",
+    "8050866",
+    "8050865",
+    "8050864",
+    "8050863",
+    "8050862",
+    "8050860",
+    "8050859",
+    "8050853",
+    "8050851",
+    "8050850",
+    "8050849",
+    "8050847"
+  ],
+  "replies": [
+    {
+      "id": "8346329",
+      "time_created": 1760611094,
+      "time_modified": 1760611094,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "fousc",
+                "text": "sorry, must've been a bad day lol",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "483002",
+        "displayname": "Khin",
+        "nickname": "Khin",
+        "avatar": "https://robertsspaceindustries.com/media/uh6jswkleva67r/heap_infobox/2.png?v=1701369249",
+        "signature": "Le Black Syndicate recrute tout homme/femme cherchant à vivre l'aventure ! Et parfois le combat !",
+        "meta": {
+          "badges": [
+            {
+              "name": "2953 Pirate Aggressor",
+              "icon": "https://media.robertsspaceindustries.com/ggj42ggozaqt1/heap_thumb.png"
+            },
+            {
+              "name": "Black Syndicate",
+              "icon": "/media/i9sl62wzyguk3r/heap_thumb/BLACKSYNDI-Logo.png",
+              "url": "https://robertsspaceindustries.com/orgs/BLACKSYNDI"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "fr",
+          "ja",
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "42007": [
+            "292862"
+          ],
+          "45486": [
+            "317621",
+            "317625"
+          ],
+          "98795": [
+            "645514"
+          ]
+        }
+      },
+      "votes": {
+        "count": 2,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8051021",
+        "label": "PhelanPatrickKell"
+      },
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8061606",
+      "time_created": 1750013265,
+      "time_modified": 1750013850,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "eifaa",
+                "text": "Its not radiation taking your ship out. This was made so obvious in the video on it that you gad to intentionally ignore it. You are essentially asking to remove all interdiction from the game. I know you hate interdiction but using a location to get your way is dumb. ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "3752311",
+        "displayname": "Skugga",
+        "nickname": "Skuggamul",
+        "avatar": "https://robertsspaceindustries.com/media/m7p06kgg4q5iqr/heap_infobox/3d7fe378-269a-4ac8-A9e1-8bd6ad0d470a.png?v=1747953619",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "2949 Pirate Aggressor",
+              "icon": "https://media.robertsspaceindustries.com/qcwc0o75z4j98/heap_thumb.png"
+            },
+            {
+              "name": "Void Steeds",
+              "icon": "https://cdn.robertsspaceindustries.com/static/images/organization/defaults/logo/club.jpg",
+              "url": "https://robertsspaceindustries.com/orgs/VOIDSTEEDS"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "115833": [
+            "762744",
+            "762746",
+            "762748"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8059568",
+        "label": "WC Nick 'Paradox' Parker"
+      },
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8059568",
+      "time_created": 1749920057,
+      "time_modified": 1751595788,
+      "thread_id": "497567",
+      "content_blocks": [],
+      "is_erased": true,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "parent_reply_reference": {
+        "id": "8052169",
+        "label": "Skugga"
+      },
+      "children_replies_references": [
+        {
+          "id": "8061606",
+          "label": "Skugga"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8058427",
+      "time_created": 1749859770,
+      "time_modified": 1749859770,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "bl554",
+                "text": "? huh?",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "4798882",
+        "displayname": "Awog8888",
+        "nickname": "Awog8888",
+        "avatar": null,
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Mercenary",
+              "icon": "https://media.robertsspaceindustries.com/95ak6prq3ek20/heap_thumb.png"
+            },
+            {
+              "name": "[REDACTED]",
+              "icon": "https://cdn.robertsspaceindustries.com/static/images/organization/defaults/members/visibility/redacted.png",
+              "url": ""
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "77221": [
+            "525095"
+          ],
+          "126404": [
+            "839393"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8058170",
+        "label": "Xerym"
+      },
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8058170",
+      "time_created": 1749848160,
+      "time_modified": 1749850780,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "160dh",
+                "text": "Edit: Alright, while this has been... interesting... I'm giving you the last word (again), so go for it -- say thanks passive aggressively, insult me, whatever you gotta do to walk away from this feeling good man...  I also apologize for engaging with the \":: thumbs up ::\" thing.  That was dumb, on on my part.  Promise, no responses this time, no emoji reactions, nothing.  Wish you the best.  Latuhhhh!!!",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "7ukot",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "1hkmd",
+                "text": "By the way, you're also blocked -- so I definitely can't see your responses.  It's for my sanity, and to help you move on.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "1859689",
+        "displayname": "Xerym",
+        "nickname": "Xerym",
+        "avatar": null,
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Civilian",
+              "icon": "https://media.robertsspaceindustries.com/9qvh53v4nyx8d/heap_thumb.png"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8057151",
+        "label": "Awog8888"
+      },
+      "children_replies_references": [
+        {
+          "id": "8058427",
+          "label": "Awog8888"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8057151",
+      "time_created": 1749818970,
+      "time_modified": 1749818970,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "5l9f0",
+                "text": "Thanks again! don’t forget to keep upvote every time you app e to help the algorithm! Thanks again!",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "4798882",
+        "displayname": "Awog8888",
+        "nickname": "Awog8888",
+        "avatar": null,
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Mercenary",
+              "icon": "https://media.robertsspaceindustries.com/95ak6prq3ek20/heap_thumb.png"
+            },
+            {
+              "name": "[REDACTED]",
+              "icon": "https://cdn.robertsspaceindustries.com/static/images/organization/defaults/members/visibility/redacted.png",
+              "url": ""
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "77221": [
+            "525095"
+          ],
+          "126404": [
+            "839393"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8056444",
+        "label": "Xerym"
+      },
+      "children_replies_references": [
+        {
+          "id": "8058170",
+          "label": "Xerym"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8056444",
+      "time_created": 1749787592,
+      "time_modified": 1749787592,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "2q3jr",
+                "text": ":: thumbs up ::",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "1859689",
+        "displayname": "Xerym",
+        "nickname": "Xerym",
+        "avatar": null,
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Civilian",
+              "icon": "https://media.robertsspaceindustries.com/9qvh53v4nyx8d/heap_thumb.png"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8056422",
+        "label": "Awog8888"
+      },
+      "children_replies_references": [
+        {
+          "id": "8057151",
+          "label": "Awog8888"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8056422",
+      "time_created": 1749786560,
+      "time_modified": 1749786560,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "f0ho4",
+                "text": "Hey! Thanks dude. Make sure you upvote me too. ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "4798882",
+        "displayname": "Awog8888",
+        "nickname": "Awog8888",
+        "avatar": null,
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Mercenary",
+              "icon": "https://media.robertsspaceindustries.com/95ak6prq3ek20/heap_thumb.png"
+            },
+            {
+              "name": "[REDACTED]",
+              "icon": "https://cdn.robertsspaceindustries.com/static/images/organization/defaults/members/visibility/redacted.png",
+              "url": ""
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "77221": [
+            "525095"
+          ],
+          "126404": [
+            "839393"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8056407",
+        "label": "Xerym"
+      },
+      "children_replies_references": [
+        {
+          "id": "8056444",
+          "label": "Xerym"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8056407",
+      "time_created": 1749785658,
+      "time_modified": 1749785658,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "47aoe",
+                "text": ":: thumbs up ::",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "1859689",
+        "displayname": "Xerym",
+        "nickname": "Xerym",
+        "avatar": null,
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Civilian",
+              "icon": "https://media.robertsspaceindustries.com/9qvh53v4nyx8d/heap_thumb.png"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8052897",
+        "label": "Awog8888"
+      },
+      "children_replies_references": [
+        {
+          "id": "8056422",
+          "label": "Awog8888"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8054485",
+      "time_created": 1749737789,
+      "time_modified": 1749737789,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "2bojl",
+                "text": "i made this same post a while back as well, but it didn't get any kind of comment by any dev or anything, so i have been posting this comment on nearly every single ptu patch update for like a month lol. im just hoping eventually they will be so annoyed by it that they just do it to shut me up lol. plus they need to be available too purchase at every station not just major landing zones",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "406432",
+        "displayname": "Canadianhero",
+        "nickname": "Canadian_Hero",
+        "avatar": "https://robertsspaceindustries.com/media/y93pw2v0nhsspr/heap_infobox/Selfie_20170506_232331.jpg?v=1635705482",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "2953 CDF Gold",
+              "icon": "https://media.robertsspaceindustries.com/5eb89g5mzji0t/heap_thumb.png"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8051740",
+        "label": "Nicholasio"
+      },
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8053512",
+      "time_created": 1749688603,
+      "time_modified": 1749688768,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "14mo2",
+                "text": "Says tbe guy who insists cig didnt answer every single thing youve brought up . The answered EVERYTHING  youve brought up since last Thursday. If you followed dev tracker you'd known this. Trying to pretend its other people that missed it just prives you won't take responsibility for your mistakes.  You should probably continue not posting on spectrum since you clearly dont follow it. Keep to reddit . It suits you better. ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "3752311",
+        "displayname": "Skugga",
+        "nickname": "Skuggamul",
+        "avatar": "https://robertsspaceindustries.com/media/m7p06kgg4q5iqr/heap_infobox/3d7fe378-269a-4ac8-A9e1-8bd6ad0d470a.png?v=1747953619",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "2949 Pirate Aggressor",
+              "icon": "https://media.robertsspaceindustries.com/qcwc0o75z4j98/heap_thumb.png"
+            },
+            {
+              "name": "Void Steeds",
+              "icon": "https://cdn.robertsspaceindustries.com/static/images/organization/defaults/logo/club.jpg",
+              "url": "https://robertsspaceindustries.com/orgs/VOIDSTEEDS"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "115833": [
+            "762744",
+            "762746",
+            "762748"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8053407",
+        "label": "PhelanPatrickKell"
+      },
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8053407",
+      "time_created": 1749683174,
+      "time_modified": 1749683174,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "ds1s3",
+                "text": "I see you're still having trouble with language comprehension. Well, that's your responsibility, not mine. I recommend going back to at least the third grade based on what I've seen here.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "6ff88",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "8ln18",
+                "text": "Good luck! o/",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "431013",
+        "displayname": "PhelanPatrickKell",
+        "nickname": "PhelanPatrickKell",
+        "avatar": "https://robertsspaceindustries.com/media/n2s3xcxgm1wy1r/heap_infobox/PhelanPKell_v1__jacket-Tex_w-Mech_BG1-2_WiP_SHRUNK.png?v=1625930104",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Civilian",
+              "icon": "https://media.robertsspaceindustries.com/9qvh53v4nyx8d/heap_thumb.png"
+            },
+            {
+              "name": "Red Leaf Trading Guild",
+              "icon": "/media/l7gidxdok1wfyr/heap_thumb/RLTG-Logo.png",
+              "url": "https://robertsspaceindustries.com/orgs/RLTG"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "38": [
+            "271"
+          ],
+          "90322": [
+            "598384",
+            "598385",
+            "598387"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8053202",
+        "label": "Skugga"
+      },
+      "children_replies_references": [
+        {
+          "id": "8053512",
+          "label": "Skugga"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8053374",
+      "time_created": 1749682299,
+      "time_modified": 1749682299,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "5nk2e",
+                "text": "so sad :disappointed:",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [
+                  {
+                    "offset": 7,
+                    "length": 14,
+                    "key": 0
+                  }
+                ],
+                "data": []
+              }
+            ],
+            "entityMap": [
+              {
+                "type": "EMOJI",
+                "mutability": "IMMUTABLE",
+                "data": ":disappointed:"
+              }
+            ]
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "4925150",
+        "displayname": "EupheMiaow",
+        "nickname": "EupheMiaow",
+        "avatar": "https://robertsspaceindustries.com/media/svee6cfzsr10qr/heap_infobox/F324e056-3999-4456-820b-8c8440a0cbd6.jpg?v=1748010149",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Grand Admiral",
+              "icon": "https://media.robertsspaceindustries.com/ypj2zo0u5fsfb/heap_thumb.png"
+            },
+            {
+              "name": "Outer Planets Armada",
+              "icon": "/media/tcp4m3j7o34c9r/heap_thumb/SCOPA-Logo.png",
+              "url": "https://robertsspaceindustries.com/orgs/SCOPA"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en",
+          "zh",
+          "la"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "27334": [
+            "191267"
+          ],
+          "108038": [
+            "710287"
+          ],
+          "112498": [
+            "741670"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8051205",
+        "label": "TalentX"
+      },
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8053340",
+      "time_created": 1749681605,
+      "time_modified": 1749681605,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "943ad",
+                "text": "Hey CIG, can we get a few recent issues fixed?",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "4drkc",
+                "text": "These were worked on recently, so hopefully the fixes won’t be too difficult:",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "b6nep",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "co25i",
+                "text": "- TAC Turrets Alignment – The TAC turrets don’t properly follow the hull’s contour, particularly on the bottom, creating unnecessary dead zones that don’t align with CIG’s usual attention to detail. Could we also swap the S4s on top with the S5s on the sides? It makes more sense, considering ground-based personnel and vehicles don’t need S5s as much as ship-to-ship combat does. Given the gunboat role, adjusting weapon placement to reflect tactical priorities would be a solid improvement!",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [
+                  {
+                    "offset": 2,
+                    "length": 21,
+                    "style": "BOLD"
+                  }
+                ],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "djbqj",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "d1fnd",
+                "text": "- TAC Speed and boost, certainly a drop ship required more?  Thanks so much for the little bit of boost!",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [
+                  {
+                    "offset": 0,
+                    "length": 60,
+                    "style": "STRIKETHROUGH"
+                  },
+                  {
+                    "offset": 61,
+                    "length": 43,
+                    "style": "BOLD"
+                  }
+                ],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "f3no",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "907p6",
+                "text": "- Prowler Health Nerf – The Prowler unexpectedly lost half its body HP, dropping from 40,000 to 20,000. Was this an accident? Considering CIG previously agreed that drop ships should be tougher, this seems like an odd change. Some players joked that this might signal another Prowler variant or similar ship being introduced, but honestly, it didn’t feel funny to me. A reason for the change would be great so we can better understand the logic behind it.  I see you have made several attempts to fix the hull.  I do not completely understand it, but it seems to be much better!",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [
+                  {
+                    "offset": 0,
+                    "length": 456,
+                    "style": "STRIKETHROUGH"
+                  },
+                  {
+                    "offset": 456,
+                    "length": 122,
+                    "style": "BOLD"
+                  }
+                ],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "bq00n",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "ejed9",
+                "text": "Lock out NON-Party Players from our ships.  I think this is self explanatory.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [
+                  {
+                    "offset": 0,
+                    "length": 44,
+                    "style": "BOLD"
+                  }
+                ],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "cci7k",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "djfsj",
+                "text": "- Vehicle Deployment via Cargo Lift – Being able to summon vehicles using the cargo lift would be an incredible quality-of-life improvement right now.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [
+                  {
+                    "offset": 0,
+                    "length": 36,
+                    "style": "BOLD"
+                  }
+                ],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "dni8d",
+                "text": "Some feedback would be awesome, so we know whether these issues are on the radar.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "263043",
+        "displayname": "Biffbobaggin",
+        "nickname": "BiffboBaggin",
+        "avatar": "https://robertsspaceindustries.com/media/vha89j2naome6r/heap_infobox/Badger6.png?v=1664833904",
+        "signature": "Been there  done that, twice!",
+        "meta": {
+          "badges": [
+            {
+              "name": "Predator",
+              "icon": "https://media.robertsspaceindustries.com/1av781lyaev25/heap_thumb.png"
+            },
+            {
+              "name": "Colossus",
+              "icon": "/media/83is3ad0tsmuor/heap_thumb/CTEC-Logo.png",
+              "url": "https://robertsspaceindustries.com/orgs/CTEC"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "285269",
+            "4"
+          ],
+          "5398": [
+            "37780",
+            "37784"
+          ],
+          "9711": [
+            "67976"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": null,
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8053202",
+      "time_created": 1749677966,
+      "time_modified": 1749678104,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "dp7lu",
+                "text": "They did in fact communicate on both of these Issues. Several times. If you bothered to follow dev tracker you'd known this but you chose to ignore everything that cig says . Jared flat out said that 4.2 was targeted 2 weeks from the release of the video. Basic math will tell you we are still a week away from that.  You are not entitled to more than that information.  Especially when they flat out told you in dec that no news is no news. You demand communication and ignore the communication when you get it.. if you are going to talk about intelligence prove that you have the bare basic intelligence required to read a post or listen to a video. ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "3752311",
+        "displayname": "Skugga",
+        "nickname": "Skuggamul",
+        "avatar": "https://robertsspaceindustries.com/media/m7p06kgg4q5iqr/heap_infobox/3d7fe378-269a-4ac8-A9e1-8bd6ad0d470a.png?v=1747953619",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "2949 Pirate Aggressor",
+              "icon": "https://media.robertsspaceindustries.com/qcwc0o75z4j98/heap_thumb.png"
+            },
+            {
+              "name": "Void Steeds",
+              "icon": "https://cdn.robertsspaceindustries.com/static/images/organization/defaults/logo/club.jpg",
+              "url": "https://robertsspaceindustries.com/orgs/VOIDSTEEDS"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "115833": [
+            "762744",
+            "762746",
+            "762748"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8052628",
+        "label": "PhelanPatrickKell"
+      },
+      "children_replies_references": [
+        {
+          "id": "8053407",
+          "label": "PhelanPatrickKell"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052897",
+      "time_created": 1749668453,
+      "time_modified": 1749668453,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "fomj7",
+                "text": "Mr “Swipping your credit card isn’t the solution to everything” is walking away.  made two point. First that the features needed to make in game trading are NOT in the game. The second point is that you are either pure and untouched by paying to progress or a sinner throwing stones(a hypocrite) ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "d8poj",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "50fc7",
+                "text": "you pretended you wanted a discussion but threw passive aggressive slures. Yeah ok buddy. Wink wink. ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "4798882",
+        "displayname": "Awog8888",
+        "nickname": "Awog8888",
+        "avatar": null,
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Mercenary",
+              "icon": "https://media.robertsspaceindustries.com/95ak6prq3ek20/heap_thumb.png"
+            },
+            {
+              "name": "[REDACTED]",
+              "icon": "https://cdn.robertsspaceindustries.com/static/images/organization/defaults/members/visibility/redacted.png",
+              "url": ""
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "77221": [
+            "525095"
+          ],
+          "126404": [
+            "839393"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": null,
+      "children_replies_references": [
+        {
+          "id": "8056407",
+          "label": "Xerym"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052825",
+      "time_created": 1749667026,
+      "time_modified": 1749667026,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "aaoti",
+                "text": "Bought 3 Racing Sabers because the terminal told me the purcase didn't complete, very nice bird do! ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "9d0nu",
+                "text": "Standard Sabre is really stealthy atm, not making any engine sounds.  ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "dsbjo",
+                "text": "Landingpads not showing up on some moon. ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "60v0e",
+                "text": "Jump gate just throws me back to the station instead of opening to Pyro (could be a me problem?)",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "rp3s",
+                "text": "Servers reporting issues.  ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        },
+        {
+          "id": "mbsa0m58-f9ieyijukwo",
+          "type": "image",
+          "data": [
+            {
+              "id": "upload:3383552",
+              "type": "upload",
+              "data": {
+                "url": "https://dto9r5vaiz7bu.cloudfront.net/de6nu971nmnal/source.jpg",
+                "image_width": 2560,
+                "image_height": 1440,
+                "sizes": {
+                  "mini": {
+                    "url": "https://dto9r5vaiz7bu.cloudfront.net/de6nu971nmnal/tavern_upload_mini.jpg"
+                  },
+                  "square": {
+                    "url": "https://dto9r5vaiz7bu.cloudfront.net/de6nu971nmnal/tavern_upload_square.jpg"
+                  },
+                  "small": {
+                    "url": "https://dto9r5vaiz7bu.cloudfront.net/de6nu971nmnal/tavern_upload_small.jpg"
+                  },
+                  "medium": {
+                    "url": "https://dto9r5vaiz7bu.cloudfront.net/de6nu971nmnal/tavern_upload_medium.jpg"
+                  },
+                  "large": {
+                    "url": "https://dto9r5vaiz7bu.cloudfront.net/de6nu971nmnal/tavern_upload_large.jpg"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "367439",
+        "displayname": "KemoSahbee",
+        "nickname": "kemosahbee",
+        "avatar": "https://robertsspaceindustries.com/media/5a8ixqkv7oblmr/heap_infobox/D49e3521-1778-47b8-8396-648beb80131c.jpg?v=1715893512",
+        "signature": "o7",
+        "meta": {
+          "badges": [
+            {
+              "name": "Scout",
+              "icon": "https://media.robertsspaceindustries.com/dsduc1vjs0gg3/heap_thumb.png"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en",
+          "nl",
+          "de"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": null,
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052628",
+      "time_created": 1749662663,
+      "time_modified": 1749662663,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "e4a6s",
+                "text": "Since you seem to be having trouble understanding simple language, I'll highlight some details. If you STILL cannot understand the message I posted for CIG, then you're on your own. I'm not your English teacher, and I don't get paid to tutor you.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "8nkht",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "92p2b",
+                "text": "Whether you're ignoring the PU, or sapping resources from PU servers to give to the PTU, I don't know, but the PU is degrading quickly.",
+                "type": "blockquote",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "5hqu8",
+                "text": "I am asking for some communication from you guys.",
+                "type": "blockquote",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "7vmdr",
+                "text": "If you're going to wait until Wed-Thurs next week when Jared implied the patch would drop...then you need to do something about the degradation in the PU THIS week.",
+                "type": "blockquote",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "ag4vd",
+                "text": "THIS is the core of the message. Boiled down, it simply amounts to \"Communicate with the community.\"",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "5supm",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "dkmd1",
+                "text": "THIS:",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "ebgld",
+                "text": "If you're planning to drop 4.2 this week, then you need to speak up and let people know.",
+                "type": "blockquote",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "cj4bj",
+                "text": "Which is the sole part of my post you are obsessed with, and seemingly intellectually incapable of divorcing yourself from in the same way a petulant child obsesses over the ONE cookie he saw, ignoring that in the other hand there are TWO cookies he could have, is simply an alternative possible outcome of events, however unlikely.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "431013",
+        "displayname": "PhelanPatrickKell",
+        "nickname": "PhelanPatrickKell",
+        "avatar": "https://robertsspaceindustries.com/media/n2s3xcxgm1wy1r/heap_infobox/PhelanPKell_v1__jacket-Tex_w-Mech_BG1-2_WiP_SHRUNK.png?v=1625930104",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Civilian",
+              "icon": "https://media.robertsspaceindustries.com/9qvh53v4nyx8d/heap_thumb.png"
+            },
+            {
+              "name": "Red Leaf Trading Guild",
+              "icon": "/media/l7gidxdok1wfyr/heap_thumb/RLTG-Logo.png",
+              "url": "https://robertsspaceindustries.com/orgs/RLTG"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "38": [
+            "271"
+          ],
+          "90322": [
+            "598384",
+            "598385",
+            "598387"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8052599",
+        "label": "Skugga"
+      },
+      "children_replies_references": [
+        {
+          "id": "8053202",
+          "label": "Skugga"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052599",
+      "time_created": 1749661831,
+      "time_modified": 1749661831,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "6odmp",
+                "text": "Rich coming from someone demanding cig tell him something they already told him a week ago. Probably should follow your own advice. Since you got your answer on the 5th.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "3752311",
+        "displayname": "Skugga",
+        "nickname": "Skuggamul",
+        "avatar": "https://robertsspaceindustries.com/media/m7p06kgg4q5iqr/heap_infobox/3d7fe378-269a-4ac8-A9e1-8bd6ad0d470a.png?v=1747953619",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "2949 Pirate Aggressor",
+              "icon": "https://media.robertsspaceindustries.com/qcwc0o75z4j98/heap_thumb.png"
+            },
+            {
+              "name": "Void Steeds",
+              "icon": "https://cdn.robertsspaceindustries.com/static/images/organization/defaults/logo/club.jpg",
+              "url": "https://robertsspaceindustries.com/orgs/VOIDSTEEDS"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "115833": [
+            "762744",
+            "762746",
+            "762748"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8052588",
+        "label": "PhelanPatrickKell"
+      },
+      "children_replies_references": [
+        {
+          "id": "8052628",
+          "label": "PhelanPatrickKell"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052588",
+      "time_created": 1749661575,
+      "time_modified": 1749661575,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "9rn1k",
+                "text": "Please, continue to reinforce that you're incapable of understanding the English language.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "f5h4s",
+                "text": "",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "8b7vu",
+                "text": "What's the old adage? It's better to keep your mouth shut and let people think you're an idiot, then to open your mouth and remove all doubt.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "431013",
+        "displayname": "PhelanPatrickKell",
+        "nickname": "PhelanPatrickKell",
+        "avatar": "https://robertsspaceindustries.com/media/n2s3xcxgm1wy1r/heap_infobox/PhelanPKell_v1__jacket-Tex_w-Mech_BG1-2_WiP_SHRUNK.png?v=1625930104",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Civilian",
+              "icon": "https://media.robertsspaceindustries.com/9qvh53v4nyx8d/heap_thumb.png"
+            },
+            {
+              "name": "Red Leaf Trading Guild",
+              "icon": "/media/l7gidxdok1wfyr/heap_thumb/RLTG-Logo.png",
+              "url": "https://robertsspaceindustries.com/orgs/RLTG"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "38": [
+            "271"
+          ],
+          "90322": [
+            "598384",
+            "598385",
+            "598387"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8052329",
+        "label": "Skugga"
+      },
+      "children_replies_references": [
+        {
+          "id": "8052599",
+          "label": "Skugga"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052505",
+      "time_created": 1749658949,
+      "time_modified": 1749658949,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "1m087",
+                "text": "I don't know... why is everything just a 'Potential Fix'? Why isn't CIG able to fix things conclusively? And all this fancy, shiny new stuff is cool, wow and everything, but how about fixing hangar elevators and quantum and the inventory? I also don't get why this community just accepts the worst game inventory in the history if the gaming industry. The inventory is an pain in the a$$, an absolute pain, and all they do is fumble around at the way how to swap armor. CIG sells storm breaker as sandbox and exploring, what a joke. To say it's an alpha is an argument that just doesn't count anymore. They said this would be the year of playability. Well I don't see much of that yet, and it is June. I am just one player, so I don't matter, but in my case the negative things are starting to outweigh the positive things in this game.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "2458090",
+        "displayname": "Heselwood",
+        "nickname": "Heselwood",
+        "avatar": "https://robertsspaceindustries.com/media/f20xknikytt3yr/heap_infobox/1.jpg?v=1678560690",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Civilian",
+              "icon": "https://media.robertsspaceindustries.com/9qvh53v4nyx8d/heap_thumb.png"
+            },
+            {
+              "name": "NOVA Intergalactic",
+              "icon": "/media/jab9b5zu455z9r/heap_thumb/NOVAEN-Logo.png",
+              "url": "https://robertsspaceindustries.com/orgs/NOVAEN"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en",
+          "de",
+          "fr"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "27573": [
+            "192932"
+          ],
+          "40528": [
+            "282375"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": null,
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052381",
+      "time_created": 1749655200,
+      "time_modified": 1749655200,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "a3pka",
+                "text": "polaris pilot s10 torp control ever? ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "4927121",
+        "displayname": "StarAI",
+        "nickname": "StarAI",
+        "avatar": "https://robertsspaceindustries.com/media/95t6q8c0osy3hr/heap_infobox/B9f1ab27-70ee-40dc-9bef-225682e644b1.png?v=1714558983",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "High Admiral",
+              "icon": "https://media.robertsspaceindustries.com/9jpynmq428zsl/heap_thumb.png"
+            },
+            {
+              "name": "NOVA Intergalactic",
+              "icon": "/media/jab9b5zu455z9r/heap_thumb/NOVAEN-Logo.png",
+              "url": "https://robertsspaceindustries.com/orgs/NOVAEN"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en",
+          "de"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "27573": [
+            "192933"
+          ],
+          "40528": [
+            "282374"
+          ],
+          "79416": [
+            "535658"
+          ],
+          "121967": [
+            "808052"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": null,
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052329",
+      "time_created": 1749653768,
+      "time_modified": 1749654355,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "a9udc",
+                "text": "Your post demands answers that cig fave you at the beginning of June. Stop demanding answer when you flat out ignore cig when they tell you the date the patch drops. 2 weeks from June 5 is June 19. Typical patch release is a Thursday or Friday.  The 19th is a Thursday. ",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "3752311",
+        "displayname": "Skugga",
+        "nickname": "Skuggamul",
+        "avatar": "https://robertsspaceindustries.com/media/m7p06kgg4q5iqr/heap_infobox/3d7fe378-269a-4ac8-A9e1-8bd6ad0d470a.png?v=1747953619",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "2949 Pirate Aggressor",
+              "icon": "https://media.robertsspaceindustries.com/qcwc0o75z4j98/heap_thumb.png"
+            },
+            {
+              "name": "Void Steeds",
+              "icon": "https://cdn.robertsspaceindustries.com/static/images/organization/defaults/logo/club.jpg",
+              "url": "https://robertsspaceindustries.com/orgs/VOIDSTEEDS"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "115833": [
+            "762744",
+            "762746",
+            "762748"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8052235",
+        "label": "PhelanPatrickKell"
+      },
+      "children_replies_references": [
+        {
+          "id": "8052588",
+          "label": "PhelanPatrickKell"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052245",
+      "time_created": 1749651309,
+      "time_modified": 1749651309,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "ev3hi",
+                "text": "#STARC-169860 requesting help mission last target inside locked room. Confirmed at Lazarus Transport Hub Phoenix-I",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [
+                  {
+                    "offset": 0,
+                    "length": 14,
+                    "style": "BOLD"
+                  }
+                ],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "5368124",
+        "displayname": "Chhrom",
+        "nickname": "Chhrom",
+        "avatar": "https://robertsspaceindustries.com/media/dqhnky3c7wud8r/heap_infobox/Dd51b5b7-4a9b-433b-A3f8-2f0c2e66912c.png?v=1736465505",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "High Admiral",
+              "icon": "https://media.robertsspaceindustries.com/9jpynmq428zsl/heap_thumb.png"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "fr"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": null,
+      "children_replies_references": [],
+      "tracked_replies_references": [],
+      "read": false
+    },
+    {
+      "id": "8052235",
+      "time_created": 1749650976,
+      "time_modified": 1749650976,
+      "thread_id": "497567",
+      "content_blocks": [
+        {
+          "id": 1,
+          "type": "text",
+          "data": {
+            "blocks": [
+              {
+                "key": "cm53i",
+                "text": "It's always appreciated when people who only read the last line of a post provide commentary that ignores the rest of the post. It's kinda like when someone walks down the street pointing to the one patch of blue sky off in the distance, but completely ignores the torrential rain cloud overhead.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              },
+              {
+                "key": "1v5s1",
+                "text": "Yeah, the information is technically correct, but utterly useless in the context of what's going on.",
+                "type": "unstyled",
+                "depth": 0,
+                "inlineStyleRanges": [],
+                "entityRanges": [],
+                "data": []
+              }
+            ],
+            "entityMap": []
+          }
+        }
+      ],
+      "is_erased": false,
+      "erased_by": null,
+      "annotation_plaintext": null,
+      "member": {
+        "id": "431013",
+        "displayname": "PhelanPatrickKell",
+        "nickname": "PhelanPatrickKell",
+        "avatar": "https://robertsspaceindustries.com/media/n2s3xcxgm1wy1r/heap_infobox/PhelanPKell_v1__jacket-Tex_w-Mech_BG1-2_WiP_SHRUNK.png?v=1625930104",
+        "signature": "",
+        "meta": {
+          "badges": [
+            {
+              "name": "Civilian",
+              "icon": "https://media.robertsspaceindustries.com/9qvh53v4nyx8d/heap_thumb.png"
+            },
+            {
+              "name": "Red Leaf Trading Guild",
+              "icon": "/media/l7gidxdok1wfyr/heap_thumb/RLTG-Logo.png",
+              "url": "https://robertsspaceindustries.com/orgs/RLTG"
+            }
+          ]
+        },
+        "isGM": false,
+        "spoken_languages": [
+          "en"
+        ],
+        "roles": {
+          "1": [
+            "11",
+            "4"
+          ],
+          "38": [
+            "271"
+          ],
+          "90322": [
+            "598384",
+            "598385",
+            "598387"
+          ]
+        }
+      },
+      "votes": {
+        "count": 1,
+        "voted": 0
+      },
+      "reactions": [],
+      "parent_reply_reference": {
+        "id": "8052180",
+        "label": "Skugga"
+      },
+      "children_replies_references": [
+        {
+          "id": "8052329",
+          "label": "Skugga"
+        }
+      ],
+      "tracked_replies_references": [],
+      "read": false
+    }
+  ]
+}
