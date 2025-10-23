@@ -7,6 +7,7 @@ const voiceRooms = require('./voiceRooms');
 const tickets = require('./tickets');
 const moderation = require('./moderation');
 const spectrumWatcher = require('./spectrumWatcher');
+const referrals = require('./referrals');
 
 const commandModules = [voiceRooms, tickets, moderation, spectrumWatcher];
 
@@ -29,6 +30,12 @@ client.once(Events.ClientReady, async c => {
     await commandManager.registerAllCommands(c.token ?? token, commandModules);
   } catch (err) {
     console.error('Failed to register slash commands:', err);
+  }
+
+  try {
+    await referrals.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize referrals module:', err);
   }
 
   try {
@@ -108,6 +115,13 @@ async function bootstrap() {
     await spectrumWatcher.initialize(client);
   } catch (err) {
     console.error('Failed to initialize spectrum watcher module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await referrals.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize referrals module:', err);
     process.exit(1);
   }
 

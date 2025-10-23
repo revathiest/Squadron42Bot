@@ -5,6 +5,7 @@ const { handleModCommand } = require('./roleConfig');
 const { handleActionRequest, handlePardonCommand } = require('./actions/context');
 const { handleModal } = require('./actions/modals');
 const { handleHistoryContext } = require('./history/context');
+const referrals = require('../referrals');
 
 async function handleInteraction(interaction) {
   try {
@@ -64,6 +65,10 @@ function registerInteractionListener(client) {
     handleInteraction(interaction).catch(err => {
       console.error('moderation: Unhandled interaction error', err);
     });
+
+    referrals.handleInteraction(interaction).catch(err => {
+      console.error('referrals: Unhandled interaction error', err);
+    })
   });
 }
 
