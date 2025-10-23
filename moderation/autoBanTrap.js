@@ -60,14 +60,10 @@ async function handleTrapConfigCommand(interaction) {
     try {
       await setTrapRoleId(guildId, role.id, interaction.user?.id);
       await interaction.editReply(`Marked ${role.toString()} as the trap role.`);
-} catch (err) {
-  console.error(
-    `[autoBanTrap] Failed to set trap role for guild ${guildId}: ${err.message}`
-  );
-  await interaction.editReply('Failed to update the trap role. Please try again later.');
-}
-
-
+    } catch (err) {
+      console.error('moderation:autoBanTrap: failed to set trap role', { guildId, roleId: role.id }, err);
+      await interaction.editReply('Failed to update the trap role. Please try again later.');
+    }
     return;
   }
 
@@ -75,13 +71,10 @@ async function handleTrapConfigCommand(interaction) {
     try {
       await clearTrapRoleId(guildId, interaction.user?.id);
       await interaction.editReply('Cleared the configured trap role.');
-} catch (err) {
-  console.error(
-    `[autoBanTrap] Failed to clear trap role for guild ${guildId}: ${err.message}`
-  );
-  await interaction.editReply('Failed to clear the trap role. Please try again later.');
-}
-
+    } catch (err) {
+      console.error('moderation:autoBanTrap: failed to clear trap role', { guildId }, err);
+      await interaction.editReply('Failed to clear the trap role. Please try again later.');
+    }
     return;
   }
 
@@ -130,42 +123,34 @@ function buildSyntheticInteraction(guild, botUser) {
 
 async function handleGuildMemberUpdate(oldMember, newMember, client) {
   const guild = newMember?.guild;
-  if (!guild) return;
-
-  // Guard: Discord may send null oldMember if not cached
-  if (!oldMember || !newMember) {
-    console.warn("autoBanTrap: missing member data for GuildMemberUpdate", {
-      guildId: guild?.id,
-      oldMember: !!oldMember,
-      newMember: !!newMember
-    });
+  if (!guild || !newMember?.user) {
     return;
   }
 
-  if (!oldMember?.user || !newMember?.user) return;
-
-
   const guildId = guild.id;
   const trapRoleId = await fetchTrapRoleId(guildId);
-  if (!trapRoleId) return;
+  if (!trapRoleId) {
+    return;
+  }
 
-  // Simplify role-change check
-  if (!oldMember.roles.cache || !newMember.roles.cache) return;
+  if (!isTrapRoleNewlyAssigned(oldMember, newMember, trapRoleId)) {
+    return;
+  }
 
-if (
-  newMember.roles.cache.has(trapRoleId) &&
-  !oldMember.roles.cache.has(trapRoleId)
-) {
-  const botMember = guild.members.me;
+  const botMember = guild.members?.me;
+  if (!botMember?.permissions?.has?.(PermissionFlagsBits.BanMembers)) {
+    console.warn('moderation:autoBanTrap: missing BanMembers permission', { guildId, trapRoleId });
+    return;
+  }
 
+  const botHighest = botMember.roles?.highest;
+  const targetHighest = newMember.roles?.highest;
   if (
-    !botMember?.permissions?.has(PermissionFlagsBits.BanMembers) ||
-    botMember.roles.highest.comparePositionTo(newMember.roles.highest) <= 0
+    botHighest?.comparePositionTo &&
+    targetHighest &&
+    botHighest.comparePositionTo(targetHighest) <= 0
   ) {
-    console.warn(
-      `[autoBanTrap] Bot cannot ban ${newMember.user.tag} (${newMember.id}) — role hierarchy too low or missing BanMembers.`,
-      { guildId, trapRoleId }
-    );
+    console.warn('moderation:autoBanTrap: role hierarchy prevents ban', { guildId, trapRoleId });
     return;
   }
 
@@ -180,20 +165,9 @@ if (
       reference: null,
       targetUser
     });
-    console.log(
-      `[autoBanTrap] Banned ${targetUser.tag} (${targetUser.id}) in guild ${guildId}`
-    );
   } catch (err) {
-    console.error(
-      "[autoBanTrap] Ban execution failed.",
-      { guildId, userId: targetUser?.id, error: err.message }
-    );
+    console.error('moderation:autoBanTrap: failed to execute trap ban', { guildId, userId: targetUser.id }, err);
   }
-} else {
-  return;
-}
-
-
 }
 
 function registerAutoBanTrap(client) {

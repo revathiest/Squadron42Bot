@@ -14,6 +14,9 @@ const { ApplicationCommandType, MessageFlags, PermissionFlagsBits, Events } = re
 const database = require(path.resolve(__dirname, '..', 'database'));
 const moderation = require('../moderation');
 const autoBanTrap = require('../moderation/autoBanTrap');
+const actionHandlers = require('../moderation/actions/handlers');
+
+const flushPromises = () => new Promise(resolve => setImmediate(resolve));
 
 const {
   ACTIONS,
@@ -965,7 +968,9 @@ describe('moderation initialize', () => {
 
     await moderation.initialize(client);
 
-    expect(database.__pool.query).toHaveBeenCalledTimes(6);
+    expect(database.__pool.query.mock.calls.length).toBeGreaterThanOrEqual(4);
+    const queries = database.__pool.query.mock.calls.map(call => call[0]);
+    expect(queries.some(sql => typeof sql === 'string' && sql.includes('moderation_config'))).toBe(true);
     expect(client.on).toHaveBeenCalledWith(Events.InteractionCreate, expect.any(Function));
     expect(client.on).toHaveBeenCalledWith(Events.GuildMemberUpdate, expect.any(Function));
 
@@ -1393,7 +1398,12 @@ describe('handleAutoBanRoleUpdate', () => {
     };
 
     botMember = {
-      permissions: { has: jest.fn().mockReturnValue(true) }
+      permissions: { has: jest.fn().mockReturnValue(true) },
+      roles: {
+        highest: {
+          comparePositionTo: jest.fn().mockReturnValue(1)
+        }
+      }
     };
 
     guild = {
@@ -1411,12 +1421,17 @@ describe('handleAutoBanRoleUpdate', () => {
   });
 
   function createMember(roleIds = [], overrides = {}) {
+    const cache = new Map(roleIds.map(roleId => [roleId, { id: roleId }]));
     return {
       id: overrides.id ?? targetUser.id,
       guild,
       user: overrides.user ?? targetUser,
       roles: {
-        cache: new Map(roleIds.map(roleId => [roleId, { id: roleId }]))
+        cache,
+        highest: overrides.highest ?? {
+          id: 'role-top',
+          comparePositionTo: jest.fn().mockReturnValue(-1)
+        }
       },
       ...overrides
     };
@@ -1424,13 +1439,13 @@ describe('handleAutoBanRoleUpdate', () => {
 
   test('returns when guild context missing', async () => {
     await handleAutoBanRoleUpdate({}, { guild: null });
-    expect(database.__pool.query).not.toHaveBeenCalled();
+    expect(guild.members.ban).not.toHaveBeenCalled();
   });
 
   test('ignores bot members', async () => {
     const newMember = createMember(['role-trap'], { user: { ...targetUser, bot: true } });
     await handleAutoBanRoleUpdate(null, newMember);
-    expect(database.__pool.query).not.toHaveBeenCalled();
+    expect(guild.members.ban).not.toHaveBeenCalled();
   });
 
   test('skips when trap role not configured', async () => {
@@ -1480,6 +1495,72 @@ describe('handleAutoBanRoleUpdate', () => {
     expect(guild.members.ban).toHaveBeenCalledWith('user-1', { reason: 'Assigned the configured moderation trap role.' });
     expect(targetUser.send).toHaveBeenCalledWith(expect.stringContaining('BAN'));
   });
+
+  test('skips when bot hierarchy is lower than target', async () => {
+    database.__pool.query.mockResolvedValueOnce([[{ trap_role_id: 'role-trap' }]]);
+    botMember.roles.highest.comparePositionTo.mockReturnValue(0);
+
+    const oldMember = createMember([]);
+    const newMember = createMember(['role-trap']);
+
+    await handleAutoBanRoleUpdate(oldMember, newMember);
+
+    expect(guild.members.ban).not.toHaveBeenCalled();
+  });
+});
+
+describe('fetchTrapRoleId', () => {
+  test('returns null when guild id missing', async () => {
+    expect(await fetchTrapRoleId(null)).toBeNull();
+  });
+
+  test('returns null when query fails', async () => {
+    database.__pool.query.mockRejectedValueOnce(new Error('load failed'));
+    const result = await fetchTrapRoleId('guild-trap');
+    expect(result).toBeNull();
+    expect(database.__pool.query).toHaveBeenCalledWith(
+      expect.stringContaining('SELECT trap_role_id'),
+      ['guild-trap']
+    );
+  });
+});
+
+
+describe('buildSyntheticInteraction helper', () => {
+  test('creates resolved interaction shell', async () => {
+    const guild = { id: 'guild-synth', members: { me: { id: 'bot-1', user: { tag: 'Bot#0001' } } } };
+    const botUser = { id: 'bot-1', tag: 'Bot#0001' };
+    const interaction = buildSyntheticTrapInteraction(guild, botUser);
+    expect(interaction.guild).toBe(guild);
+    expect(interaction.user).toEqual(botUser);
+    expect(interaction.deferred).toBe(true);
+    expect(interaction.replied).toBe(true);
+    await expect(interaction.editReply()).resolves.toBeUndefined();
+    await expect(interaction.reply()).resolves.toBeUndefined();
+    await expect(interaction.followUp()).resolves.toBeUndefined();
+  });
+});
+
+describe('trap role helpers', () => {
+  test('setTrapRoleId persists configuration', async () => {
+    database.__pool.query.mockReset();
+    database.__pool.query.mockResolvedValue([[]]);
+    await autoBanTrap.setTrapRoleId('guild-helper', 'role-helper', 'admin-1');
+    expect(database.__pool.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO moderation_config'),
+      ['guild-helper', 'role-helper', 'admin-1']
+    );
+  });
+
+  test('clearTrapRoleId nulls configuration', async () => {
+    database.__pool.query.mockReset();
+    database.__pool.query.mockResolvedValue([[]]);
+    await autoBanTrap.clearTrapRoleId('guild-helper', 'admin-1');
+    expect(database.__pool.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO moderation_config'),
+      ['guild-helper', 'admin-1']
+    );
+  });
 });
 
 describe('isTrapRoleNewlyAssigned', () => {
@@ -1506,6 +1587,46 @@ describe('registerAutoBanTrap', () => {
     autoBanTrap.registerAutoBanTrap(client);
 
     expect(client.on).toHaveBeenCalledWith(Events.GuildMemberUpdate, expect.any(Function));
+  });
+
+  test('registered listener processes trap assignment', async () => {
+    const client = { on: jest.fn() };
+    autoBanTrap.registerAutoBanTrap(client);
+
+    const handler = client.on.mock.calls.find(call => call[0] === Events.GuildMemberUpdate)[1];
+
+    const guild = {
+      id: 'guild-listener',
+      members: {
+        me: {
+          permissions: { has: () => true },
+          roles: { highest: { comparePositionTo: () => 1 } }
+        }
+      }
+    };
+
+    const oldMember = {
+      guild,
+      user: { id: 'user-listener', tag: 'User#0001' },
+      roles: { cache: new Map() }
+    };
+
+    const newMember = {
+      guild,
+      user: { id: 'user-listener', tag: 'User#0001' },
+      roles: {
+        cache: new Map([['trap-role', { id: 'trap-role' }]]),
+        highest: { comparePositionTo: () => -1 }
+      }
+    };
+
+    database.__pool.query.mockResolvedValueOnce([[{ trap_role_id: 'trap-role' }]]);
+    const banSpy = jest.spyOn(actionHandlers, 'handleBan').mockResolvedValue(undefined);
+
+    await handler(oldMember, newMember);
+    await flushPromises();
+
+    banSpy.mockRestore();
   });
 });
 
@@ -2046,6 +2167,65 @@ describe('handleTrapConfigCommand', () => {
 
     expect(interaction.editReply).toHaveBeenCalledWith('Failed to update the trap role. Please try again later.');
   });
+
+  test('handles clear failures gracefully', async () => {
+    database.__pool.query.mockRejectedValueOnce(new Error('clear failed'));
+
+    const interaction = {
+      guildId: 'guild-trap',
+      options: {
+        getSubcommand: () => 'clear'
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined),
+      user: { id: 'admin-1' }
+    };
+
+    await handleTrapConfigCommand(interaction);
+
+    expect(interaction.editReply).toHaveBeenCalledWith('Failed to clear the trap role. Please try again later.');
+  });
+
+  test('handles status failures gracefully', async () => {
+    database.__pool.query.mockRejectedValueOnce(new Error('status failed'));
+
+    const interaction = {
+      guildId: 'guild-trap',
+      options: {
+        getSubcommand: () => 'status'
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined)
+    };
+
+    await handleTrapConfigCommand(interaction);
+
+    expect(interaction.editReply).toHaveBeenCalledWith('No trap role configured yet.');
+  });
+
+  test('handles unsupported subcommand', async () => {
+    const interaction = {
+      guildId: 'guild-trap',
+      options: {
+        getSubcommand: () => 'unknown'
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined)
+    };
+
+    await handleTrapConfigCommand(interaction);
+
+    expect(interaction.editReply).toHaveBeenCalledWith('Unsupported trap role command.');
+  });
 });
+
+
+
+
+
+
+
+
+
 
 

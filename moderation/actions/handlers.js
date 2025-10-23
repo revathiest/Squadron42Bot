@@ -93,12 +93,14 @@ async function handleKick({ interaction, context, reason, reference, targetUser 
 
 async function handleBan({ interaction, context, reason, reference, targetUser }) {
   const guild = interaction.guild;
-
   const botMember = guild.members.me;
+
+
   if (!botMember?.permissions?.has(PermissionFlagsBits.BanMembers)) {
-    await respondEphemeral(interaction, 'I do not have permission to ban members. Update my role settings first.');
+    console.log('Missing BanMembers permission.');
     return;
   }
+
 
   try {
     await guild.members.ban(targetUser.id, { reason });
@@ -110,11 +112,10 @@ async function handleBan({ interaction, context, reason, reference, targetUser }
       moderator: interaction.user,
       reason,
       reference
-    });
-    await respondEphemeral(interaction, `Banned ${targetUser.tag}.`);
+  });
+    console.log(`Banned ${targetUser.tag}. Assigned a honey trap role.`);
   } catch (err) {
     console.error('moderation: Failed to ban user', { guildId: interaction.guildId, targetId: targetUser.id }, err);
-    await respondEphemeral(interaction, 'Failed to ban that member. Check my permissions and try again.');
   }
 }
 

@@ -47,6 +47,17 @@ client.once(Events.ClientReady, async c => {
   } catch (err) {
     console.error('Failed to finalize moderation module:', err);
   }
+
+    // --- Warm up member cache for all guilds ---
+  for (const [guildId, guild] of c.guilds.cache) {
+    try {
+      await guild.members.fetch(); // populates the member cache
+      console.log(`[autoBanTrap] Cached members for ${guild.name} (${guildId})`);
+    } catch (err) {
+      console.warn(`[autoBanTrap] Failed to fetch members for ${guild.name}:`, err.message);
+    }
+  }
+
 });
 
 const token = (process.env.DISCORD_TOKEN || '').trim();
