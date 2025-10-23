@@ -11,8 +11,14 @@ const commandModules = [voiceRooms, tickets, moderation];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers, // Required for role change detection
+    GatewayIntentBits.GuildModeration,    // Needed to execute bans
+    GatewayIntentBits.GuildVoiceStates
+  ]
 });
+
 
 // Fires once when the gateway is ready
 client.once(Events.ClientReady, async c => {
