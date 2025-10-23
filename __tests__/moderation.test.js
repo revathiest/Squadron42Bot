@@ -9,7 +9,7 @@ jest.mock(require('path').resolve(__dirname, '..', 'database'), () => {
 });
 
 const path = require('path');
-const { ApplicationCommandType, MessageFlags, PermissionFlagsBits, Events } = require('discord.js');
+const { ApplicationCommandType, ApplicationCommandOptionType, MessageFlags, PermissionFlagsBits, Events } = require('discord.js');
 
 const database = require(path.resolve(__dirname, '..', 'database'));
 const moderation = require('../moderation');
@@ -20,6 +20,8 @@ const flushPromises = () => new Promise(resolve => setImmediate(resolve));
 
 const {
   ACTIONS,
+  PARDON_COMMAND_NAME,
+  PARDON_COMMAND_DESCRIPTION,
   roleCache,
   addRoleToCache,
   removeRoleFromCache,
@@ -35,7 +37,7 @@ const {
   handleModCommand,
   handleInteraction,
   handleHistoryContext,
-  handlePardonContext,
+  handlePardonCommand,
   handleModal,
   fetchReferenceMessage,
   handleTrapConfigCommand,
@@ -109,7 +111,8 @@ describe('moderation command definitions', () => {
       expect.objectContaining({ name: ACTIONS.warn.label, type: 2 }),
       expect.objectContaining({ name: ACTIONS.kick.label, type: 2 }),
       expect.objectContaining({ name: ACTIONS.ban.label, type: 2 }),
-      expect.objectContaining({ name: 'Pardon User', type: 2 }),
+      expect.objectContaining({ name: ACTIONS.timeout.label, type: 2 }),
+      expect.objectContaining({ name: PARDON_COMMAND_NAME }),
       expect.objectContaining({ name: 'View Moderation History', type: 2 })
     ]));
 
@@ -129,8 +132,12 @@ describe('moderation command definitions', () => {
     const banDef = defs.guild.find(def => def.name === ACTIONS.ban.label);
     expect(banDef.default_member_permissions).toBeUndefined();
 
-    const pardonDef = defs.guild.find(def => def.name === 'Pardon User');
-    expect(pardonDef.default_member_permissions).toBeUndefined();
+    const pardonDef = defs.guild.find(def => def.name === PARDON_COMMAND_NAME);
+    expect(pardonDef).toBeDefined();
+    expect(pardonDef.description).toBe(PARDON_COMMAND_DESCRIPTION);
+    expect(pardonDef.options).toEqual(expect.arrayContaining([
+      expect.objectContaining({ name: 'user', type: ApplicationCommandOptionType.User })
+    ]));
 
     const historyDef = defs.guild.find(def => def.name === 'View Moderation History');
     expect(historyDef.default_member_permissions).toBeUndefined();
@@ -449,6 +456,129 @@ describe('handleModal', () => {
     expect(database.__pool.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO moderation_actions'), expect.any(Array));
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'Banned Banned#0001.'
+    }));
+  });
+
+  test('timeouts member when moderator selects duration', async () => {
+    addRoleToCache('guild-timeout', 'timeout', 'role-timeout');
+    const timeoutMock = jest.fn().mockResolvedValue(undefined);
+    const targetUser = { id: 'target-timeout', tag: 'Timeout#0001', send: jest.fn().mockResolvedValue(undefined) };
+    const targetMember = {
+      id: 'target-timeout',
+      timeout: timeoutMock,
+      roles: {
+        cache: { has: () => false },
+        highest: { comparePositionTo: () => -1 }
+      },
+      user: targetUser
+    };
+
+    const membersManager = {
+      fetch: jest.fn().mockResolvedValue(targetMember),
+      me: { permissions: { has: perm => perm === PermissionFlagsBits.ModerateMembers } }
+    };
+
+    const interaction = {
+      customId: 'moderation:timeout:target-timeout',
+      guildId: 'guild-timeout',
+      guild: {
+        id: 'guild-timeout',
+        name: 'Brig',
+        members: membersManager,
+        channels: { fetch: jest.fn() }
+      },
+      member: {
+        roles: {
+          cache: { has: roleId => roleId === 'role-timeout' },
+          highest: { comparePositionTo: () => 1 }
+        },
+        permissions: { has: () => true }
+      },
+      user: { id: 'mod-timeout', tag: 'Moderator#042' },
+      fields: {
+        getTextInputValue: jest.fn(key => {
+          if (key === 'reason') {
+            return 'Cooling off period';
+          }
+          if (key === 'duration') {
+            return '1h';
+          }
+          return '';
+        })
+      },
+      reply: jest.fn().mockResolvedValue(undefined),
+      client: {
+        users: { fetch: jest.fn() }
+      }
+    };
+
+    await handleModal(interaction);
+
+    expect(timeoutMock).toHaveBeenCalledWith(60 * 60 * 1000, expect.stringContaining('Timeout: 1 hour'));
+    const insertCall = database.__pool.query.mock.calls.find(call => call[0].includes('INSERT INTO moderation_actions'));
+    expect(insertCall).toBeDefined();
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
+      content: 'Timed out Timeout#0001 for 1 hour.'
+    }));
+  });
+
+  test('rejects timeout when duration is invalid', async () => {
+    addRoleToCache('guild-timeout-invalid', 'timeout', 'role-timeout');
+    const timeoutMock = jest.fn().mockResolvedValue(undefined);
+    const targetMember = {
+      id: 'target-timeout-invalid',
+      timeout: timeoutMock,
+      roles: {
+        cache: { has: () => false },
+        highest: { comparePositionTo: () => -1 }
+      },
+      user: { id: 'target-timeout-invalid', tag: 'Timeout#Bad', send: jest.fn().mockResolvedValue(undefined) }
+    };
+
+    const membersManager = {
+      fetch: jest.fn().mockResolvedValue(targetMember),
+      me: { permissions: { has: perm => perm === PermissionFlagsBits.ModerateMembers } }
+    };
+
+    const interaction = {
+      customId: 'moderation:timeout:target-timeout-invalid',
+      guildId: 'guild-timeout-invalid',
+      guild: {
+        id: 'guild-timeout-invalid',
+        name: 'Brig',
+        members: membersManager,
+        channels: { fetch: jest.fn() }
+      },
+      member: {
+        roles: {
+          cache: { has: roleId => roleId === 'role-timeout' },
+          highest: { comparePositionTo: () => 1 }
+        },
+        permissions: { has: () => true }
+      },
+      user: { id: 'mod-timeout-invalid', tag: 'Moderator#043' },
+      fields: {
+        getTextInputValue: jest.fn(key => {
+          if (key === 'reason') {
+            return 'Invalid duration supplied';
+          }
+          if (key === 'duration') {
+            return '9h';
+          }
+          return '';
+        })
+      },
+      reply: jest.fn().mockResolvedValue(undefined),
+      client: {
+        users: { fetch: jest.fn() }
+      }
+    };
+
+    await handleModal(interaction);
+
+    expect(timeoutMock).not.toHaveBeenCalled();
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
+      content: 'Select a valid timeout duration: 10m, 1h, 12h, 24h, 3d, 7d.'
     }));
   });
 
@@ -784,12 +914,30 @@ describe('handleModal', () => {
       tag: 'Pilot#7777',
       send: jest.fn().mockResolvedValue(undefined)
     };
+    const timeoutMock = jest.fn().mockResolvedValue(undefined);
 
     const interaction = {
       customId: 'moderation:pardon:target-pardon-modal',
       guildId: 'guild-pardon-modal',
       guild: {
-        members: { fetch: jest.fn().mockResolvedValue({ permissions: { has: perm => perm === PermissionFlagsBits.Administrator } }) }
+        id: 'guild-pardon-modal',
+        members: {
+          fetch: jest.fn().mockImplementation(async userId => {
+            if (userId === 'admin-user') {
+              return { permissions: { has: perm => perm === PermissionFlagsBits.Administrator } };
+            }
+
+            if (userId === 'target-pardon-modal') {
+              return {
+                id: 'target-pardon-modal',
+                isCommunicationDisabled: () => true,
+                timeout: timeoutMock
+              };
+            }
+
+            return null;
+          })
+        }
       },
       member: {
         permissions: { has: perm => perm === PermissionFlagsBits.Administrator }
@@ -812,6 +960,7 @@ describe('handleModal', () => {
     const insertCall = database.__pool.query.mock.calls.find(call => call[0].includes('INSERT INTO moderation_actions'));
     expect(insertCall).toBeDefined();
     expect(insertCall[1][1]).toBe('pardon');
+    expect(timeoutMock).toHaveBeenCalledWith(null, 'Completed rehabilitation program');
     expect(targetUser.send).toHaveBeenCalledWith(expect.stringContaining('PARDON'));
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: expect.stringContaining('Pardoned')
@@ -912,14 +1061,14 @@ describe('handleInteraction', () => {
     expect(interaction.showModal).toHaveBeenCalled();
   });
 
-  test('routes pardon context command', async () => {
+  test('routes pardon slash command', async () => {
     const interaction = {
-      isChatInputCommand: () => false,
-      isUserContextMenuCommand: () => true,
-      commandName: 'Pardon User',
+      isChatInputCommand: () => true,
+      isUserContextMenuCommand: () => false,
+      commandName: PARDON_COMMAND_NAME,
       guildId: null,
       guild: null,
-      targetUser: { id: 'target' },
+      options: { getUser: jest.fn() },
       user: { id: 'moderator' },
       reply: jest.fn().mockResolvedValue(undefined)
     };
@@ -1662,6 +1811,33 @@ describe('handleModCommand', () => {
     expect(interaction.editReply).toHaveBeenCalledWith('Added @Moderators to the **Warn User** role list.');
   });
 
+  test('adds timeout moderation role without enum failures', async () => {
+    const role = { id: 'role-timeout', toString: () => '@TimeoutMods' };
+    const interaction = {
+      guildId: 'guild-timeout',
+      options: {
+        getSubcommandGroup: () => 'roles',
+        getSubcommand: () => 'add',
+        getString: () => 'timeout',
+        getRole: () => role
+      },
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined)
+    };
+
+    await handleModCommand(interaction);
+
+    expect(database.__pool.query).toHaveBeenCalledWith(
+      'INSERT IGNORE INTO moderation_roles (guild_id, action, role_id) VALUES (?, ?, ?)',
+      ['guild-timeout', 'timeout', 'role-timeout']
+    );
+
+    const actionMap = roleCache.get('guild-timeout');
+    expect(actionMap).toBeDefined();
+    expect(actionMap.get('timeout')?.has('role-timeout')).toBe(true);
+    expect(interaction.editReply).toHaveBeenCalledWith('Added @TimeoutMods to the **Timeout User** role list.');
+  });
+
   test('removes moderation role when present', async () => {
     addRoleToCache('guild-remove', 'kick', 'role-remove');
     const role = { id: 'role-remove', toString: () => '@TempMods' };
@@ -1793,17 +1969,17 @@ describe('handleModCommand', () => {
   });
 });
 
-describe('handlePardonContext', () => {
+describe('handlePardonCommand', () => {
   test('requires guild context', async () => {
     const interaction = {
       guildId: null,
       guild: null,
-      targetUser: { id: 'target-context' },
+      options: { getUser: jest.fn() },
       user: { id: 'moderator' },
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handlePardonContext(interaction);
+    await handlePardonCommand(interaction);
 
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'This moderation action must be used inside a guild.'
@@ -1811,6 +1987,7 @@ describe('handlePardonContext', () => {
   });
 
   test('rejects when executor lacks administrator permission', async () => {
+    const target = { id: 'target-user' };
     const interaction = {
       guildId: 'guild-no-admin',
       guild: {
@@ -1819,12 +1996,14 @@ describe('handlePardonContext', () => {
       member: {
         permissions: { has: () => false }
       },
-      targetUser: { id: 'target-user' },
+      options: {
+        getUser: jest.fn().mockReturnValue(target)
+      },
       user: { id: 'moderator' },
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handlePardonContext(interaction);
+    await handlePardonCommand(interaction);
 
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'You must be an administrator to pardon users.'
@@ -1835,28 +2014,35 @@ describe('handlePardonContext', () => {
     const interaction = {
       guildId: 'guild-no-target',
       guild: {},
-      targetUser: null,
+      options: {
+        getUser: jest.fn(() => {
+          throw new Error('no option');
+        })
+      },
       user: { id: 'moderator' },
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handlePardonContext(interaction);
+    await handlePardonCommand(interaction);
 
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
-      content: 'Unable to identify the selected user.'
+      content: 'You must choose a user to pardon.'
     }));
   });
 
   test('prevents self pardons', async () => {
+    const target = { id: 'moderator' };
     const interaction = {
       guildId: 'guild-self',
       guild: {},
-      targetUser: { id: 'moderator' },
+      options: {
+        getUser: jest.fn().mockReturnValue(target)
+      },
       user: { id: 'moderator' },
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handlePardonContext(interaction);
+    await handlePardonCommand(interaction);
 
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'You cannot issue a pardon to yourself.'
@@ -1864,6 +2050,7 @@ describe('handlePardonContext', () => {
   });
 
   test('opens modal when executor is administrator', async () => {
+    const target = { id: 'target-admin', tag: 'Pilot#1234' };
     const interaction = {
       guildId: 'guild-admin',
       guild: {
@@ -1872,13 +2059,15 @@ describe('handlePardonContext', () => {
       member: {
         permissions: { has: perm => perm === PermissionFlagsBits.Administrator }
       },
-      targetUser: { id: 'target-admin', tag: 'Pilot#1234' },
+      options: {
+        getUser: jest.fn().mockReturnValue(target)
+      },
       user: { id: 'admin-user' },
       showModal: jest.fn().mockResolvedValue(undefined),
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handlePardonContext(interaction);
+    await handlePardonCommand(interaction);
 
     expect(interaction.showModal).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ custom_id: 'moderation:pardon:target-admin' })
@@ -1886,6 +2075,7 @@ describe('handlePardonContext', () => {
   });
 
   test('handles modal presentation failures gracefully', async () => {
+    const target = { id: 'target-fail', tag: 'Pilot#9999' };
     const interaction = {
       guildId: 'guild-admin-fail',
       guild: {
@@ -1894,13 +2084,15 @@ describe('handlePardonContext', () => {
       member: {
         permissions: { has: perm => perm === PermissionFlagsBits.Administrator }
       },
-      targetUser: { id: 'target-fail', tag: 'Pilot#9999' },
+      options: {
+        getUser: jest.fn().mockReturnValue(target)
+      },
       user: { id: 'admin-fail' },
       showModal: jest.fn().mockRejectedValue(new Error('modal failed')),
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handlePardonContext(interaction);
+    await handlePardonCommand(interaction);
 
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'Unable to open the pardon dialog. Please try again later.'

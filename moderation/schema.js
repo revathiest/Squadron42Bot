@@ -5,7 +5,7 @@ async function ensureSchema(pool) {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS moderation_roles (
       guild_id VARCHAR(20) NOT NULL,
-      action ENUM('warn', 'kick', 'ban') NOT NULL,
+      action VARCHAR(20) NOT NULL,
       role_id VARCHAR(20) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (guild_id, action, role_id)
@@ -16,7 +16,7 @@ async function ensureSchema(pool) {
     CREATE TABLE IF NOT EXISTS moderation_actions (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
       guild_id VARCHAR(20) NOT NULL,
-      action ENUM('warn', 'kick', 'ban', 'pardon') NOT NULL,
+      action ENUM('warn', 'kick', 'ban', 'timeout', 'pardon') NOT NULL,
       target_id VARCHAR(20) NOT NULL,
       target_tag VARCHAR(40) DEFAULT NULL,
       executor_id VARCHAR(20) NOT NULL,
@@ -39,7 +39,15 @@ async function ensureSchema(pool) {
 
   await pool.query(`
     ALTER TABLE moderation_actions
-    MODIFY COLUMN action ENUM('warn', 'kick', 'ban', 'pardon') NOT NULL
+    MODIFY COLUMN action ENUM('warn', 'kick', 'ban', 'timeout', 'pardon') NOT NULL
+  `).catch(err => {
+    if (err?.code !== 'ER_BAD_FIELD_ERROR' && err?.code !== 'ER_CANT_MODIFY_USED_TABLE') {
+      throw err;
+    }
+  });
+  await pool.query(`
+    ALTER TABLE moderation_roles
+    MODIFY COLUMN action VARCHAR(20) NOT NULL
   `).catch(err => {
     if (err?.code !== 'ER_BAD_FIELD_ERROR' && err?.code !== 'ER_CANT_MODIFY_USED_TABLE') {
       throw err;

@@ -95,12 +95,10 @@ async function handleBan({ interaction, context, reason, reference, targetUser }
   const guild = interaction.guild;
   const botMember = guild.members.me;
 
-
   if (!botMember?.permissions?.has(PermissionFlagsBits.BanMembers)) {
-    console.log('Missing BanMembers permission.');
+    await respondEphemeral(interaction, 'I do not have permission to ban members. Update my role settings first.');
     return;
   }
-
 
   try {
     await guild.members.ban(targetUser.id, { reason });
@@ -112,14 +110,72 @@ async function handleBan({ interaction, context, reason, reference, targetUser }
       moderator: interaction.user,
       reason,
       reference
-  });
-    console.log(`Banned ${targetUser.tag}. Assigned a honey trap role.`);
+    });
+    await respondEphemeral(interaction, `Banned ${targetUser.tag}.`);
   } catch (err) {
     console.error('moderation: Failed to ban user', { guildId: interaction.guildId, targetId: targetUser.id }, err);
+    await respondEphemeral(interaction, 'Failed to ban that member. Check my permissions and try again.');
   }
 }
 
+async function handleTimeout({ interaction, context, reason, reference, targetUser, duration }) {
+  const targetMember = context.targetMember;
+  if (!targetMember) {
+    await respondEphemeral(interaction, 'That user is no longer in the server.');
+    return;
+  }
+
+  const botMember = interaction.guild.members.me;
+  if (!botMember?.permissions?.has(PermissionFlagsBits.ModerateMembers)) {
+    await respondEphemeral(interaction, 'I do not have permission to timeout members. Update my role settings first.');
+    return;
+  }
+
+  if (!duration?.milliseconds) {
+    await respondEphemeral(interaction, 'A timeout duration must be selected.');
+    return;
+  }
+
+  const reasonWithDuration = `${reason} (Timeout: ${duration.label})`;
+
+  try {
+    await targetMember.timeout(duration.milliseconds, reasonWithDuration);
+  } catch (err) {
+    console.error('moderation: Failed to timeout user', { guildId: interaction.guildId, targetId: targetMember.id }, err);
+    await respondEphemeral(interaction, 'Failed to timeout that member. Check my permissions and try again.');
+    return;
+  }
+
+  await dmUser(targetMember.user, 'timeout', reasonWithDuration, interaction.guild?.name);
+
+  await logAction({
+    guildId: interaction.guildId,
+    action: 'timeout',
+    targetUser: targetMember.user,
+    moderator: interaction.user,
+    reason: reasonWithDuration,
+    reference
+  });
+
+  await respondEphemeral(interaction, `Timed out ${targetMember.user.tag} for ${duration.label}.`);
+}
+
 async function executePardon({ interaction, targetUser, moderator, reason }) {
+  const guild = interaction.guild;
+  if (guild) {
+    try {
+      const member = await guild.members.fetch(targetUser.id).catch(() => null);
+      if (member?.isCommunicationDisabled?.()) {
+        await member.timeout(null, reason);
+      }
+    } catch (err) {
+      console.warn('moderation: Failed to clear timeout during pardon', {
+        guildId: guild.id,
+        targetId: targetUser.id
+      }, err);
+    }
+  }
+
   await logAction({
     guildId: interaction.guildId,
     action: 'pardon',
@@ -138,5 +194,6 @@ module.exports = {
   handleWarn,
   handleKick,
   handleBan,
+  handleTimeout,
   executePardon
 };

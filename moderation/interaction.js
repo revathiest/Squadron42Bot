@@ -1,8 +1,8 @@
 const { Events } = require('discord.js');
-const { ACTIONS, PARDON_CONTEXT_LABEL, HISTORY_CONTEXT_LABEL } = require('./constants');
+const { ACTIONS, PARDON_COMMAND_NAME, HISTORY_CONTEXT_LABEL } = require('./constants');
 const { respondEphemeral } = require('./utils');
 const { handleModCommand } = require('./roleConfig');
-const { handleActionRequest, handlePardonContext } = require('./actions/context');
+const { handleActionRequest, handlePardonCommand } = require('./actions/context');
 const { handleModal } = require('./actions/modals');
 const { handleHistoryContext } = require('./history/context');
 
@@ -11,6 +11,11 @@ async function handleInteraction(interaction) {
     if (interaction.isChatInputCommand()) {
       if (interaction.commandName === 'mod') {
         await handleModCommand(interaction);
+        return;
+      }
+
+      if (interaction.commandName === PARDON_COMMAND_NAME) {
+        await handlePardonCommand(interaction);
         return;
       }
     }
@@ -31,8 +36,8 @@ async function handleInteraction(interaction) {
         return;
       }
 
-      if (interaction.commandName === PARDON_CONTEXT_LABEL) {
-        await handlePardonContext(interaction);
+      if (interaction.commandName === ACTIONS.timeout.label) {
+        await handleActionRequest(interaction, 'timeout');
         return;
       }
 

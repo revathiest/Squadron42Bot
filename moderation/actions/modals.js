@@ -6,13 +6,14 @@ const {
   TextInputStyle,
   PermissionFlagsBits
 } = require('discord.js');
-const { ACTIONS } = require('../constants');
+const { ACTIONS, TIMEOUT_DURATIONS } = require('../constants');
 const { parseReferenceInput, fetchReferenceMessage, respondEphemeral } = require('../utils');
 const { hasActionPermission } = require('../roleCache');
 const {
   handleWarn,
   handleKick,
   handleBan,
+  handleTimeout,
   executePardon
 } = require('./handlers');
 
@@ -37,10 +38,30 @@ function buildReasonModal({ action, targetUser }) {
     .setRequired(false)
     .setPlaceholder('Paste the message URL or channelId:messageId');
 
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(reasonInput),
-    new ActionRowBuilder().addComponents(referenceInput)
-  );
+  const components = [
+    new ActionRowBuilder().addComponents(reasonInput)
+  ];
+
+  if (ACTIONS[action]?.durationChoices?.length) {
+    const options = ACTIONS[action].durationChoices
+      .map(choice => choice.value)
+      .join(', ');
+
+    const durationInput = new TextInputBuilder()
+      .setCustomId('duration')
+      .setLabel('Timeout duration')
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true)
+      .setPlaceholder(`Choose from: ${options}`);
+
+    components.push(new ActionRowBuilder().addComponents(durationInput));
+  }
+
+  components.push(new ActionRowBuilder().addComponents(referenceInput));
+
+  for (const row of components) {
+    modal.addComponents(row);
+  }
 
   return modal;
 }
@@ -136,6 +157,9 @@ async function handleModal(interaction) {
   }
 
   const reason = interaction.fields.getTextInputValue('reason')?.trim();
+  const durationInput = action === 'timeout'
+    ? interaction.fields.getTextInputValue('duration')?.trim()
+    : null;
 
   if (!reason) {
     await respondEphemeral(interaction, 'A reason is required for this action.');
@@ -188,6 +212,13 @@ async function handleModal(interaction) {
     parseReferenceInput(referenceInput)
   );
 
+  const timeoutChoice = action === 'timeout' ? resolveTimeoutChoice(durationInput) : null;
+  if (action === 'timeout' && !timeoutChoice) {
+    const allowed = TIMEOUT_DURATIONS.map(choice => choice.value).join(', ');
+    await respondEphemeral(interaction, `Select a valid timeout duration: ${allowed}.`);
+    return;
+  }
+
   const targetUser =
     context.targetMember?.user ||
     (await interaction.client.users.fetch(targetId).catch(() => null));
@@ -200,7 +231,8 @@ async function handleModal(interaction) {
   const handlerMap = {
     warn: handleWarn,
     kick: handleKick,
-    ban: handleBan
+    ban: handleBan,
+    timeout: handleTimeout
   };
 
   await handlerMap[action]({
@@ -208,8 +240,27 @@ async function handleModal(interaction) {
     context,
     reason,
     reference,
-    targetUser
+    targetUser,
+    duration: timeoutChoice
   });
+}
+
+function resolveTimeoutChoice(input) {
+  if (!input) {
+    return null;
+  }
+
+  const normalized = input.trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  return TIMEOUT_DURATIONS.find(choice => {
+    const value = choice.value.toLowerCase();
+    const label = choice.label.toLowerCase();
+    const compactLabel = label.replace(/\s+/g, '');
+    return normalized === value || normalized === label || normalized === compactLabel;
+  }) || null;
 }
 
 module.exports = {

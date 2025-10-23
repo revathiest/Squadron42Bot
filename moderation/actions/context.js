@@ -32,18 +32,24 @@ async function handleActionRequest(interaction, action) {
   await interaction.showModal(buildReasonModal({ action, targetUser }));
 }
 
-async function handlePardonContext(interaction) {
+async function handlePardonCommand(interaction) {
   const guildId = interaction.guildId;
   const guild = interaction.guild;
-  const targetUser = interaction.targetUser;
 
   if (!guildId || !guild) {
     await respondEphemeral(interaction, 'This moderation action must be used inside a guild.');
     return;
   }
 
+  let targetUser = null;
+  try {
+    targetUser = interaction.options?.getUser('user', true);
+  } catch {
+    targetUser = null;
+  }
+
   if (!targetUser) {
-    await respondEphemeral(interaction, 'Unable to identify the selected user.');
+    await respondEphemeral(interaction, 'You must choose a user to pardon.');
     return;
   }
 
@@ -76,5 +82,5 @@ async function handlePardonContext(interaction) {
 
 module.exports = {
   handleActionRequest,
-  handlePardonContext
+  handlePardonCommand
 };

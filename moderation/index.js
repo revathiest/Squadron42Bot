@@ -1,5 +1,5 @@
 const { getPool } = require('../database');
-const { ACTIONS, PARDON_CONTEXT_LABEL, HISTORY_CONTEXT_LABEL } = require('./constants');
+const { ACTIONS, PARDON_COMMAND_NAME, PARDON_COMMAND_DESCRIPTION, HISTORY_CONTEXT_LABEL } = require('./constants');
 const { respondEphemeral, parseReferenceInput, fetchReferenceMessage, toTimestamp, formatTimestamp, formatReason } = require('./utils');
 const { roleCache, addRoleToCache, removeRoleFromCache, memberHasRole, hasActionPermission } = require('./roleCache');
 const { ensureSchema, loadRoleCache } = require('./schema');
@@ -46,7 +46,8 @@ module.exports = {
   onReady,
   __testables: {
     ACTIONS,
-    PARDON_CONTEXT_LABEL,
+    PARDON_COMMAND_NAME,
+    PARDON_COMMAND_DESCRIPTION,
     HISTORY_CONTEXT_LABEL,
     roleCache,
     addRoleToCache,
@@ -63,7 +64,7 @@ module.exports = {
     formatReason,
     handleModCommand: roleConfig.handleModCommand,
     handleActionRequest: actionsContext.handleActionRequest,
-    handlePardonContext: actionsContext.handlePardonContext,
+    handlePardonCommand: actionsContext.handlePardonCommand,
     handleModal: actionsModals.handleModal,
     handleInteraction,
     handleHistoryContext: historyContext.handleHistoryContext,
@@ -81,6 +82,7 @@ module.exports = {
     handleWarn: actionHandlers.handleWarn,
     handleKick: actionHandlers.handleKick,
     handleBan: actionHandlers.handleBan,
+    handleTimeout: actionHandlers.handleTimeout,
     executePardon: actionHandlers.executePardon
   }
 };
