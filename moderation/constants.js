@@ -11,15 +11,15 @@ const ACTIONS = {
   warn: {
     label: '1. Warn User'
   },
+  timeout: {
+    label: '2. Timeout User',
+    durationChoices: TIMEOUT_DURATIONS
+  },
   kick: {
     label: '3. Kick User'
   },
   ban: {
     label: '4. Ban User'
-  },
-  timeout: {
-    label: '2. Timeout User',
-    durationChoices: TIMEOUT_DURATIONS
   }
 };
 

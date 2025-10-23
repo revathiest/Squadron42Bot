@@ -57,6 +57,7 @@ DB_NAME=database_name              # optional if you connect without selecting a
 DB_POOL_LIMIT=5                    # optional, concurrent connections in the pool
 
 LOG_LEVEL=info
+SPECTRUM_POLL_INTERVAL_MS=300000   # optional, override Spectrum watcher polling interval (ms)
 ```
 
 ---

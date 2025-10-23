@@ -6,8 +6,9 @@ const commandManager = require('./commandManager');
 const voiceRooms = require('./voiceRooms');
 const tickets = require('./tickets');
 const moderation = require('./moderation');
+const spectrumWatcher = require('./spectrumWatcher');
 
-const commandModules = [voiceRooms, tickets, moderation];
+const commandModules = [voiceRooms, tickets, moderation, spectrumWatcher];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -46,6 +47,12 @@ client.once(Events.ClientReady, async c => {
     await moderation.onReady(c);
   } catch (err) {
     console.error('Failed to finalize moderation module:', err);
+  }
+
+  try {
+    await spectrumWatcher.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize spectrum watcher module:', err);
   }
 
     // --- Warm up member cache for all guilds ---
@@ -94,6 +101,13 @@ async function bootstrap() {
     await moderation.initialize(client);
   } catch (err) {
     console.error('Failed to initialize moderation module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await spectrumWatcher.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize spectrum watcher module:', err);
     process.exit(1);
   }
 

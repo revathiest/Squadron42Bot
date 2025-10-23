@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS spectrum_config (
+  guild_id VARCHAR(20) NOT NULL PRIMARY KEY,
+  announce_channel_id VARCHAR(20) NULL,
+  forum_id VARCHAR(32) NULL,
+  updated_by VARCHAR(20) NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS spectrum_watcher_state (
+  guild_id VARCHAR(20) NOT NULL PRIMARY KEY,
+  last_thread_id VARCHAR(32) NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
