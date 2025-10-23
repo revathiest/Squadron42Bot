@@ -53,10 +53,20 @@ function buildDescriptionFromBlocks(contentBlocks) {
 
 // ---------- Fixed and improved version ----------
 
-const { load } = require('cheerio');
+// spectrum/watcher/descriptionBuilder.js
+// Safe Cheerio handling for weird Node environments.
+
+let load = null;
+try {
+  ({ load } = require('cheerio'));
+  console.log('Cheerio loaded successfully.');
+} catch {
+  console.warn('Cheerio not available. Falling back to plain-text parser.');
+}
 
 function buildDescriptionFromThread(threadDetails) {
-  const blocks = threadDetails?.content_blocks?.[0]?.data?.blocks || [];
+  const blocks =
+    threadDetails?.content_blocks?.[0]?.data?.blocks || [];
   if (!Array.isArray(blocks) || blocks.length === 0) return null;
 
   const lines = [];
@@ -69,22 +79,17 @@ function buildDescriptionFromThread(threadDetails) {
 
     switch (node.type) {
       case 'header-one':
-        // Big section header — extra spacing & divider line
         lines.push(`\n━━━━━━━━━━━━━━━━━━━━━━`);
         lines.push(`**${text.replace(/\s+/g, ' ')}**`);
-        lines.push(''); // spacer line
+        lines.push('');
         break;
-
       case 'header-two':
       case 'header-three':
-        // Smaller subsection header
         lines.push(`\n__${text.replace(/\s+/g, ' ')}__`);
         break;
-
       case 'unordered-list-item':
         lines.push(`• ${text}`);
         break;
-
       case 'ordered-list-item': {
         const key = 'ordered';
         const next = (orderedCounters.get(key) || 0) + 1;
@@ -92,19 +97,30 @@ function buildDescriptionFromThread(threadDetails) {
         lines.push(`${next}. ${text}`);
         break;
       }
-
       case 'blockquote':
         lines.push(`> ${text}`);
         break;
-
       default:
         lines.push(text);
         break;
     }
   }
 
-  const description = lines.join('\n');
-  return description.length ? description.slice(0, 4000) : null;
+  // Only use Cheerio if it’s actually loaded and we find raw HTML
+  if (load && threadDetails?.content_html) {
+    try {
+      const $ = load(threadDetails.content_html);
+      $('p, li, blockquote').each((_, el) => {
+        const t = $(el).text().trim();
+        if (t) lines.push(t);
+      });
+    } catch (err) {
+      console.warn('Cheerio parse failed:', err.message);
+    }
+  }
+
+  const desc = lines.join('\n').trim();
+  return desc.length ? desc.slice(0, 4000) : '*No content found.*';
 }
 
 // ------------------------------------------------
