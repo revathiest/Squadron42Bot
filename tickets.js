@@ -693,7 +693,6 @@ async function handleButton(interaction) {
   const parts = interaction.customId.split(':');
   /* istanbul ignore next */
   if (parts.length !== 3 || parts[0] !== 'ticket') {
-    console.warn('tickets: handleButton unhandled customId', { customId: interaction.customId });
     return;
   }
 
