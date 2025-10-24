@@ -746,9 +746,6 @@ async function handleInteraction(interaction) {
     await handleModalSubmit(interaction);
     return;
   }
-
-  /* istanbul ignore next */
-  console.warn('tickets: handleInteraction ignored interaction type', { type: interaction.type, guildId: interaction.guildId ?? 'unknown' });
 }
 
 /* istanbul ignore next */
