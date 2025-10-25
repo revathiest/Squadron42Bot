@@ -3,6 +3,7 @@ const { ACTIONS, PARDON_COMMAND_NAME, HISTORY_CONTEXT_LABEL } = require('./const
 const { respondEphemeral } = require('./utils');
 const { handleModCommand } = require('./roleConfig');
 const { handleActionRequest, handlePardonCommand } = require('./actions/context');
+const { handleConfigStatus } = require("../configstatus");
 const { handleModal } = require('./actions/modals');
 const { handleHistoryContext } = require('./history/context');
 const referrals = require('../referrals');
@@ -17,6 +18,12 @@ async function handleInteraction(interaction) {
 
       if (interaction.commandName === PARDON_COMMAND_NAME) {
         await handlePardonCommand(interaction);
+        return;
+      }
+
+      if(interaction.commandName === 'config-status') {
+        await handleConfigStatus(interaction);
+        console.log(`I'm here!`);
         return;
       }
     }
@@ -60,15 +67,30 @@ async function handleInteraction(interaction) {
 }
 
 /* istanbul ignore next */
-function registerInteractionListener(client) {
-  client.on(Events.InteractionCreate, interaction => {
-    handleInteraction(interaction).catch(err => {
+function registerInteractionListener(client, commandModules = []) {
+  client.on(Events.InteractionCreate, async interaction => {
+    try {
+      console.log('attempting to handle ' + interaction.commandName);
+      await handleInteraction(interaction);
+    } catch (err) {
       console.error('moderation: Unhandled interaction error', err);
-    });
+    }
 
-    referrals.handleInteraction(interaction).catch(err => {
+    try {
+      await referrals.handleInteraction(interaction);
+    } catch (err) {
       console.error('referrals: Unhandled interaction error', err);
-    })
+    }
+
+    for (const mod of commandModules) {
+      if (typeof mod.handleInteraction === 'function') {
+        try {
+          await mod.handleInteraction(interaction);
+        } catch (err) {
+          console.error(`[${mod.constructor?.name || 'module'}] Unhandled interaction error:`, err);
+        }
+      }
+    }
   });
 }
 

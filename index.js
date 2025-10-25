@@ -8,8 +8,9 @@ const tickets = require('./tickets');
 const moderation = require('./moderation');
 const spectrumWatcher = require('./spectrumWatcher');
 const referrals = require('./referrals');
+const configStatus = require('./configstatus');
 
-const commandModules = [voiceRooms, tickets, moderation, spectrumWatcher];
+const commandModules = [voiceRooms, tickets, moderation, spectrumWatcher, configStatus];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({

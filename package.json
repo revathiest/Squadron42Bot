@@ -4,8 +4,8 @@
     "description": "A Discord bot for the **Squadron 42** community server: event coordination, spoiler-safe discussion, announcements, and community utilities. Built to be simple to operate, easy to extend, and impossible to confuse with an actual Idris.",
     "main": "index.js",
     "scripts": {
-        "start": "node index.js",
-        "dev": "node --watch index.js",
+        "start": "node -e \"process.stdout.write('\\x1Bc')\" && node index.js",
+        "dev": "node -e \"process.stdout.write('\\x1Bc')\" && node --watch index.js",
         "test": "jest --coverage"
     },
     "keywords": [],
