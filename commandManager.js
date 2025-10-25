@@ -70,7 +70,7 @@ async function registerAllCommands(token, modules) {
     console.error('commandManager: Failed to clear global slash commands', err);
   }
 
-  if (guildId && !process.env.FORCE_REREGISTER === 'true') {
+  if (guildId && process.env.CLEAR_GUILD_COMMANDS === 'true') {
     try {
       await rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: [] });
       console.log(`commandManager: Cleared slash commands for guild ${guildId}.`);
@@ -79,8 +79,8 @@ async function registerAllCommands(token, modules) {
     }
   } else if (!guildId) {
     console.warn('commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be cleared.');
-  } else if (!process.env.FORCE_REREGISTER === 'true') {
-    console.log('commandManager: Guild-specific commands not deleted. Forced re-register disabled.')
+  } else if (process.env.CLEAR_GUILD_COMMANDS === 'false') {
+    console.log('commandManager: Guild-specific commands not deleted. Forced command clearing disabled.')
   }
 
   if (globalCommands.length) {

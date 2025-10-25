@@ -54,15 +54,6 @@ function buildDescriptionFromBlocks(contentBlocks) {
 // ---------- Fixed and improved version ----------
 
 // spectrum/watcher/descriptionBuilder.js
-// Safe Cheerio handling for weird Node environments.
-
-let load = null;
-try {
-  ({ load } = require('cheerio'));
-  console.log('Cheerio loaded successfully.');
-} catch {
-  console.warn('Cheerio not available. Falling back to plain-text parser.');
-}
 
 function buildDescriptionFromThread(threadDetails) {
   const blocks =
@@ -103,19 +94,6 @@ function buildDescriptionFromThread(threadDetails) {
       default:
         lines.push(text);
         break;
-    }
-  }
-
-  // Only use Cheerio if it’s actually loaded and we find raw HTML
-  if (load && threadDetails?.content_html) {
-    try {
-      const $ = load(threadDetails.content_html);
-      $('p, li, blockquote').each((_, el) => {
-        const t = $(el).text().trim();
-        if (t) lines.push(t);
-      });
-    } catch (err) {
-      console.warn('Cheerio parse failed:', err.message);
     }
   }
 

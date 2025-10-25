@@ -23,7 +23,6 @@ async function handleInteraction(interaction) {
 
       if(interaction.commandName === 'config-status') {
         await handleConfigStatus(interaction);
-        console.log(`I'm here!`);
         return;
       }
     }
