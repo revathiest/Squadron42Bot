@@ -67,9 +67,9 @@ client.once(Events.ClientReady, async c => {
   for (const [guildId, guild] of c.guilds.cache) {
     try {
       await guild.members.fetch(); // populates the member cache
-      console.log(`[autoBanTrap] Cached members for ${guild.name} (${guildId})`);
+      console.log(`autoBanTrap: Cached members for ${guild.name} (${guildId})`);
     } catch (err) {
-      console.warn(`[autoBanTrap] Failed to fetch members for ${guild.name}:`, err.message);
+      console.warn(`autoBanTrap: Failed to fetch members for ${guild.name}:`, err.message);
     }
   }
 

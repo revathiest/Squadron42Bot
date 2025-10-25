@@ -201,17 +201,68 @@ async function handleConfigStatus(interaction) {
       inline: false
     });
 
-    //Honey Trap
-      const [autoBanRoles] = await db.query(
-      'SELECT role_id FROM auto_ban_roles where guild_id = ?',
+    // 🐝 Honey Trap
+    const [autoBanRoles] = await db.query(
+      'SELECT trap_role_id FROM moderation_config WHERE guild_id = ?',
       [interaction.guild.id]
     );
 
+    let honeyValue;
+    if (!autoBanRoles.length || !autoBanRoles[0].trap_role_id) {
+      honeyValue = 'No trap role configured.';
+    } else {
+      honeyValue = `Ban on assign: <@&${autoBanRoles[0].trap_role_id}>`;
+    }
+
     embed.addFields({
-        name: 'Honey Trap',
-        value: `Ban on assign: ${autoBanRoles[0]}`,
-        inline: false
-    })
+      name: '🐝 Honey Trap',
+      value: honeyValue,
+      inline: false
+    });
+
+    // 📡 Spectrum Patch Bot
+    const [spectrumConfig] = await db.query(
+      'SELECT * FROM spectrum_config WHERE guild_id = ?',
+      [interaction.guild.id]
+    );
+
+    let spectrumValue;
+    if (!spectrumConfig.length) {
+      spectrumValue = 'No Spectrum configuration found.';
+    } else {
+      spectrumValue =
+        `Channel: <#${spectrumConfig[0].announce_channel_id}>\n` +
+        `Forum ID: ${spectrumConfig[0].forum_id}`;
+    }
+
+    embed.addFields({
+      name: '📡 Spectrum Patch Bot',
+      value: spectrumValue,
+      inline: false
+    });
+
+    //Temp Channels
+
+    const [tempChannels] = await db.query(
+      'SELECT * FROM voice_channel_templates WHERE guild_id = ?',
+      [interaction.guild.id]
+    );
+
+    let tempValue;
+
+    if (!tempChannels.length) {
+      tempValue = 'No temporary channel templates configured.';
+    } else {
+      tempValue = tempChannels
+        .map(ch => `• <#${ch.template_channel_id}>`)
+        .join('\n');
+    }
+
+    embed.addFields({
+      name: '🎧 Temp Channels',
+      value: tempValue,
+      inline: false
+    });
 
   } catch (err) {
     console.error('[config-status] Failed to compile configuration:', err);
@@ -220,7 +271,6 @@ async function handleConfigStatus(interaction) {
       value: 'Failed to load one or more configurations. Check logs.',
       inline: false
     });
-
   }
 
   await interaction.editReply({ embeds: [embed] });

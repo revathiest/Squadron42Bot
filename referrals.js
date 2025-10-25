@@ -13,9 +13,9 @@ async function onReady(client) {
     try {
     await client.application.commands.create(registerCommand());
     await client.application.commands.create(getCommand());
-    console.log('[referrals] Slash commands registered.');
+    console.log('referrals: Slash commands registered.');
   } catch (err) {
-    console.error('[referrals] Failed to register commands:', err);
+    console.error('referrals: Failed to register commands:', err);
   } 
 }
 

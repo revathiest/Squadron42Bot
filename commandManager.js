@@ -70,15 +70,17 @@ async function registerAllCommands(token, modules) {
     console.error('commandManager: Failed to clear global slash commands', err);
   }
 
-  if (guildId) {
+  if (guildId && !process.env.FORCE_REREGISTER === 'true') {
     try {
       await rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: [] });
       console.log(`commandManager: Cleared slash commands for guild ${guildId}.`);
     } catch (err) {
       console.error(`commandManager: Failed to clear slash commands for guild ${guildId}`, err);
     }
-  } else if (guildCommands.length) {
-    console.warn('commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be registered.');
+  } else if (!guildId) {
+    console.warn('commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be cleared.');
+  } else if (!process.env.FORCE_REREGISTER === 'true') {
+    console.log('commandManager: Guild-specific commands not deleted. Forced re-register disabled.')
   }
 
   if (globalCommands.length) {
@@ -94,7 +96,7 @@ async function registerAllCommands(token, modules) {
     console.log('commandManager: No global commands to register.');
   }
 
-  if (guildCommands.length && guildId) {
+  if (guildCommands.length && guildId && process.env.FORCE_REREGISTER === 'true') {
     try {
       await rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: guildCommands });
       console.log(`commandManager: Registered ${guildCommands.length} guild slash command(s).`);
@@ -103,8 +105,12 @@ async function registerAllCommands(token, modules) {
       console.error(`commandManager: Failed to register guild slash commands for guild ${guildId}`, err);
       logCommandList(`failed guild(${guildId}) commands`, guildCommands);
     }
-  } else if (guildId) {
+  } else if (!guildCommands.length) {
     console.log(`commandManager: No guild commands to register for guild ${guildId}.`);
+  } else if (process.env.FORCE_REREGISTER === 'false'){
+    console.log(`commandManager: Guild commands not registered.  Forced reregister disabled.`);
+  } else if (!guildId) {
+    console.log(`commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be registered.`);
   }
 }
 
