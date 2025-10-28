@@ -4,7 +4,7 @@ const {
   ApplicationCommandType
 } = require('discord.js');
 const { ACTIONS, PARDON_COMMAND_NAME, PARDON_COMMAND_DESCRIPTION, HISTORY_CONTEXT_LABEL } = require('./constants');
-const { buildRoleChoices } = require('./roleConfig');
+const { buildRoleChoices } = require('./handlers/roles');
 
 function buildSlashCommandDefinition() {
   const builder = new SlashCommandBuilder()

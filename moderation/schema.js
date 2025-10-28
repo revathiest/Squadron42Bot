@@ -1,4 +1,4 @@
-const { addRoleToCache, roleCache } = require('./roleCache');
+const { addRoleToCache, roleCache } = require('./handlers/roles');
 
 /* istanbul ignore next */
 async function ensureSchema(pool) {

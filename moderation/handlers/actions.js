@@ -36,7 +36,7 @@ async function dmUser(targetUser, action, reason, guildName) {
       `You have received a ${action.toUpperCase()}${guildName ? ` in ${guildName}` : ''}.\nReason: ${reason}`
     );
   } catch {
-    // ignore DM failures
+    // Ignore DM failures; user may have DMs disabled.
   }
 }
 

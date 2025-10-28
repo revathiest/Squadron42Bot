@@ -14,7 +14,7 @@ const { ApplicationCommandType, ApplicationCommandOptionType, MessageFlags, Perm
 const database = require(path.resolve(__dirname, '..', 'database'));
 const moderation = require('../moderation');
 const autoBanTrap = require('../moderation/autoBanTrap');
-const actionHandlers = require('../moderation/actions/handlers');
+const actionHandlers = require('../moderation/handlers/actions');
 
 const flushPromises = () => new Promise(resolve => setImmediate(resolve));
 

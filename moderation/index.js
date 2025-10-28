@@ -1,16 +1,13 @@
 const { getPool } = require('../database');
 const { ACTIONS, PARDON_COMMAND_NAME, PARDON_COMMAND_DESCRIPTION, HISTORY_CONTEXT_LABEL } = require('./constants');
 const { respondEphemeral, parseReferenceInput, fetchReferenceMessage, toTimestamp, formatTimestamp, formatReason } = require('./utils');
-const { roleCache, addRoleToCache, removeRoleFromCache, memberHasRole, hasActionPermission } = require('./roleCache');
 const { ensureSchema, loadRoleCache } = require('./schema');
 const { getSlashCommandDefinitions } = require('./commands');
-const roleConfig = require('./roleConfig');
 const autoBanTrap = require('./autoBanTrap');
-const actionsContext = require('./actions/context');
-const actionsModals = require('./actions/modals');
-const actionHandlers = require('./actions/handlers');
-const historyView = require('./history/view');
-const historyContext = require('./history/context');
+const roles = require('./handlers/roles');
+const actions = require('./handlers/actions');
+const modals = require('./handlers/modal');
+const history = require('./handlers/history');
 const { handleInteraction } = require('./handlers/interaction');
 
 let initialized = false;
@@ -49,40 +46,40 @@ module.exports = {
     PARDON_COMMAND_NAME,
     PARDON_COMMAND_DESCRIPTION,
     HISTORY_CONTEXT_LABEL,
-    roleCache,
-    addRoleToCache,
-    removeRoleFromCache,
-    memberHasRole,
-    hasActionPermission,
-    buildRoleList: roleConfig.buildRoleList,
-    buildRoleChoices: roleConfig.buildRoleChoices,
+    roleCache: roles.roleCache,
+    addRoleToCache: roles.addRoleToCache,
+    removeRoleFromCache: roles.removeRoleFromCache,
+    memberHasRole: roles.memberHasRole,
+    hasActionPermission: roles.hasActionPermission,
+    buildRoleList: roles.buildRoleList,
+    buildRoleChoices: roles.buildRoleChoices,
     parseReferenceInput,
     fetchReferenceMessage,
     respondEphemeral,
     toTimestamp,
     formatTimestamp,
     formatReason,
-    handleModCommand: roleConfig.handleModCommand,
-    handleActionRequest: actionsContext.handleActionRequest,
-    handlePardonCommand: actionsContext.handlePardonCommand,
-    handleModal: actionsModals.handleModal,
+    handleModCommand: roles.handleModCommand,
+    handleActionRequest: modals.handleActionRequest,
+    handlePardonCommand: modals.handlePardonCommand,
+    handleModal: modals.handleModal,
     handleInteraction,
-    handleHistoryContext: historyContext.handleHistoryContext,
+    handleHistoryContext: history.handleHistoryContext,
     handleAutoBanRoleUpdate: autoBanTrap.handleGuildMemberUpdate,
     handleTrapConfigCommand: autoBanTrap.handleTrapConfigCommand,
     fetchTrapRoleId: autoBanTrap.fetchTrapRoleId,
     isTrapRoleNewlyAssigned: autoBanTrap.isTrapRoleNewlyAssigned,
     buildSyntheticTrapInteraction: autoBanTrap.buildSyntheticInteraction,
-    logAction: actionHandlers.logAction,
-    hasHistoryPermission: historyView.hasHistoryPermission,
-    filterEntriesForModerators: historyView.filterEntriesForModerators,
-    buildHistoryLines: historyView.buildHistoryLines,
-    buildHistoryContent: historyView.buildHistoryContent,
-    fetchHistoryRows: historyView.fetchHistoryRows,
-    handleWarn: actionHandlers.handleWarn,
-    handleKick: actionHandlers.handleKick,
-    handleBan: actionHandlers.handleBan,
-    handleTimeout: actionHandlers.handleTimeout,
-    executePardon: actionHandlers.executePardon
+    logAction: actions.logAction,
+    hasHistoryPermission: history.hasHistoryPermission,
+    filterEntriesForModerators: history.filterEntriesForModerators,
+    buildHistoryLines: history.buildHistoryLines,
+    buildHistoryContent: history.buildHistoryContent,
+    fetchHistoryRows: history.fetchHistoryRows,
+    handleWarn: actions.handleWarn,
+    handleKick: actions.handleKick,
+    handleBan: actions.handleBan,
+    handleTimeout: actions.handleTimeout,
+    executePardon: actions.executePardon
   }
 };

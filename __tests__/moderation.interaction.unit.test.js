@@ -1,17 +1,14 @@
-jest.mock('../moderation/roleConfig', () => ({
+jest.mock('../moderation/handlers/roles', () => ({
   handleModCommand: jest.fn()
 }));
 
-jest.mock('../moderation/actions/context', () => ({
+jest.mock('../moderation/handlers/modal', () => ({
   handleActionRequest: jest.fn(),
-  handlePardonCommand: jest.fn()
-}));
-
-jest.mock('../moderation/actions/modals', () => ({
+  handlePardonCommand: jest.fn(),
   handleModal: jest.fn()
 }));
 
-jest.mock('../moderation/history/context', () => ({
+jest.mock('../moderation/handlers/history', () => ({
   handleHistoryContext: jest.fn()
 }));
 
@@ -19,10 +16,9 @@ jest.mock('../moderation/utils', () => ({
   respondEphemeral: jest.fn()
 }));
 
-const roleConfig = require('../moderation/roleConfig');
-const actionsContext = require('../moderation/actions/context');
-const modals = require('../moderation/actions/modals');
-const historyContext = require('../moderation/history/context');
+const roles = require('../moderation/handlers/roles');
+const modalHandlers = require('../moderation/handlers/modal');
+const historyHandlers = require('../moderation/handlers/history');
 const utils = require('../moderation/utils');
 const { ACTIONS, PARDON_COMMAND_NAME, HISTORY_CONTEXT_LABEL } = require('../moderation/constants');
 const { handleInteraction } = require('../moderation/handlers/interaction');
@@ -43,10 +39,10 @@ describe('moderation interaction routing', () => {
       commandName: 'mod'
     };
 
-    roleConfig.handleModCommand.mockResolvedValue(undefined);
+    roles.handleModCommand.mockResolvedValue(undefined);
 
     await expect(handleInteraction(interaction)).resolves.toBe(true);
-    expect(roleConfig.handleModCommand).toHaveBeenCalledWith(interaction);
+    expect(roles.handleModCommand).toHaveBeenCalledWith(interaction);
   });
 
   test('routes /pardon slash command', async () => {
@@ -55,10 +51,10 @@ describe('moderation interaction routing', () => {
       commandName: PARDON_COMMAND_NAME
     };
 
-    actionsContext.handlePardonCommand.mockResolvedValue(undefined);
+    modalHandlers.handlePardonCommand.mockResolvedValue(undefined);
 
     await expect(handleInteraction(interaction)).resolves.toBe(true);
-    expect(actionsContext.handlePardonCommand).toHaveBeenCalledWith(interaction);
+    expect(modalHandlers.handlePardonCommand).toHaveBeenCalledWith(interaction);
   });
 
   test.each([
@@ -73,10 +69,10 @@ describe('moderation interaction routing', () => {
       commandName: label
     };
 
-    actionsContext.handleActionRequest.mockResolvedValue(undefined);
+    modalHandlers.handleActionRequest.mockResolvedValue(undefined);
 
     await expect(handleInteraction(interaction)).resolves.toBe(true);
-    expect(actionsContext.handleActionRequest).toHaveBeenLastCalledWith(interaction, actionKey);
+    expect(modalHandlers.handleActionRequest).toHaveBeenLastCalledWith(interaction, actionKey);
   });
 
   test('routes history context command', async () => {
@@ -86,10 +82,10 @@ describe('moderation interaction routing', () => {
       commandName: HISTORY_CONTEXT_LABEL
     };
 
-    historyContext.handleHistoryContext.mockResolvedValue(undefined);
+    historyHandlers.handleHistoryContext.mockResolvedValue(undefined);
 
     await expect(handleInteraction(interaction)).resolves.toBe(true);
-    expect(historyContext.handleHistoryContext).toHaveBeenCalledWith(interaction);
+    expect(historyHandlers.handleHistoryContext).toHaveBeenCalledWith(interaction);
   });
 
   test('routes moderation modal submissions', async () => {
@@ -100,10 +96,10 @@ describe('moderation interaction routing', () => {
       customId: 'moderation:warn'
     };
 
-    modals.handleModal.mockResolvedValue(undefined);
+    modalHandlers.handleModal.mockResolvedValue(undefined);
 
     await expect(handleInteraction(interaction)).resolves.toBe(true);
-    expect(modals.handleModal).toHaveBeenCalledWith(interaction);
+    expect(modalHandlers.handleModal).toHaveBeenCalledWith(interaction);
   });
 
   test('returns false when no handler matches', async () => {
@@ -123,7 +119,7 @@ describe('moderation interaction routing', () => {
       isRepliable: () => true
     };
 
-    roleConfig.handleModCommand.mockRejectedValue(new Error('boom'));
+    roles.handleModCommand.mockRejectedValue(new Error('boom'));
     utils.respondEphemeral.mockResolvedValue(undefined);
 
     await expect(handleInteraction(interaction)).resolves.toBe(true);

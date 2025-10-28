@@ -1,6 +1,5 @@
 const {
   ActionRowBuilder,
-  GuildMember,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -8,14 +7,14 @@ const {
 } = require('discord.js');
 const { ACTIONS, TIMEOUT_DURATIONS } = require('../constants');
 const { parseReferenceInput, fetchReferenceMessage, respondEphemeral } = require('../utils');
-const { hasActionPermission } = require('../roleCache');
+const { hasActionPermission, memberHasRole } = require('./roles');
 const {
   handleWarn,
   handleKick,
   handleBan,
   handleTimeout,
   executePardon
-} = require('./handlers');
+} = require('./actions');
 
 function buildReasonModal({ action, targetUser }) {
   const modal = new ModalBuilder()
@@ -38,15 +37,10 @@ function buildReasonModal({ action, targetUser }) {
     .setRequired(false)
     .setPlaceholder('Paste the message URL or channelId:messageId');
 
-  const components = [
-    new ActionRowBuilder().addComponents(reasonInput)
-  ];
+  const components = [new ActionRowBuilder().addComponents(reasonInput)];
 
   if (ACTIONS[action]?.durationChoices?.length) {
-    const options = ACTIONS[action].durationChoices
-      .map(choice => choice.value)
-      .join(', ');
-
+    const options = ACTIONS[action].durationChoices.map(choice => choice.value).join(', ');
     const durationInput = new TextInputBuilder()
       .setCustomId('duration')
       .setLabel('Timeout duration')
@@ -82,6 +76,82 @@ function buildPardonModal(targetUser) {
 
   modal.addComponents(new ActionRowBuilder().addComponents(reasonInput));
   return modal;
+}
+
+async function handleActionRequest(interaction, action) {
+  const guildId = interaction.guildId;
+  const member = interaction.member;
+
+  if (!guildId || !member) {
+    return respondEphemeral(interaction, 'This command can only be used inside a guild.');
+  }
+
+  if (!hasActionPermission(guildId, member, action)) {
+    return respondEphemeral(interaction, 'You are not allowed to use this moderation action.');
+  }
+
+  const targetUser = interaction.targetUser;
+  if (!targetUser) {
+    return respondEphemeral(interaction, 'Unable to identify the selected user.');
+  }
+
+  if (targetUser.id === interaction.user.id) {
+    return respondEphemeral(interaction, 'You cannot perform moderation actions on yourself.');
+  }
+
+  if (targetUser.id === interaction.client.user.id) {
+    return respondEphemeral(interaction, 'Nice try. I refuse to moderate myself.');
+  }
+
+  await interaction.showModal(buildReasonModal({ action, targetUser }));
+}
+
+async function handlePardonCommand(interaction) {
+  const guildId = interaction.guildId;
+  const guild = interaction.guild;
+
+  if (!guildId || !guild) {
+    await respondEphemeral(interaction, 'This moderation action must be used inside a guild.');
+    return;
+  }
+
+  let targetUser = null;
+  try {
+    targetUser = interaction.options?.getUser('user', true);
+  } catch {
+    targetUser = null;
+  }
+
+  if (!targetUser) {
+    await respondEphemeral(interaction, 'You must choose a user to pardon.');
+    return;
+  }
+
+  if (targetUser.id === interaction.user.id) {
+    await respondEphemeral(interaction, 'You cannot issue a pardon to yourself.');
+    return;
+  }
+
+  let member = interaction.member;
+  if (!member) {
+    try {
+      member = await guild.members.fetch(interaction.user.id);
+    } catch {
+      member = null;
+    }
+  }
+
+  if (!member?.permissions?.has?.(PermissionFlagsBits.Administrator)) {
+    await respondEphemeral(interaction, 'You must be an administrator to pardon users.');
+    return;
+  }
+
+  try {
+    await interaction.showModal(buildPardonModal(targetUser));
+  } catch (err) {
+    console.error('moderation: Failed to show pardon modal', { guildId, targetId: targetUser.id }, err);
+    await respondEphemeral(interaction, 'Unable to open the pardon dialog. Please try again later.');
+  }
 }
 
 async function validateContext(interaction, action, targetId) {
@@ -126,22 +196,20 @@ async function validateContext(interaction, action, targetId) {
     return null;
   }
 
-  return { guild, member, targetMember };
+  return { guild, targetMember };
 }
 
-function canModerateMember(invoker, targetMember) {
-  if (!targetMember || !invoker) {
-    return true;
+function canModerateMember(invoker, target) {
+  if (!invoker || !target) {
+    return false;
   }
 
-  if (!(invoker instanceof GuildMember) || !(targetMember instanceof GuildMember)) {
-    if (!targetMember.roles?.highest || !invoker.roles?.highest) {
-      return true;
-    }
+  if (invoker.id === target.id) {
+    return false;
   }
 
   const invokerHighest = invoker.roles?.highest;
-  const targetHighest = targetMember.roles?.highest;
+  const targetHighest = target.roles?.highest;
 
   if (!invokerHighest || !targetHighest) {
     return true;
@@ -266,7 +334,10 @@ function resolveTimeoutChoice(input) {
 module.exports = {
   buildReasonModal,
   buildPardonModal,
+  handleActionRequest,
+  handlePardonCommand,
   handleModal,
   validateContext,
-  canModerateMember
+  canModerateMember,
+  resolveTimeoutChoice
 };

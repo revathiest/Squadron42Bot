@@ -13,4 +13,3 @@ Handles dynamic voice channels that spin up when members join configured lobby t
 - Responds to VoiceStateUpdate events to spawn and clean up rooms.
 - Uses the shared interaction registry to handle /voice-rooms commands.
 
-Database schema definitions are located in schema.sql.

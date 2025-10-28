@@ -1,7 +1,7 @@
 const { Events, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { getPool } = require('../database');
-const { memberHasRole } = require('./roleCache');
-const { handleBan } = require('./actions/handlers');
+const { memberHasRole } = require('./handlers/roles');
+const { handleBan } = require('./handlers/actions');
 
 const TRAP_REASON = 'Assigned the configured moderation trap role.';
 
