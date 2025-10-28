@@ -11,7 +11,7 @@ const actionsModals = require('./actions/modals');
 const actionHandlers = require('./actions/handlers');
 const historyView = require('./history/view');
 const historyContext = require('./history/context');
-const { handleInteraction } = require('./interaction');
+const { handleInteraction } = require('./handlers/interaction');
 
 let initialized = false;
 let clientRef;

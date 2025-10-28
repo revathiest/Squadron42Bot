@@ -2,7 +2,15 @@ module.exports = {
   testEnvironment: 'node',
   collectCoverage: true,
   coverageDirectory: 'reports/coverage/unit',
-  collectCoverageFrom: ['commandManager.js', 'voiceRooms.js', 'tickets.js', 'moderation.js', 'moderation/**/*.js'],
+  collectCoverageFrom: [
+    'commandManager.js',
+    'voiceRooms/core.js',
+    'voiceRooms/commands.js',
+    'tickets/core.js',
+    'tickets/commands.js',
+    'moderation.js',
+    'moderation/**/*.js'
+  ],
   coveragePathIgnorePatterns: ['/node_modules/'],
   coverageReporters: ['text', 'text-summary', 'lcov', 'html'],
   coverageThreshold: {
@@ -14,4 +22,3 @@ module.exports = {
     }
   }
 };
-

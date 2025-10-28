@@ -1,0 +1,143 @@
+const { EmbedBuilder } = require('discord.js');
+const { getPool } = require('../../database');
+
+async function showConfigStatus(interaction) {
+  const pool = getPool();
+  const guildId = interaction.guild.id;
+
+  await interaction.deferReply({ ephemeral: true });
+
+  const embed = new EmbedBuilder()
+    .setTitle('Bot Configuration Overview')
+    .setColor(0x00AE86)
+    .setTimestamp();
+
+  try {
+    const [ticketConfig] = await pool.query(
+      'SELECT channel_id, archive_category_id FROM ticket_settings WHERE guild_id = ?',
+      [guildId]
+    );
+    const [ticketRoles] = await pool.query(
+      'SELECT role_id FROM ticket_roles WHERE guild_id = ?',
+      [guildId]
+    );
+
+    if (ticketConfig.length) {
+      const config = ticketConfig[0];
+      const archiveMention = config.archive_category_id ? `<#${config.archive_category_id}>` : 'Not set';
+      const roleMentions = ticketRoles.length
+        ? ticketRoles.map(r => `<@&${r.role_id}>`).join(', ')
+        : 'No ticket roles configured.';
+
+      embed.addFields({
+        name: 'Tickets',
+        value:
+          `Registered Channel: <#${config.channel_id}>\n` +
+          `Archive Category: ${archiveMention}\n` +
+          `Authorized Roles: ${roleMentions}`,
+        inline: false
+      });
+    } else {
+      embed.addFields({
+        name: 'Tickets',
+        value: 'No configuration found.',
+        inline: false
+      });
+    }
+
+    const [modData] = await pool.query(
+      'SELECT role_id, action FROM moderation_roles WHERE guild_id = ?',
+      [guildId]
+    );
+
+    const modSection = modData.length
+      ? Object.entries(
+        modData.reduce((acc, row) => {
+          if (!acc[row.action]) {
+            acc[row.action] = [];
+          }
+          acc[row.action].push(`<@&${row.role_id}>`);
+          return acc;
+        }, {})
+      )
+        .map(([action, roles]) => {
+          const label = action.charAt(0).toUpperCase() + action.slice(1);
+          return `**${label}:** ${roles.join(', ')}`;
+        })
+        .join('\n')
+      : 'No roles configured.';
+
+    embed.addFields({
+      name: 'Moderation Roles',
+      value: modSection,
+      inline: false
+    });
+
+    const [storeCodes] = await pool.query('SELECT COUNT(*) AS count FROM referral_codes');
+    const [providedCodes] = await pool.query('SELECT COUNT(*) AS count FROM provided_codes');
+    const registered = storeCodes[0]?.count || 0;
+    const provided = providedCodes[0]?.count || 0;
+    const remaining = Math.max(registered - provided, 0);
+
+    embed.addFields({
+      name: 'Referral Codes',
+      value:
+        `${registered} codes registered\n` +
+        `${provided} codes provided\n` +
+        `${remaining} codes available`,
+      inline: false
+    });
+
+    const [autoBanRoles] = await pool.query(
+      'SELECT trap_role_id FROM moderation_config WHERE guild_id = ?',
+      [guildId]
+    );
+    const trapRoleId = autoBanRoles[0]?.trap_role_id;
+    embed.addFields({
+      name: 'Honey Trap',
+      value: trapRoleId ? `Ban on assign: <@&${trapRoleId}>` : 'No trap role configured.',
+      inline: false
+    });
+
+    const [spectrumConfig] = await pool.query(
+      'SELECT announce_channel_id, forum_id FROM spectrum_config WHERE guild_id = ?',
+      [guildId]
+    );
+    const spectrumValue = spectrumConfig.length
+      ? `Channel: ${spectrumConfig[0].announce_channel_id ? `<#${spectrumConfig[0].announce_channel_id}>` : 'Not set'}\n` +
+        `Forum ID: ${spectrumConfig[0].forum_id || 'Not set'}`
+      : 'No Spectrum configuration found.';
+
+    embed.addFields({
+      name: 'Spectrum Patch Bot',
+      value: spectrumValue,
+      inline: false
+    });
+
+    const [tempChannels] = await pool.query(
+      'SELECT template_channel_id FROM voice_channel_templates WHERE guild_id = ?',
+      [guildId]
+    );
+
+    embed.addFields({
+      name: 'Temp Channels',
+      value: tempChannels.length
+        ? tempChannels.map(ch => `• <#${ch.template_channel_id}>`).join('\n')
+        : 'No temporary channel templates configured.',
+      inline: false
+    });
+  } catch (err) {
+    console.error('[config-status] Failed to compile configuration:', err);
+    embed.addFields({
+      name: 'Error',
+      value: 'Failed to load one or more configurations. Check logs.',
+      inline: false
+    });
+  }
+
+  await interaction.editReply({ embeds: [embed] });
+}
+
+module.exports = {
+  showConfigStatus
+};

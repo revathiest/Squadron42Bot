@@ -1,9 +1,9 @@
-const { ACTIONS, PARDON_COMMAND_NAME, HISTORY_CONTEXT_LABEL } = require('./constants');
-const { respondEphemeral } = require('./utils');
-const { handleModCommand } = require('./roleConfig');
-const { handleActionRequest, handlePardonCommand } = require('./actions/context');
-const { handleModal } = require('./actions/modals');
-const { handleHistoryContext } = require('./history/context');
+const { ACTIONS, PARDON_COMMAND_NAME, HISTORY_CONTEXT_LABEL } = require('../constants');
+const { respondEphemeral } = require('../utils');
+const { handleModCommand } = require('../roleConfig');
+const { handleActionRequest, handlePardonCommand } = require('../actions/context');
+const { handleModal } = require('../actions/modals');
+const { handleHistoryContext } = require('../history/context');
 
 async function handleInteraction(interaction) {
   try {

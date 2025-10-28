@@ -25,7 +25,7 @@ const modals = require('../moderation/actions/modals');
 const historyContext = require('../moderation/history/context');
 const utils = require('../moderation/utils');
 const { ACTIONS, PARDON_COMMAND_NAME, HISTORY_CONTEXT_LABEL } = require('../moderation/constants');
-const { handleInteraction } = require('../moderation/interaction');
+const { handleInteraction } = require('../moderation/handlers/interaction');
 
 describe('moderation interaction routing', () => {
   beforeEach(() => {

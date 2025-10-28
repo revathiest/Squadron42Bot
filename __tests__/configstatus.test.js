@@ -9,7 +9,7 @@ jest.mock('../database', () => {
 });
 
 const database = require('../database');
-const configStatus = require('../configstatus');
+const configStatus = require('../configStatus');
 
 describe('configstatus getSlashCommandDefinitions', () => {
   test('exposes guild scoped command', () => {

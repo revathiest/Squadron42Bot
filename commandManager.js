@@ -41,6 +41,10 @@ function logCommandList(label, commands) {
   console.log(`commandManager: ${label} => ${names}`);
 }
 
+function serializeCommands(commands) {
+  return commands.map(cmd => (typeof cmd?.toJSON === 'function' ? cmd.toJSON() : cmd));
+}
+
 async function registerAllCommands(token, modules) {
   const applicationId = process.env.APPLICATION_ID;
   const guildId = process.env.GUILD_ID;
@@ -85,7 +89,7 @@ async function registerAllCommands(token, modules) {
 
   if (globalCommands.length) {
     try {
-      await rest.put(Routes.applicationCommands(applicationId), { body: globalCommands });
+    await rest.put(Routes.applicationCommands(applicationId), { body: serializeCommands(globalCommands) });
       console.log(`commandManager: Registered ${globalCommands.length} global slash command(s).`);
       logCommandList('registered global commands', globalCommands);
     } catch (err) {
@@ -98,7 +102,7 @@ async function registerAllCommands(token, modules) {
 
   if (guildCommands.length && guildId && process.env.FORCE_REREGISTER === 'true') {
     try {
-      await rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: guildCommands });
+      await rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: serializeCommands(guildCommands) });
       console.log(`commandManager: Registered ${guildCommands.length} guild slash command(s).`);
       logCommandList(`registered guild(${guildId}) commands`, guildCommands);
     } catch (err) {

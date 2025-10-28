@@ -7,16 +7,15 @@ const {
   ButtonStyle,
   ChannelType,
   EmbedBuilder,
-  Events,
+  
   ModalBuilder,
   MessageFlags,
   PermissionFlagsBits,
   PermissionsBitField,
-  SlashCommandBuilder,
   TextInputBuilder,
   TextInputStyle
 } = require('discord.js');
-const { getPool } = require('./database');
+const { getPool } = require('../database');
 
 const settingsCache = new Map(); // guildId -> { channelId, messageId, archiveCategoryId }
 const rolesCache = new Map(); // guildId -> Set(roleId)
@@ -809,12 +808,6 @@ async function initialize(client) {
   await ensureSchema(pool);
   await loadCache(pool);
 
-  client.on(Events.MessageCreate, message => {
-    handleMessageCreate(message).catch(err => {
-      console.error('tickets: lobby message handler failed', err);
-    });
-  });
-
   initialized = true;
 }
 
@@ -897,10 +890,14 @@ async function onReady(client) {
 }
 
 module.exports = {
-  getSlashCommandDefinitions,
   initialize,
   onReady,
   handleInteraction,
+  handleMessageCreate,
+  ensureLobbyMessage,
+  settingsCache,
+  rolesCache,
+  openTickets,
   __testables: {
     buildTicketChannelName,
     getModeratorRoles,

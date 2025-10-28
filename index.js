@@ -7,12 +7,12 @@ const { registerInteractionHandlers } = require('./interactionRegistry');
 const voiceRooms = require('./voiceRooms');
 const tickets = require('./tickets');
 const moderation = require('./moderation');
-const spectrumWatcher = require('./spectrumWatcher');
+const spectrum = require('./spectrum');
 const referrals = require('./referrals');
-const configStatus = require('./configstatus');
+const configStatus = require('./configStatus');
 
-const commandModules = [voiceRooms, tickets, moderation, spectrumWatcher, referrals, configStatus];
-const interactionModules = [voiceRooms, tickets, moderation, spectrumWatcher, referrals, configStatus];
+const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus];
+const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -62,7 +62,7 @@ client.once(Events.ClientReady, async c => {
   }
 
   try {
-    await spectrumWatcher.onReady(c);
+    await spectrum.onReady(c);
   } catch (err) {
     console.error('Failed to finalize spectrum watcher module:', err);
   }
@@ -117,7 +117,7 @@ async function bootstrap() {
   }
 
   try {
-    await spectrumWatcher.initialize(client);
+    await spectrum.initialize(client);
   } catch (err) {
     console.error('Failed to initialize spectrum watcher module:', err);
     process.exit(1);

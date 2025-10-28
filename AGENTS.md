@@ -1,123 +1,98 @@
-# Squadron 42 Bot Agents
+﻿# Squadron 42 Bot – Agent Standards
 
-Planning guide for the modular "agents" that power (or soon will power) the Squadron 42 community bot. Each agent encapsulates a domain concern, exposing explicit command and event interfaces while sharing a thin core for Discord connectivity, persistence, and observability.
-
----
-
-## Shared Foundations
-- **Runtime**: Node.js 20+, `discord.js` v14 gateway client.
-- **Command surface**: Modules export `getSlashCommandDefinitions()` so `commandManager.js` can register global vs. guild commands and reset Discord's cache at startup.
-- **Persistence**: MySQL via the pooled connector in `database.js`.
-- **Configuration**: `.env` variables (see `README.md`) loaded through `dotenv`.
-- **Logging**: Structured `console` output for now; plan to wrap with Winston/Pino once telemetry requirements solidify.
-- **Scheduling**: Use `setTimeout`/`setInterval` for lightweight reminders; evaluate `bullmq` or `agenda` if recurrent jobs grow complex.
-
-All agents import shared utilities (command manager, database pool, validation helpers once they exist). A thin service registry should mediate access to the database, cache, and shared state.
+This bot is organised into modular **agents**. Each agent owns a feature area (voice rooms, tickets, moderation, etc.), and exposes the same API so the bootstrap and command manager can treat every module uniformly. Follow these rules whenever you add or modify an agent.
 
 ---
 
-## Agent Catalogue
+## Directory Layout
 
-### 1. Core Flight Control
-- **Purpose**: bootstrap the bot, own startup sequencing, and orchestrate command registration.
-- **Triggers**: `ready` event, process lifecycle signals.
-- **Key Tasks**:
-  - Validate environment variables -> test DB connectivity -> initialize modules -> log in.
-  - Call `commandManager.registerAllCommands()` so each deploy clears and re-registers both global and guild commands.
-  - Provide shared error boundaries and fallback responses.
-- **Dependencies**: `DISCORD_TOKEN`, `APPLICATION_ID`, optional `GUILD_ID` for fast guild-only deployments.
+Each agent lives in its own directory at the repository root:
 
-### 2. Hangar Bay (IMPLEMENTED)
-- **Purpose**: manage dynamic voice rooms that spin up from configured lobbies.
-- **Triggers**: `/voice-rooms` guild slash command, `VoiceStateUpdate` events.
-- **Key Tasks**:
-  - Persist lobby templates and temporary room metadata (`voice_channel_templates`, `temporary_voice_channels`).
-  - Clone voice channels when members join a lobby, move them, and grant owner permissions.
-  - Tear down temporary rooms when empty and reconcile orphaned records on startup.
-- **Commands**: `/voice-rooms set-template|clear-template|list` (guild scoped, administrators only).
+`
+/voiceRooms/
+/tickets/
+/referrals/
+/configStatus/
+/spectrum/
+/moderation/
+`
 
-### 3. Hangar Support (IMPLEMENTED)
-- **Purpose**: manage user support tickets via Discord buttons/modals.
-- **Triggers**: lobby button press `ticket:create`, modal submissions, ticket channel button presses.
-- **Key Tasks**: create private ticket channels, persist ticket metadata/status, allow moderators to claim/close tickets, archive closed channels.
-- **Commands**: `/ticket set-channel`, `/ticket set-archive`, `/ticket roles add|remove|list`.
+Every module **must** contain the following files:
 
-### 4. Spoiler Sentinel
-- **Purpose**: protect story-sensitive discussion by tagging and isolating content.
-- **Triggers**: `messageCreate`, `/spoiler` commands, scheduled expiry checks.
-- **Key Tasks**:
-  - Auto-tag messages containing spoiler keywords or phrases.
-  - Manage spoiler-only channel access based on opt-in roles.
-  - Provide `/spoiler mute|unmute|status` slash commands.
-- **Data Needs**: tables `spoiler_flags`, `spoiler_roles`, optional keyword corpus.
-- **Observability**: log every auto-flag with message link and outcome.
+`
+/module/
+ ├── index.js        # Entry point wiring the shared lifecycle
+ ├── commands.js     # Slash/Context command builders
+ ├── handlers/       # Interaction/event handlers (split by concern)
+ ├── utils.js        # Module-specific helpers or caches
+ └── README.md       # Overview, commands, behaviours
+`
 
-### 5. Event Quartermaster
-- **Purpose**: coordinate watch parties, Q&As, and play sessions.
-- **Triggers**: `/event` command group, button interactions for RSVP, scheduled reminders.
-- **Key Tasks**:
-  - Create/update/delete events and persist schedule metadata.
-  - Send reminder DM/channel pings at configurable offsets.
-  - Export calendar feed (`.ics`) where feasible.
-- **Data Needs**: table `events` with recurrence metadata, occupant link table for RSVPs.
-- **Scheduling**: maintain in-memory queue seeded at startup and refreshed on change.
-
-### 6. Announcement Courier
-- **Purpose**: disseminate official updates, patch notes, dev tracker highlights.
-- **Triggers**: `/announce` slash command, webhook ingestion (future), publish timers.
-- **Key Tasks**:
-  - Draft announcements in mod-only channels with preview embeds.
-  - Support scheduled publishing and crossposting to news channels.
-  - Archive announcements to DB for audit.
-- **Data Needs**: table `announcements` plus history log.
-
-### 7. Onboarding Quarterdeck
-- **Purpose**: welcome new members and shepherd them through roles/rules.
-- **Triggers**: `guildMemberAdd`, `/welcome` admin command.
-- **Key Tasks**:
-  - DM/channel welcome message with rule acknowledgement buttons.
-  - Present opt-in role menu (platforms, regions, spoiler tolerance).
-  - Track completion metrics to refine onboarding copy.
-- **Data Needs**: table `onboarding_sessions` capturing timestamps & selections.
-
-### 8. Moderation Sentry
-- **Purpose**: augment mod team with lightweight automation.
-- **Triggers**: message events, `/mod` command shortcuts, scheduled sweeps.
-- **Key Tasks**:
-  - Rate-limit anti-spam (cooldowns based on channel heat).
-  - Detect forbidden links/content via pattern rules.
-  - Log mod actions to a dedicated channel and DB.
-- **Data Needs**: `moderation_actions`, `rule_violations` tables.
-- **Integration**: coordinate with Spoiler Sentinel to avoid double-handling.
-
-### 9. Lore Archivist
-- **Purpose**: provide quick access to Squadron 42 lore, FAQs, and key links.
-- **Triggers**: `/faq`, `/links`, `/lore`, context menu commands.
-- **Key Tasks**:
-  - Serve curated embeds sourced from structured content (JSON or DB-backed).
-  - Allow staff to submit updates via `/lore add` with approval workflow.
-  - Cache frequently requested entries in-memory.
-- **Data Needs**: `knowledge_entries` table, optional revision history.
+Additional folders (e.g. ctions/, history/) are fine when a module needs more structure.
 
 ---
 
-## Cross-Agent Patterns
-- **Permission Model**: enforce Discord role checks in centralized helpers; log denials for visibility.
-- **Command Declaration**: each agent should expose `getSlashCommandDefinitions()` alongside its event handlers so the command manager can register the right scope.
-- **Interaction Replies**: prefer `MessageFlags.Ephemeral` for private responses (Discord deprecated the `ephemeral` option).
-- **Error Handling**: standardized ephemeral error responses with correlation IDs for logs.
-- **Localization**: plan for copy extraction once multiple languages become a priority.
-- **Testing**: unit-test command handlers with mocked `discord.js` objects, enforce Jest coverage (92% statements/lines, 90% functions, 80% branches), and integration-test DB workflows via transactional fixtures.
-- **Deployment Flow**: CI pipeline to lint, run tests, regenerate slash commands, and restart the process manager (PM2/systemd/docker) used in production.
+## Required Exports
+
+index.js inside every module must export the same surface:
+
+`js
+module.exports = {
+  initialize,                 // async (client)
+  onReady,                    // async (client)
+  getSlashCommandDefinitions, // => { global: [], guild: [] }
+  handleInteraction           // async (interaction) -> boolean
+};
+`
+
+* initialize – prepare database tables, caches, listeners. Called before login.
+* onReady – post-login setup (e.g. scheduling, cache warm-up).
+* handleInteraction – route relevant interactions and return 	rue when handled so the shared registry can short-circuit.
 
 ---
 
-## Implementation Roadmap
-1. Harden Core Flight Control + Hangar Bay, add automated tests around dynamic voice rooms.
-2. Ship Event Quartermaster MVP (creates events + reminder pings).
-3. Add Spoiler Sentinel auto-tagging, then integrate with Moderation Sentry.
-4. Layer in Announcement Courier scheduling.
-5. Build Onboarding Quarterdeck flows and opt-in role menus.
-6. Expand Lore Archivist with staff editing tools.
+## Command Definition Guidelines
 
-Treat each agent as a deployable slice: design command schema, write handler tests, implement service, then hook into the shared router. Document command changes in `CHANGELOG.md` (to be created) and update `.env.example` when new configuration is required.
+- Build commands with SlashCommandBuilder in commands.js.
+- Return the builder instances; commandManager handles serialization.
+- getSlashCommandDefinitions() must return { global: [...], guild: [...] }.
+- Favour guild-scoped commands unless the feature is safe globally.
+
+---
+
+## Event & Handler Wiring
+
+- Interaction routing happens through the shared interactionRegistry. Register additional listeners (e.g. MessageCreate, VoiceStateUpdate) in initialize, but guard against double registration.
+- Keep index.js tiny by delegating logic to handlers/* and helpers in utils.js.
+
+---
+
+## Database Access
+
+- All SQL queries must use getPool() from database.js.
+- Guarantee required tables exist inside initialize (e.g. via an ensureSchema helper).
+- Do not access the database in commands.js; keep persistence in handlers or utilities.
+
+---
+
+## Testing Expectations
+
+- Add Jest coverage for new features. Import the module’s index.js (or a core helper) in tests to validate behaviour.
+- Coverage thresholds remain enforced globally (92% statements/lines, 90% functions, 80% branches).
+
+---
+
+## Moderation Module Notes
+
+The moderation agent has additional subfolders (ctions/, history/, oleConfig/, etc.). Interaction routing now lives in moderation/handlers/interaction.js, keeping moderation/index.js consistent with the shared interface. Continue to route new moderation features through these handlers.
+
+---
+
+## Adding a New Module
+
+1. Create /moduleName/ with the required files.
+2. Implement commands.js, handlers/interaction.js, and index.js following the existing modules as examples (	ickets/ is a good starting point).
+3. Wire the module into the root index.js by pushing it into both commandModules and interactionModules.
+4. Add tests, README documentation, and any necessary database setup inside initialize.
+
+Adhering to these standards keeps the codebase predictable and makes it straightforward to plug new agents into the Squadron 42 bot.

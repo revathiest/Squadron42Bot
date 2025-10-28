@@ -1,4 +1,4 @@
-# Squadron 42 Community Bot
+﻿# Squadron 42 Community Bot
 
 A Discord bot for the **Squadron 42** community server: event coordination, spoiler-safe discussion, announcements, and community utilities. Built to be simple to operate, easy to extend, and impossible to confuse with an actual Idris.
 
@@ -67,6 +67,35 @@ SPECTRUM_POLL_INTERVAL_MS=300000   # optional, override Spectrum watcher polling
 - Every module exports `getSlashCommandDefinitions()` and indicates whether each command is global or guild-scoped.
 - At startup `commandManager.registerAllCommands()` clears all existing global and guild commands, then re-registers only the current definitions. This prevents duplicate entries and ensures guild-specific commands become available immediately.
 - Set `GUILD_ID` when deploying to a single server so guild commands register instantly; omit it if you want global rollout and can tolerate propagation delays.
+
+---
+
+## Module Architecture
+
+Feature work is organised into self-contained **agents**. Each agent lives under its own directory and exposes the same public surface so the bootstrapper and command manager can treat them uniformly.
+
+```
+/module/
+ ├── index.js
+ ├── commands.js
+ ├── handlers/
+ ├── utils.js
+ └── README.md
+```
+
+`index.js` must export:
+
+```js
+module.exports = {
+  initialize,                 // async (client)
+  onReady,                    // async (client)
+  getSlashCommandDefinitions, // => { global: [], guild: [] }
+  handleInteraction           // async (interaction) -> boolean
+};
+```
+
+
+For more detail, see [AGENTS.md](AGENTS.md).
 
 ---
 
