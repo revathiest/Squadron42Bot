@@ -28,7 +28,7 @@ Every module **must** contain the following files:
  └── README.md       # Overview, commands, behaviours
 `
 
-Additional folders (e.g. ctions/, history/) are fine when a module needs more structure.
+Additional folders (e.g. actions/, history/) are fine when a module needs more structure.
 
 ---
 
@@ -84,7 +84,8 @@ module.exports = {
 
 ## Moderation Module Notes
 
-The moderation agent has additional subfolders (ctions/, history/, oleConfig/, etc.). Interaction routing now lives in moderation/handlers/interaction.js, keeping moderation/index.js consistent with the shared interface. Continue to route new moderation features through these handlers.
+The moderation agent has additional subfolders (actions/, history/, 
+oleConfig/, etc.). Interaction routing now lives in moderation/handlers/interaction.js, keeping moderation/index.js consistent with the shared interface. Continue to route new moderation features through these handlers.
 
 ---
 
