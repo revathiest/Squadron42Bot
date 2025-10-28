@@ -47,6 +47,18 @@ const {
   buildSyntheticTrapInteraction
 } = moderation.__testables;
 
+const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+beforeAll(() => {
+  console.error = jest.fn();
+  console.warn = jest.fn();
+});
+
+afterAll(() => {
+  console.error = originalConsoleError;
+  console.warn = originalConsoleWarn;
+});
+
 describe('memberHasRole', () => {
   test('returns false when member missing', () => {
     expect(memberHasRole(null, 'role')).toBe(false);
@@ -1022,7 +1034,7 @@ describe('handleInteraction', () => {
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'Unsupported moderation command.'
@@ -1056,7 +1068,7 @@ describe('handleInteraction', () => {
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(interaction.showModal).toHaveBeenCalled();
   });
@@ -1073,7 +1085,7 @@ describe('handleInteraction', () => {
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'This moderation action must be used inside a guild.'
@@ -1097,7 +1109,7 @@ describe('handleInteraction', () => {
       reply: jest.fn().mockResolvedValue(undefined)
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'You are not allowed to view moderation history.'
@@ -1111,81 +1123,27 @@ describe('moderation initialize', () => {
     database.__pool.query.mockResolvedValue([[]]);
   });
 
-  test('registers interaction handler and routes events', async () => {
+  test('initializes schema and auto-ban listener once', async () => {
     const client = { on: jest.fn() };
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const originalRegister = autoBanTrap.registerAutoBanTrap;
+    const registerSpy = jest.spyOn(autoBanTrap, 'registerAutoBanTrap').mockImplementation(clientArg => originalRegister(clientArg));
 
     await moderation.initialize(client);
 
     expect(database.__pool.query.mock.calls.length).toBeGreaterThanOrEqual(4);
     const queries = database.__pool.query.mock.calls.map(call => call[0]);
     expect(queries.some(sql => typeof sql === 'string' && sql.includes('moderation_config'))).toBe(true);
-    expect(client.on).toHaveBeenCalledWith(Events.InteractionCreate, expect.any(Function));
+    expect(registerSpy).toHaveBeenCalledWith(client);
     expect(client.on).toHaveBeenCalledWith(Events.GuildMemberUpdate, expect.any(Function));
+    expect(client.on.mock.calls.some(call => call[0] === Events.InteractionCreate)).toBe(false);
 
-    const interactionHandler = client.on.mock.calls.find(call => call[0] === Events.InteractionCreate)[1];
+    await moderation.initialize(client);
 
-    const chatInteraction = {
-      isChatInputCommand: () => true,
-      commandName: 'mod',
-      options: {
-        getSubcommandGroup: () => null,
-        getSubcommand: () => 'list'
-      },
-      reply: jest.fn().mockResolvedValue(undefined)
-    };
-    await interactionHandler(chatInteraction);
-    expect(chatInteraction.reply).toHaveBeenCalledWith(expect.objectContaining({
-      content: 'Unsupported moderation command.'
-    }));
+    expect(registerSpy).toHaveBeenCalledTimes(1);
+    expect(client.on.mock.calls.filter(call => call[0] === Events.GuildMemberUpdate)).toHaveLength(1);
 
-    const contextInteraction = {
-      isChatInputCommand: () => false,
-      isUserContextMenuCommand: () => true,
-      commandName: ACTIONS.kick.label,
-      guildId: '',
-      member: null,
-      targetUser: { id: 'user' },
-      user: { id: 'moderator' },
-      client: { user: { id: 'bot' } },
-      deferred: true,
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-    await interactionHandler(contextInteraction);
-    expect(contextInteraction.editReply).toHaveBeenCalledWith(expect.objectContaining({
-      content: 'This command can only be used inside a guild.'
-    }));
-
-    const modalInteraction = {
-      isChatInputCommand: () => false,
-      isUserContextMenuCommand: () => false,
-      isModalSubmit: () => true,
-      customId: 'moderation:warn:123',
-      guildId: null,
-      guild: null,
-      member: null,
-      fields: { getTextInputValue: jest.fn(key => (key === 'reason' ? 'Reason text' : '')) },
-      reply: jest.fn().mockResolvedValue(undefined),
-      client: { users: { fetch: jest.fn() } }
-    };
-    await interactionHandler(modalInteraction);
-    expect(modalInteraction.reply).toHaveBeenCalledWith(expect.objectContaining({
-      content: 'This moderation action must be used inside a guild.'
-    }));
-
-    const failureInteraction = {
-      isChatInputCommand: () => true,
-      commandName: 'mod',
-      options: null,
-      isRepliable: () => true,
-      reply: jest.fn().mockResolvedValue(undefined)
-    };
-    await interactionHandler(failureInteraction);
-    expect(failureInteraction.reply).toHaveBeenCalledWith(expect.objectContaining({
-      content: 'An error occurred while processing that moderation action.'
-    }));
-
-    await moderation.onReady(client);
+    registerSpy.mockRestore();
     errorSpy.mockRestore();
   });
 });
@@ -1808,7 +1766,7 @@ describe('handleModCommand', () => {
     );
     const roles = roleCache.get('guild-add').get('warn');
     expect(roles.has('role-add')).toBe(true);
-    expect(interaction.editReply).toHaveBeenCalledWith('Added @Moderators to the **Warn User** role list.');
+    expect(interaction.editReply).toHaveBeenCalledWith('Added @Moderators to the **1. Warn User** role list.');
   });
 
   test('adds timeout moderation role without enum failures', async () => {
@@ -1835,7 +1793,7 @@ describe('handleModCommand', () => {
     const actionMap = roleCache.get('guild-timeout');
     expect(actionMap).toBeDefined();
     expect(actionMap.get('timeout')?.has('role-timeout')).toBe(true);
-    expect(interaction.editReply).toHaveBeenCalledWith('Added @TimeoutMods to the **Timeout User** role list.');
+    expect(interaction.editReply).toHaveBeenCalledWith('Added @TimeoutMods to the **2. Timeout User** role list.');
   });
 
   test('removes moderation role when present', async () => {
@@ -1863,7 +1821,7 @@ describe('handleModCommand', () => {
     );
     const roles = roleCache.get('guild-remove')?.get('kick') || new Set();
     expect(roles.has('role-remove')).toBe(false);
-    expect(interaction.editReply).toHaveBeenCalledWith('Removed @TempMods from the **Kick User** role list.');
+    expect(interaction.editReply).toHaveBeenCalledWith('Removed @TempMods from the **3. Kick User** role list.');
   });
 
   test('lists configured roles', async () => {

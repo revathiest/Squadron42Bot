@@ -732,19 +732,28 @@ async function handleInteraction(interaction) {
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === 'ticket') {
       await handleTicketCommand(interaction);
+      return true;
     }
-    return;
+    return false;
   }
 
   if (interaction.isButton()) {
+    if (!interaction.customId || !interaction.customId.startsWith('ticket:')) {
+      return false;
+    }
     await handleButton(interaction);
-    return;
+    return true;
   }
 
   if (interaction.isModalSubmit()) {
+    if (!interaction.customId || !interaction.customId.startsWith('ticket:')) {
+      return false;
+    }
     await handleModalSubmit(interaction);
-    return;
+    return true;
   }
+
+  return false;
 }
 
 /* istanbul ignore next */
@@ -799,15 +808,6 @@ async function initialize(client) {
   const pool = getPool();
   await ensureSchema(pool);
   await loadCache(pool);
-
-  client.on(Events.InteractionCreate, interaction => {
-    handleInteraction(interaction).catch(err => {
-      console.error('tickets: Failed to process interaction', err);
-      if (interaction.isRepliable() && !interaction.replied) {
-        interaction.reply({ content: 'An error occurred while handling that ticket action.', flags: MessageFlags.Ephemeral }).catch(() => null);
-      }
-    });
-  });
 
   client.on(Events.MessageCreate, message => {
     handleMessageCreate(message).catch(err => {
@@ -900,6 +900,7 @@ module.exports = {
   getSlashCommandDefinitions,
   initialize,
   onReady,
+  handleInteraction,
   __testables: {
     buildTicketChannelName,
     getModeratorRoles,

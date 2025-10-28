@@ -31,6 +31,18 @@ const {
   rolesCache,
   openTickets
 } = tickets.__testables;
+
+const originalWarn = console.warn;
+const originalError = console.error;
+beforeAll(() => {
+  console.warn = jest.fn();
+  console.error = jest.fn();
+});
+
+afterAll(() => {
+  console.warn = originalWarn;
+  console.error = originalError;
+});
 describe('tickets module helpers', () => {
   beforeEach(() => {
     rolesCache.clear();
@@ -463,7 +475,7 @@ describe('ticket interaction router', () => {
       isModalSubmit: () => false
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
     expect(interaction.editReply).toHaveBeenCalled();
@@ -487,7 +499,7 @@ describe('ticket interaction router', () => {
       isModalSubmit: () => false
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(interaction.showModal).toHaveBeenCalledTimes(1);
     expect(interaction.reply).not.toHaveBeenCalled();
@@ -504,7 +516,7 @@ describe('ticket interaction router', () => {
       isModalSubmit: () => true
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(interaction.reply).toHaveBeenCalledWith({
       content: 'Ticket system is not configured for this server.',
@@ -768,7 +780,6 @@ describe('tickets initialize', () => {
 
     // three schema queries + three cache queries
     expect(database.__pool.query).toHaveBeenCalledTimes(6);
-    expect(client.on).toHaveBeenCalledWith(Events.InteractionCreate, expect.any(Function));
     expect(client.on).toHaveBeenCalledWith(Events.MessageCreate, expect.any(Function));
 
     const queryCount = database.__pool.query.mock.calls.length;

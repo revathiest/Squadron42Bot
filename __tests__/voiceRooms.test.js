@@ -36,7 +36,7 @@ describe('voiceRooms handleInteraction', () => {
       isChatInputCommand: () => false
     };
 
-    await expect(handleInteraction(interaction)).resolves.toBeUndefined();
+    await expect(handleInteraction(interaction)).resolves.toBe(false);
   });
 
   test('ignores other commands', async () => {
@@ -45,7 +45,7 @@ describe('voiceRooms handleInteraction', () => {
       commandName: 'other'
     };
 
-    await expect(handleInteraction(interaction)).resolves.toBeUndefined();
+    await expect(handleInteraction(interaction)).resolves.toBe(false);
   });
 
   test('rejects usage outside guilds', async () => {
@@ -57,7 +57,7 @@ describe('voiceRooms handleInteraction', () => {
       reply
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(reply).toHaveBeenCalledWith({
       content: 'This command can only be used in a server.',
@@ -78,7 +78,7 @@ describe('voiceRooms handleInteraction', () => {
       reply
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(reply).toHaveBeenCalledWith({
       content: 'Only administrators can use this command.',
@@ -102,7 +102,7 @@ describe('voiceRooms handleInteraction', () => {
       reply
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(reply).toHaveBeenCalledWith({
       content: 'Please choose a voice channel.',
@@ -132,7 +132,7 @@ describe('voiceRooms handleInteraction', () => {
       reply
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(database.__pool.query).toHaveBeenCalledWith(
       'INSERT INTO voice_channel_templates (guild_id, template_channel_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE created_at = created_at',
@@ -168,7 +168,7 @@ describe('voiceRooms handleInteraction', () => {
       reply
     };
 
-    await handleInteraction(interaction);
+    await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(database.__pool.query).toHaveBeenCalledWith(
       'DELETE FROM voice_channel_templates WHERE guild_id = ? AND template_channel_id = ?',

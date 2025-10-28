@@ -134,22 +134,22 @@ function getSlashCommandDefinitions() {
 
 async function handleInteraction(interaction) {
   if (!interaction.isChatInputCommand()) {
-    return;
+    return false;
   }
 
   if (interaction.commandName !== 'voice-rooms') {
-    return;
+    return false;
   }
 
   if (!interaction.inGuild()) {
     await interaction.reply({ content: 'This command can only be used in a server.', flags: MessageFlags.Ephemeral });
-    return;
+    return true;
   }
 
   const subcommand = interaction.options.getSubcommand();
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
     await interaction.reply({ content: 'Only administrators can use this command.', flags: MessageFlags.Ephemeral });
-    return;
+    return true;
   }
   const guildId = interaction.guildId;
   const pool = getPool();
@@ -160,7 +160,7 @@ async function handleInteraction(interaction) {
 
       if (channel.type !== ChannelType.GuildVoice) {
         await interaction.reply({ content: 'Please choose a voice channel.', flags: MessageFlags.Ephemeral });
-        return;
+        return true;
       }
 
       await pool.query(
@@ -191,7 +191,7 @@ async function handleInteraction(interaction) {
 
       if (!templates || templates.size === 0) {
         await interaction.reply({ content: 'No dynamic voice lobbies are configured yet.', flags: MessageFlags.Ephemeral });
-        return;
+        return true;
       }
 
       const lines = [];
@@ -210,6 +210,8 @@ async function handleInteraction(interaction) {
       await interaction.reply({ content: 'Something went wrong while processing that command.', flags: MessageFlags.Ephemeral });
     }
   }
+
+  return true;
 }
 
 /* istanbul ignore next */
@@ -387,7 +389,6 @@ async function initialize(client) {
   await ensureSchema(pool);
   await loadCacheFromDatabase(pool);
 
-  client.on(Events.InteractionCreate, handleInteraction);
   client.on(Events.VoiceStateUpdate, (oldState, newState) => {
     onVoiceStateUpdate(oldState, newState).catch(err => {
       console.error('voiceRooms: voice state handler failed', err);
@@ -410,6 +411,7 @@ module.exports = {
   getSlashCommandDefinitions,
   initialize,
   onReady,
+  handleInteraction,
   __testables: {
     handleInteraction,
     addTemplateToCache,

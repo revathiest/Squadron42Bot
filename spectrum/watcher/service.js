@@ -328,6 +328,7 @@ module.exports = {
   getSlashCommandDefinitions,
   initialize,
   onReady,
+  handleInteraction: spectrumConfig.handleInteraction,
   fetchThreads,
   fetchThreadDetails,
   checkForNewThreads,

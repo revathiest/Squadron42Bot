@@ -9,16 +9,6 @@ async function initialize(client) {
   await ensureTables();
 }
 
-async function onReady(client) {
-    try {
-    await client.application.commands.create(registerCommand());
-    await client.application.commands.create(getCommand());
-    console.log('referrals: Slash commands registered.');
-  } catch (err) {
-    console.error('referrals: Failed to register commands:', err);
-  } 
-}
-
 async function ensureTables() {
   await conn.query(`
     CREATE TABLE IF NOT EXISTS referral_codes (
@@ -35,7 +25,7 @@ async function ensureTables() {
   `);
 }
 
-function registerCommand() {
+function buildRegisterCommand() {
   return new SlashCommandBuilder()
     .setName('register-referral-code')
     .setDescription('Register or update your Star Citizen referral code.')
@@ -46,10 +36,11 @@ function registerCommand() {
     );
 }
 
-function getCommand() {
+function buildGetCommand() {
   return new SlashCommandBuilder()
     .setName('get-referral-code')
-    .setDescription('Get a random unused Star Citizen referral code from the pool.');
+    .setDescription('Get a random unused Star Citizen referral code from the pool.')
+    .toJSON();
 }
 
 async function handleRegister(interaction) {
@@ -142,16 +133,24 @@ async function handleGet(interaction) {
 
 module.exports = {
   initialize,            // sets up tables (safe to run before login)
-  onReady,               // registers slash commands after client is ready
-  getSlashCommandDefinitions: () => [registerCommand(), getCommand()],
-  handleInteraction: async (interaction) => {
-    if (!interaction.isChatInputCommand()) return;
+  onReady: async () => {}, // no-op for interface consistency
+  getSlashCommandDefinitions: () => ({
+    global: [buildRegisterCommand(), buildGetCommand()],
+    guild: []
+  }),
+  handleInteraction: async interaction => {
+    if (!interaction.isChatInputCommand()) {
+      return false;
+    }
     if (interaction.commandName === 'register-referral-code') {
-      return handleRegister(interaction);
+      await handleRegister(interaction);
+      return true;
     }
     if (interaction.commandName === 'get-referral-code') {
-      return handleGet(interaction);
+      await handleGet(interaction);
+      return true;
     }
+    return false;
   },
   __testables: { REFERRAL_REGEX }
 };

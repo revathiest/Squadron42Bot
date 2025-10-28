@@ -3,6 +3,7 @@ require('dotenv/config');
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { testConnection } = require('./database');
 const commandManager = require('./commandManager');
+const { registerInteractionHandlers } = require('./interactionRegistry');
 const voiceRooms = require('./voiceRooms');
 const tickets = require('./tickets');
 const moderation = require('./moderation');
@@ -10,7 +11,8 @@ const spectrumWatcher = require('./spectrumWatcher');
 const referrals = require('./referrals');
 const configStatus = require('./configstatus');
 
-const commandModules = [voiceRooms, tickets, moderation, spectrumWatcher, configStatus];
+const commandModules = [voiceRooms, tickets, moderation, spectrumWatcher, referrals, configStatus];
+const interactionModules = [voiceRooms, tickets, moderation, spectrumWatcher, referrals, configStatus];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -21,6 +23,8 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates
   ]
 });
+
+registerInteractionHandlers(client, interactionModules);
 
 
 // Fires once when the gateway is ready

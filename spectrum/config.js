@@ -3,7 +3,6 @@
 
 const {
   ChannelType,
-  Events,
   MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder
@@ -373,9 +372,9 @@ async function handleSpectrumCommand(interaction) {
   }
 }
 
-async function onInteraction(interaction) {
+async function handleInteraction(interaction) {
   if (!interaction.isChatInputCommand() || interaction.commandName !== 'spectrum') {
-    return;
+    return false;
   }
 
   try {
@@ -384,6 +383,8 @@ async function onInteraction(interaction) {
     console.error('spectrumConfig: failed to handle /spectrum command', err);
     await replyEphemeral(interaction, 'Something went wrong while handling this command. Please try again later.');
   }
+
+  return true;
 }
 
 async function initialize(client) {
@@ -395,7 +396,6 @@ async function initialize(client) {
   await ensureSchema(pool);
   await loadCache(pool);
 
-  client.on(Events.InteractionCreate, onInteraction);
   initialized = true;
 }
 
@@ -409,6 +409,7 @@ module.exports = {
   getSlashCommandDefinitions,
   initialize,
   onReady,
+  handleInteraction,
   fetchConfig,
   setConfig,
   clearConfig,

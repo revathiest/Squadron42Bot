@@ -62,11 +62,30 @@ describe('commandManager collectCommands', () => {
     expect(errorSpy).toHaveBeenCalled();
     errorSpy.mockRestore();
   });
+
+  test('skips modules whose definitions are not objects', () => {
+    const modules = [
+      {
+        getSlashCommandDefinitions: () => null
+      },
+      {
+        getSlashCommandDefinitions: () => ({
+          global: [{ name: 'valid' }]
+        })
+      }
+    ];
+
+    const result = collectCommands(modules);
+    expect(result.global).toHaveLength(1);
+  });
 });
 
 describe('commandManager registerAllCommands', () => {
   let putMock;
   let setTokenMock;
+  let originalWarn;
+  let originalError;
+  let originalLog;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -79,38 +98,45 @@ describe('commandManager registerAllCommands', () => {
     REST.mockReturnValue({ setToken: setTokenMock });
     Routes.applicationCommands.mockImplementation(appId => `app:${appId}`);
     Routes.applicationGuildCommands.mockImplementation((appId, guildId) => `guild:${appId}:${guildId}`);
+
+    originalWarn = console.warn;
+    originalError = console.error;
+    originalLog = console.log;
+    console.warn = jest.fn();
+    console.error = jest.fn();
+    console.log = jest.fn();
   });
 
   afterAll(() => {
     process.env = originalEnv;
   });
 
-  test('warns when APPLICATION_ID is missing', async () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  afterEach(() => {
+    console.warn = originalWarn;
+    console.error = originalError;
+    console.log = originalLog;
+  });
 
+  test('warns when APPLICATION_ID is missing', async () => {
     await registerAllCommands('token-123', []);
 
-    expect(warnSpy).toHaveBeenCalledWith('commandManager: APPLICATION_ID is not set; skipping slash command registration.');
+    expect(console.warn).toHaveBeenCalledWith('commandManager: APPLICATION_ID is not set; skipping slash command registration.');
     expect(REST).not.toHaveBeenCalled();
-
-    warnSpy.mockRestore();
   });
 
   test('warns when token is missing', async () => {
     process.env.APPLICATION_ID = 'app-1';
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-
     await registerAllCommands(undefined, []);
 
-    expect(warnSpy).toHaveBeenCalledWith('commandManager: Missing bot token; cannot register slash commands.');
+    expect(console.warn).toHaveBeenCalledWith('commandManager: Missing bot token; cannot register slash commands.');
     expect(REST).not.toHaveBeenCalled();
-
-    warnSpy.mockRestore();
   });
 
   test('registers global and guild commands when configuration present', async () => {
     process.env.APPLICATION_ID = 'app-9';
     process.env.GUILD_ID = 'guild-7';
+    process.env.CLEAR_GUILD_COMMANDS = 'true';
+    process.env.FORCE_REREGISTER = 'true';
 
     const modules = [
       {
@@ -138,8 +164,8 @@ describe('commandManager registerAllCommands', () => {
 
   test('warns when guild commands exist without GUILD_ID', async () => {
     process.env.APPLICATION_ID = 'app-1';
-
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    process.env.CLEAR_GUILD_COMMANDS = 'true';
+    process.env.FORCE_REREGISTER = 'true';
 
     const modules = [
       {
@@ -149,11 +175,10 @@ describe('commandManager registerAllCommands', () => {
 
     await registerAllCommands('token-abc', modules);
 
-    expect(warnSpy).toHaveBeenCalledWith('commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be registered.');
+    expect(console.warn).toHaveBeenCalledWith('commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be cleared.');
+    expect(console.warn).toHaveBeenCalledWith('commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be registered.');
     expect(putMock).toHaveBeenCalledTimes(1);
     expect(putMock.mock.calls[0]).toEqual(['app:app-1', { body: [] }]);
-
-    warnSpy.mockRestore();
   });
 
   test('logs errors when registering global commands fails', async () => {
@@ -163,9 +188,6 @@ describe('commandManager registerAllCommands', () => {
       .mockResolvedValueOnce(undefined) // clear global
       .mockRejectedValueOnce(new Error('registration failed'));
 
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
     const modules = [
       {
         getSlashCommandDefinitions: () => ({ global: [{ name: 'fail' }] })
@@ -174,11 +196,54 @@ describe('commandManager registerAllCommands', () => {
 
     await registerAllCommands('token-err', modules);
 
-    expect(errorSpy).toHaveBeenCalledWith('commandManager: Failed to register global slash commands', expect.any(Error));
-    expect(logSpy).toHaveBeenCalledWith('commandManager: failed global commands => fail');
+    expect(console.error).toHaveBeenCalledWith('commandManager: Failed to register global slash commands', expect.any(Error));
+    expect(console.log).toHaveBeenCalledWith('commandManager: failed global commands => fail');
+  });
 
-    errorSpy.mockRestore();
-    logSpy.mockRestore();
+  test('logs errors when clearing global commands fails', async () => {
+    process.env.APPLICATION_ID = 'app-clear';
+
+    putMock.mockRejectedValueOnce(new Error('clear failed'));
+    await registerAllCommands('token-clear', []);
+
+    expect(console.error).toHaveBeenCalledWith(
+      'commandManager: Failed to clear global slash commands',
+      expect.any(Error)
+    );
+  });
+
+  test('skips guild clearing when disabled via env flag', async () => {
+    process.env.APPLICATION_ID = 'app-skip';
+    process.env.GUILD_ID = 'guild-skip';
+    process.env.CLEAR_GUILD_COMMANDS = 'false';
+
+    await registerAllCommands('token-skip', []);
+
+    expect(console.log).toHaveBeenCalledWith('commandManager: Guild-specific commands not deleted. Forced command clearing disabled.');
+    expect(putMock).toHaveBeenCalledTimes(1); // only global clear
+
+  });
+
+  test('skips guild registration when FORCE_REREGISTER is false', async () => {
+    process.env.APPLICATION_ID = 'app-skip-reg';
+    process.env.GUILD_ID = 'guild-skip-reg';
+    process.env.FORCE_REREGISTER = 'false';
+    process.env.CLEAR_GUILD_COMMANDS = 'true';
+
+    const modules = [
+      {
+        getSlashCommandDefinitions: () => ({
+          guild: [{ name: 'guild-command' }]
+        })
+      }
+    ];
+
+    await registerAllCommands('token-skip-reg', modules);
+
+    expect(console.log).toHaveBeenCalledWith('commandManager: Guild commands not registered.  Forced reregister disabled.');
+    const guildCalls = putMock.mock.calls.filter(call => call[0].startsWith('guild:'));
+    expect(guildCalls).toHaveLength(1);
+    expect(guildCalls[0][1]).toEqual({ body: [] });
   });
 });
 

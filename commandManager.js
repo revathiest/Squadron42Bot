@@ -110,7 +110,7 @@ async function registerAllCommands(token, modules) {
   } else if (process.env.FORCE_REREGISTER === 'false'){
     console.log(`commandManager: Guild commands not registered.  Forced reregister disabled.`);
   } else if (!guildId) {
-    console.log(`commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be registered.`);
+    console.warn(`commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be registered.`);
   }
 }
 

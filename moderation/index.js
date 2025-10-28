@@ -11,7 +11,7 @@ const actionsModals = require('./actions/modals');
 const actionHandlers = require('./actions/handlers');
 const historyView = require('./history/view');
 const historyContext = require('./history/context');
-const { handleInteraction, registerInteractionListener } = require('./interaction');
+const { handleInteraction } = require('./interaction');
 
 let initialized = false;
 let clientRef;
@@ -26,7 +26,6 @@ async function initialize(client) {
   await ensureSchema(pool);
   await loadRoleCache(pool);
 
-  registerInteractionListener(client);
   autoBanTrap.registerAutoBanTrap(client);
 
   initialized = true;
@@ -44,6 +43,7 @@ module.exports = {
   getSlashCommandDefinitions,
   initialize,
   onReady,
+  handleInteraction,
   __testables: {
     ACTIONS,
     PARDON_COMMAND_NAME,
