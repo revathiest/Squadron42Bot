@@ -1,6 +1,7 @@
 ﻿# Referrals Module
 
-Implements referral code registration and retrieval commands for community members.
+## Overview
+Lets community members register their own Star Citizen referral code or draw from the shared pool when they need one.
 
 ## Commands
 | Command | Scope | Description |
@@ -8,7 +9,6 @@ Implements referral code registration and retrieval commands for community membe
 | /register-referral-code | Global | Register or update the caller's Star Citizen referral code. |
 | /get-referral-code | Global | Fetch a random unused referral code from the shared pool. |
 
-## Data
-
-- eferral_codes – Stores each user's registered code.
-- provided_codes – Tracks codes handed out so the pool can rotate usage.
+## Behaviour
+- Stores member submissions in eferral_codes and tracks handed-out codes in provided_codes to avoid duplicates.
+- Interaction routing flows through handlers/interaction.js.

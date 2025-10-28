@@ -1,15 +1,16 @@
 # Voice Rooms Module
 
-Handles dynamic voice channels that spin up when members join configured lobby templates.
+## Overview
+Manages dynamic voice channels that spin up when members join pre-configured lobby templates and cleans them up when idle.
 
 ## Commands
 | Command | Scope | Description |
 |---------|-------|-------------|
-| /voice-rooms set-template | Guild | Register a lobby channel that spawns temporary rooms. |
-| /voice-rooms clear-template | Guild | Remove a lobby channel from the dynamic list. |
-| /voice-rooms list | Guild | Display configured lobby channels. |
+| `/voice-rooms set-template` | Guild | Register a lobby channel that spawns temporary rooms. |
+| `/voice-rooms clear-template` | Guild | Remove a lobby channel from the dynamic list. |
+| `/voice-rooms list` | Guild | Display configured lobby channels. |
 
-## Events
-- Responds to VoiceStateUpdate events to spawn and clean up rooms.
-- Uses the shared interaction registry to handle /voice-rooms commands.
+## Behaviour
+- Listens for `VoiceStateUpdate` events to spawn or clean up temporary channels.
+- All interaction handling flows through the shared interaction registry via `handlers/interaction.js`.
 
