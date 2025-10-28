@@ -4,12 +4,13 @@ module.exports = {
   coverageDirectory: 'reports/coverage/unit',
   collectCoverageFrom: [
     'commandManager.js',
-    'voiceRooms/core.js',
-    'voiceRooms/commands.js',
-    'tickets/core.js',
-    'tickets/commands.js',
+    'voiceRooms/**/*.js',
+    'tickets/**/*.js',
     'moderation.js',
-    'moderation/**/*.js'
+    'moderation/**/*.js',
+    'referrals/**/*.js',
+    'configStatus/**/*.js',
+    'spectrum/**/*.js'
   ],
   coveragePathIgnorePatterns: ['/node_modules/'],
   coverageReporters: ['text', 'text-summary', 'lcov', 'html'],

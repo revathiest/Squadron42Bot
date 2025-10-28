@@ -20,6 +20,20 @@ describe('configstatus getSlashCommandDefinitions', () => {
   });
 });
 
+test('configStatus getModuleName returns identifier', () => {
+  expect(configStatus.getModuleName()).toBe('configStatus');
+});
+
+describe('configstatus lifecycle wrappers', () => {
+  test('initialize resolves even when no work is required', async () => {
+    await expect(configStatus.initialize()).resolves.toBeUndefined();
+  });
+
+  test('onReady resolves without errors', async () => {
+    await expect(configStatus.onReady()).resolves.toBeUndefined();
+  });
+});
+
 describe('configstatus handleInteraction', () => {
   beforeEach(() => {
     database.__pool.query.mockReset();
@@ -30,6 +44,15 @@ describe('configstatus handleInteraction', () => {
     console.error.mockRestore();
   });
 
+  test('returns false for non chat input interactions', async () => {
+    const interaction = {
+      isChatInputCommand: () => false
+    };
+
+    await expect(configStatus.handleInteraction(interaction)).resolves.toBe(false);
+    expect(database.__pool.query).not.toHaveBeenCalled();
+  });
+
   test('returns false for non-config command', async () => {
     const interaction = {
       isChatInputCommand: () => true,
@@ -38,6 +61,29 @@ describe('configstatus handleInteraction', () => {
 
     await expect(configStatus.handleInteraction(interaction)).resolves.toBe(false);
     expect(database.__pool.query).not.toHaveBeenCalled();
+  });
+
+  test('uses default copy when no configuration exists', async () => {
+    database.__pool.query.mockResolvedValue([[]]);
+
+    const interaction = {
+      guild: { id: 'guild-none' },
+      guildId: 'guild-none',
+      isChatInputCommand: () => true,
+      commandName: 'config-status',
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined)
+    };
+
+    await expect(configStatus.handleInteraction(interaction)).resolves.toBe(true);
+
+    const [{ embeds }] = interaction.editReply.mock.calls[0];
+    const ticketField = embeds[0].data.fields.find(field => field.name === 'Tickets');
+    expect(ticketField?.value).toBe('No configuration found.');
+    const spectrumField = embeds[0].data.fields.find(field => field.name === 'Spectrum Patch Bot');
+    expect(spectrumField?.value).toBe('No Spectrum configuration found.');
+    const tempField = embeds[0].data.fields.find(field => field.name === 'Temp Channels');
+    expect(tempField?.value).toBe('No temporary channel templates configured.');
   });
 
   test('builds configuration summary embed', async () => {

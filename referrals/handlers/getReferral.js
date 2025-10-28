@@ -12,23 +12,26 @@ async function handleGetReferral(interaction) {
 
   if (existing.length) {
     await interaction.reply({
-      content: 'You already have a referral code registered — you cannot claim another one.',
+      content: 'You already have a referral code registered; you cannot claim another one.',
       ephemeral: true
     });
     return true;
   }
 
-  let [unusedCodes] = await pool.query(`
+  const [unclaimedRows] = await pool.query(`
     SELECT code FROM referral_codes
     WHERE code NOT IN (SELECT code FROM provided_codes)
   `);
 
-  if (!unusedCodes.length) {
+  let availableCodes = unclaimedRows;
+
+  if (!availableCodes.length) {
     await pool.query('TRUNCATE TABLE provided_codes');
-    [unusedCodes] = await pool.query('SELECT code FROM referral_codes');
+    const [allRows] = await pool.query('SELECT code FROM referral_codes');
+    availableCodes = allRows;
   }
 
-  if (!unusedCodes.length) {
+  if (!availableCodes.length) {
     await interaction.reply({
       content: 'No referral codes are available right now. Try again later.',
       ephemeral: true
@@ -36,13 +39,14 @@ async function handleGetReferral(interaction) {
     return true;
   }
 
-  const randomCode = unusedCodes[Math.floor(Math.random() * unusedCodes.length)].code;
+  const randomIndex = Math.floor(Math.random() * availableCodes.length);
+  const randomCode = availableCodes[randomIndex].code;
 
   await pool.query('INSERT INTO provided_codes (code) VALUES (?)', [randomCode]);
 
   const embed = new EmbedBuilder()
-    .setTitle('Here’s Your Referral Code')
-    .setDescription(`🎁 **${randomCode}**`)
+    .setTitle("Here's Your Referral Code")
+    .setDescription(`Use **${randomCode}** when creating your account.`)
     .setColor(0x0099ff);
 
   await interaction.reply({ embeds: [embed], ephemeral: true });

@@ -63,6 +63,7 @@ module.exports = {
     handleActionRequest: modals.handleActionRequest,
     handlePardonCommand: modals.handlePardonCommand,
     handleModal: modals.handleModal,
+    resolveTimeoutChoice: modals.resolveTimeoutChoice,
     handleInteraction,
     handleHistoryContext: history.handleHistoryContext,
     handleAutoBanRoleUpdate: autoBanTrap.handleGuildMemberUpdate,

@@ -9,7 +9,7 @@ async function showConfigStatus(interaction) {
 
   const embed = new EmbedBuilder()
     .setTitle('Bot Configuration Overview')
-    .setColor(0x00AE86)
+    .setColor(0x00ae86)
     .setTimestamp();
 
   try {
@@ -26,13 +26,12 @@ async function showConfigStatus(interaction) {
       const config = ticketConfig[0];
       const archiveMention = config.archive_category_id ? `<#${config.archive_category_id}>` : 'Not set';
       const roleMentions = ticketRoles.length
-        ? ticketRoles.map(r => `<@&${r.role_id}>`).join(', ')
+        ? ticketRoles.map(row => `<@&${row.role_id}>`).join(', ')
         : 'No ticket roles configured.';
 
       embed.addFields({
         name: 'Tickets',
-        value:
-          `Registered Channel: <#${config.channel_id}>\n` +
+        value: `Registered Channel: <#${config.channel_id}>\n` +
           `Archive Category: ${archiveMention}\n` +
           `Authorized Roles: ${roleMentions}`,
         inline: false
@@ -45,14 +44,14 @@ async function showConfigStatus(interaction) {
       });
     }
 
-    const [modData] = await pool.query(
+    const [modRows] = await pool.query(
       'SELECT role_id, action FROM moderation_roles WHERE guild_id = ?',
       [guildId]
     );
 
-    const modSection = modData.length
+    const moderationValue = modRows.length
       ? Object.entries(
-        modData.reduce((acc, row) => {
+        modRows.reduce((acc, row) => {
           if (!acc[row.action]) {
             acc[row.action] = [];
           }
@@ -69,43 +68,42 @@ async function showConfigStatus(interaction) {
 
     embed.addFields({
       name: 'Moderation Roles',
-      value: modSection,
+      value: moderationValue,
       inline: false
     });
 
-    const [storeCodes] = await pool.query('SELECT COUNT(*) AS count FROM referral_codes');
+    const [storedCodes] = await pool.query('SELECT COUNT(*) AS count FROM referral_codes');
     const [providedCodes] = await pool.query('SELECT COUNT(*) AS count FROM provided_codes');
-    const registered = storeCodes[0]?.count || 0;
-    const provided = providedCodes[0]?.count || 0;
-    const remaining = Math.max(registered - provided, 0);
+    const registered = storedCodes[0]?.count ?? 0;
+    const provided = providedCodes[0]?.count ?? 0;
+    const available = Math.max(registered - provided, 0);
 
     embed.addFields({
       name: 'Referral Codes',
-      value:
-        `${registered} codes registered\n` +
-        `${provided} codes provided\n` +
-        `${remaining} codes available`,
+      value: `Registered: ${registered}\nProvided: ${provided}\nAvailable: ${available}`,
       inline: false
     });
 
-    const [autoBanRoles] = await pool.query(
+    const [autoBanRows] = await pool.query(
       'SELECT trap_role_id FROM moderation_config WHERE guild_id = ?',
       [guildId]
     );
-    const trapRoleId = autoBanRoles[0]?.trap_role_id;
+    const trapRoleId = autoBanRows[0]?.trap_role_id;
+
     embed.addFields({
       name: 'Honey Trap',
       value: trapRoleId ? `Ban on assign: <@&${trapRoleId}>` : 'No trap role configured.',
       inline: false
     });
 
-    const [spectrumConfig] = await pool.query(
+    const [spectrumRows] = await pool.query(
       'SELECT announce_channel_id, forum_id FROM spectrum_config WHERE guild_id = ?',
       [guildId]
     );
-    const spectrumValue = spectrumConfig.length
-      ? `Channel: ${spectrumConfig[0].announce_channel_id ? `<#${spectrumConfig[0].announce_channel_id}>` : 'Not set'}\n` +
-        `Forum ID: ${spectrumConfig[0].forum_id || 'Not set'}`
+
+    const spectrumValue = spectrumRows.length
+      ? `Channel: ${spectrumRows[0].announce_channel_id ? `<#${spectrumRows[0].announce_channel_id}>` : 'Not set'}\n` +
+        `Forum ID: ${spectrumRows[0].forum_id || 'Not set'}`
       : 'No Spectrum configuration found.';
 
     embed.addFields({
@@ -122,7 +120,7 @@ async function showConfigStatus(interaction) {
     embed.addFields({
       name: 'Temp Channels',
       value: tempChannels.length
-        ? tempChannels.map(ch => `• <#${ch.template_channel_id}>`).join('\n')
+        ? tempChannels.map(row => `- <#${row.template_channel_id}>`).join('\n')
         : 'No temporary channel templates configured.',
       inline: false
     });

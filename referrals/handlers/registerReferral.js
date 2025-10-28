@@ -36,7 +36,7 @@ async function handleRegisterReferral(interaction) {
 
   const embed = new EmbedBuilder()
     .setTitle('Referral Code Registered')
-    .setDescription(`✅ Your code **${code}** has been saved.`)
+    .setDescription(`Your code **${code}** has been saved.`)
     .setColor(0x00ff99);
 
   await interaction.reply({ embeds: [embed], ephemeral: true });

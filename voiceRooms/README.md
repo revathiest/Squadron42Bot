@@ -1,16 +1,27 @@
 # Voice Rooms Module
 
-## Overview
-Manages dynamic voice channels that spin up when members join pre-configured lobby templates and cleans them up when idle.
+## Purpose
+Manages dynamic voice channels that spawn from configured lobby templates and removes them automatically when empty.
 
-## Commands
+## Slash Commands
 | Command | Scope | Description |
 |---------|-------|-------------|
-| `/voice-rooms set-template` | Guild | Register a lobby channel that spawns temporary rooms. |
-| `/voice-rooms clear-template` | Guild | Remove a lobby channel from the dynamic list. |
-| `/voice-rooms list` | Guild | Display configured lobby channels. |
+| `/voice-rooms set-template` | Guild | Mark a lobby voice channel that should spawn personal rooms. |
+| `/voice-rooms clear-template` | Guild | Remove a lobby channel from the dynamic room list. |
+| `/voice-rooms list` | Guild | Display the guild''s configured voice room templates. |
 
-## Behaviour
-- Listens for `VoiceStateUpdate` events to spawn or clean up temporary channels.
-- All interaction handling flows through the shared interaction registry via `handlers/interaction.js`.
+## Event Hooks
+- `VoiceStateUpdate` – clones or removes temporary channels when members join or leave monitored lobbies.
 
+## Persistence
+- `voice_channel_templates`
+- `temporary_voice_channels`
+
+## Public Interface
+- `initialize(client)` – ensures schema, hydrates caches, and registers the voice state listener once.
+- `onReady(client)` – rehydrates cached channel state after login.
+- `getSlashCommandDefinitions()` – returns the guild-scoped slash command definitions.
+- `handleInteraction(interaction)` – routes `/voice-rooms` commands through the shared interaction registry.
+
+## Additional Notes
+- Cached template and temporary channel maps live in `voiceRooms/core.js` and are exposed via `index.js.__testables` for unit testing.

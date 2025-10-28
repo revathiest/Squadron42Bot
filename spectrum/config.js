@@ -32,6 +32,20 @@ async function ensureSchema(pool) {
   `).catch(() => {});
 }
 
+function mapRowToConfig(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    guildId: String(row.guild_id),
+    announceChannelId: row.announce_channel_id ? String(row.announce_channel_id) : null,
+    forumId: row.forum_id ? String(row.forum_id) : null,
+    updatedBy: row.updated_by ? String(row.updated_by) : null,
+    updatedAt: row.updated_at ? new Date(row.updated_at) : null
+  };
+}
+
 async function loadCache(pool) {
   const [rows] = await pool.query(`
     SELECT guild_id, announce_channel_id, forum_id, updated_by, updated_at
@@ -40,13 +54,10 @@ async function loadCache(pool) {
 
   configCache.clear();
   for (const row of rows) {
-    configCache.set(String(row.guild_id), {
-      guildId: String(row.guild_id),
-      announceChannelId: row.announce_channel_id ? String(row.announce_channel_id) : null,
-      forumId: row.forum_id ? String(row.forum_id) : null,
-      updatedBy: row.updated_by ? String(row.updated_by) : null,
-      updatedAt: row.updated_at ? new Date(row.updated_at) : null
-    });
+    const config = mapRowToConfig(row);
+    if (config) {
+      configCache.set(config.guildId, config);
+    }
   }
 }
 
@@ -98,28 +109,13 @@ function buildCommandDefinition() {
       sub
         .setName('post-latest')
         .setDescription('Immediately post the latest Spectrum thread to the configured channel.')
-    )
-    .toJSON();
+    );
 }
 
 function getSlashCommandDefinitions() {
   return {
     global: [],
     guild: [buildCommandDefinition()]
-  };
-}
-
-function mapRowToConfig(row) {
-  if (!row) {
-    return null;
-  }
-
-  return {
-    guildId: String(row.guild_id),
-    announceChannelId: row.announce_channel_id ? String(row.announce_channel_id) : null,
-    forumId: row.forum_id ? String(row.forum_id) : null,
-    updatedBy: row.updated_by ? String(row.updated_by) : null,
-    updatedAt: row.updated_at ? new Date(row.updated_at) : null
   };
 }
 
@@ -144,6 +140,7 @@ async function fetchConfig(guildId) {
   if (config) {
     configCache.set(key, config);
   }
+
   return config;
 }
 
@@ -203,6 +200,7 @@ async function replyEphemeral(interaction, options) {
   if (interaction.replied || interaction.deferred) {
     return interaction.followUp(payload);
   }
+
   return interaction.reply(payload);
 }
 
@@ -278,7 +276,7 @@ async function handleStatus(interaction) {
 
   await replyEphemeral(
     interaction,
-    `Spectrum Watcher status:\n• Channel: ${channelMention}\n• Forum: ${forumLabel}`
+    `Spectrum Watcher status:\n- Channel: ${channelMention}\n- Forum: ${forumLabel}`
   );
 
   return { action: 'status', config };

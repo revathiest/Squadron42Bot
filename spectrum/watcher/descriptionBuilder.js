@@ -5,7 +5,8 @@ function formatPlainText(text) {
   if (!text) return '';
 
   let cleaned = String(text)
-    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<br\s*\/?>(?=\s*<)/gi, '\n')
+    .replace(/<br\s*\/?>(?!\s*<)/gi, '\n')
     .replace(/<\/p>\s*<p>/gi, '\n\n')
     .replace(/<\/?p>/gi, '')
     .replace(/\[\/?(?:b|i|u|quote|url|img|center|color|size)[^\]]*\]/gi, '')
@@ -33,8 +34,9 @@ function buildDescriptionFromBlocks(contentBlocks) {
       if (!trimmed) continue;
 
       let prefix = '';
-      if (node.type === 'unordered-list-item') prefix = '• ';
-      else if (node.type === 'ordered-list-item') {
+      if (node.type === 'unordered-list-item') {
+        prefix = '- ';
+      } else if (node.type === 'ordered-list-item') {
         const key = block.id || 'ordered';
         const next = (orderedCounters.get(key) || 0) + 1;
         orderedCounters.set(key, next);
@@ -51,13 +53,8 @@ function buildDescriptionFromBlocks(contentBlocks) {
   return joined.length > 3900 ? `${joined.slice(0, 3900)}...` : joined;
 }
 
-// ---------- Fixed and improved version ----------
-
-// spectrum/watcher/descriptionBuilder.js
-
 function buildDescriptionFromThread(threadDetails) {
-  const blocks =
-    threadDetails?.content_blocks?.[0]?.data?.blocks || [];
+  const blocks = threadDetails?.content_blocks?.[0]?.data?.blocks || [];
   if (!Array.isArray(blocks) || blocks.length === 0) return null;
 
   const lines = [];
@@ -70,7 +67,7 @@ function buildDescriptionFromThread(threadDetails) {
 
     switch (node.type) {
       case 'header-one':
-        lines.push(`\n━━━━━━━━━━━━━━━━━━━━━━`);
+        lines.push('\n------------------------------');
         lines.push(`**${text.replace(/\s+/g, ' ')}**`);
         lines.push('');
         break;
@@ -79,7 +76,7 @@ function buildDescriptionFromThread(threadDetails) {
         lines.push(`\n__${text.replace(/\s+/g, ' ')}__`);
         break;
       case 'unordered-list-item':
-        lines.push(`• ${text}`);
+        lines.push(`- ${text}`);
         break;
       case 'ordered-list-item': {
         const key = 'ordered';
@@ -101,8 +98,6 @@ function buildDescriptionFromThread(threadDetails) {
   return desc.length ? desc.slice(0, 4000) : '*No content found.*';
 }
 
-// ------------------------------------------------
-
 function extractImageUrl(contentBlocks) {
   if (!Array.isArray(contentBlocks)) return null;
 
@@ -116,7 +111,7 @@ function extractImageUrl(contentBlocks) {
         sizes?.large?.url,
         sizes?.medium?.url,
         sizes?.small?.url,
-        direct,
+        direct
       ];
       const url = candidates.find(u => typeof u === 'string' && u.trim());
       if (url) return url;
@@ -129,5 +124,5 @@ module.exports = {
   formatPlainText,
   buildDescriptionFromBlocks,
   buildDescriptionFromThread,
-  extractImageUrl,
+  extractImageUrl
 };

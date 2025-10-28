@@ -517,11 +517,38 @@ describe('ticket interaction router', () => {
     };
 
     await expect(handleInteraction(interaction)).resolves.toBe(true);
-
     expect(interaction.reply).toHaveBeenCalledWith({
       content: 'Ticket system is not configured for this server.',
       flags: MessageFlags.Ephemeral
     });
+  });
+
+  test('handleInteraction ignores unrelated buttons', async () => {
+    const interaction = {
+      isChatInputCommand: () => false,
+      isButton: () => true,
+      customId: 'control-panel',
+      isModalSubmit: () => false,
+      showModal: jest.fn(),
+      reply: jest.fn()
+    };
+
+    await expect(handleInteraction(interaction)).resolves.toBe(false);
+    expect(interaction.showModal).not.toHaveBeenCalled();
+    expect(interaction.reply).not.toHaveBeenCalled();
+  });
+
+  test('handleInteraction ignores unrelated modals', async () => {
+    const interaction = {
+      isChatInputCommand: () => false,
+      isButton: () => false,
+      isModalSubmit: () => true,
+      customId: 'control:modal',
+      reply: jest.fn()
+    };
+
+    await expect(handleInteraction(interaction)).resolves.toBe(false);
+    expect(interaction.reply).not.toHaveBeenCalled();
   });
 });
 

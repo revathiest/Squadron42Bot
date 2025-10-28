@@ -362,3 +362,25 @@ describe('voiceRooms command definition', () => {
     expect(defs.guild[0].name).toBe('voice-rooms');
   });
 });
+
+describe('voiceRooms misc interaction handling', () => {
+  test('returns false for non voice-room button customIds', async () => {
+    const interaction = {
+      isChatInputCommand: () => false,
+      isButton: () => true,
+      customId: 'control:123',
+      isModalSubmit: () => false
+    };
+
+    await expect(handleInteraction(interaction)).resolves.toBe(false);
+  });
+
+  test('module handleInteraction delegates to handler implementation', async () => {
+    const interaction = {
+      isChatInputCommand: () => false
+    };
+
+    await expect(voiceRooms.handleInteraction(interaction)).resolves.toBe(false);
+  });
+});
+

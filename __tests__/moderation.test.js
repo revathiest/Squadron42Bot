@@ -39,6 +39,7 @@ const {
   handleHistoryContext,
   handlePardonCommand,
   handleModal,
+  resolveTimeoutChoice,
   fetchReferenceMessage,
   handleTrapConfigCommand,
   handleAutoBanRoleUpdate,
@@ -279,6 +280,43 @@ describe('buildHistoryLines', () => {
   });
 });
 
+describe('buildHistoryContent', () => {
+  test('appends truncation notice for long histories', () => {
+    const rows = [];
+    for (let i = 0; i < 200; i++) {
+      rows.push({
+        action: 'warn',
+        reason: 'x'.repeat(200),
+        executor_tag: `Mod#${i}`,
+        reference_message_url: null,
+        created_at: new Date(Date.UTC(2024, 0, 1, 0, 0, i))
+      });
+    }
+
+    const result = buildHistoryContent({
+      targetLabel: 'User#0001',
+      rows,
+      isAdministrator: false
+    });
+
+    expect(result.empty).toBe(false);
+    expect(result.content).toContain('Moderation history for User#0001');
+    expect(result.content).toContain('Additional records were omitted for length.');
+  });
+
+  test('returns empty message when no visible entries remain', () => {
+    const rows = [];
+    const result = buildHistoryContent({
+      targetLabel: 'User#0002',
+      rows,
+      isAdministrator: false
+    });
+
+    expect(result.empty).toBe(true);
+    expect(result.content).toBe('No moderation history for User#0002 since their last pardon.');
+  });
+});
+
 describe('handleModal', () => {
   beforeEach(() => {
     roleCache.clear();
@@ -363,6 +401,56 @@ describe('handleModal', () => {
     expect(insertCall).toBeDefined();
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'Logged a warning for Target#0002.'
+    }));
+  });
+
+  test('requires valid timeout duration', async () => {
+    addRoleToCache('guild-timeout-invalid', 'timeout', 'role-timeout');
+    const targetUser = { id: 'target-timeout', tag: 'Timeout#0001' };
+    const targetMember = {
+      id: 'target-timeout',
+      roles: {
+        cache: { has: () => false },
+        highest: { comparePositionTo: () => -1 }
+      },
+      user: targetUser
+    };
+
+    const interaction = {
+      customId: 'moderation:timeout:target-timeout',
+      guildId: 'guild-timeout-invalid',
+      guild: {
+        id: 'guild-timeout-invalid',
+        members: {
+          fetch: jest.fn().mockResolvedValue(targetMember)
+        },
+        channels: { fetch: jest.fn() }
+      },
+      member: {
+        roles: {
+          cache: { has: roleId => roleId === 'role-timeout' },
+          highest: { comparePositionTo: () => 1 }
+        },
+        permissions: { has: () => true }
+      },
+      user: { id: 'mod-timeout', tag: 'ModTimeout#1' },
+      fields: {
+        getTextInputValue: jest.fn(key => {
+          if (key === 'reason') return 'Timeout reason';
+          if (key === 'duration') return 'invalid-duration';
+          return '';
+        })
+      },
+      reply: jest.fn().mockResolvedValue(undefined),
+      client: {
+        users: { fetch: jest.fn().mockResolvedValue(targetUser) }
+      }
+    };
+
+    await handleModal(interaction);
+
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining('Select a valid timeout duration')
     }));
   });
 
@@ -1589,18 +1677,36 @@ describe('handleAutoBanRoleUpdate', () => {
     expect(guild.members.ban).not.toHaveBeenCalled();
   });
 
-  test('bans when trap role assigned', async () => {
+  test('bans when trap role assigned and swallows DM failure', async () => {
     database.__pool.query
       .mockResolvedValueOnce([[{ trap_role_id: 'role-trap' }]])
       .mockResolvedValue([[]]);
 
     const oldMember = createMember([]);
     const newMember = createMember(['role-trap']);
+    targetUser.send.mockRejectedValueOnce(new Error('dm failed'));
 
     await handleAutoBanRoleUpdate(oldMember, newMember);
 
     expect(guild.members.ban).toHaveBeenCalledWith('user-1', { reason: 'Assigned the configured moderation trap role.' });
     expect(targetUser.send).toHaveBeenCalledWith(expect.stringContaining('BAN'));
+  });
+
+  test('logs when ban request fails', async () => {
+    database.__pool.query.mockResolvedValueOnce([[{ trap_role_id: 'role-trap' }]]);
+    guild.members.ban.mockRejectedValueOnce(new Error('ban failed'));
+
+    const oldMember = createMember([]);
+    const newMember = createMember(['role-trap']);
+
+    await handleAutoBanRoleUpdate(oldMember, newMember);
+
+    expect(guild.members.ban).toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledWith(
+      'moderation: Failed to ban user',
+      expect.objectContaining({ guildId: guild.id, targetId: targetUser.id }),
+      expect.any(Error)
+    );
   });
 
   test('skips when bot hierarchy is lower than target', async () => {
@@ -1648,6 +1754,17 @@ describe('buildSyntheticInteraction helper', () => {
   });
 });
 
+
+describe('resolveTimeoutChoice', () => {
+  test('matches duration values case-insensitively', () => {
+    const option = resolveTimeoutChoice('10M');
+    expect(option).toEqual(ACTIONS.timeout.durationChoices.find(choice => choice.value === '10m'));
+  });
+
+  test('returns null when duration cannot be resolved', () => {
+    expect(resolveTimeoutChoice('not-a-duration')).toBeNull();
+  });
+});
 describe('trap role helpers', () => {
   test('setTrapRoleId persists configuration', async () => {
     database.__pool.query.mockReset();
@@ -1821,6 +1938,7 @@ describe('handleModCommand', () => {
     );
     const roles = roleCache.get('guild-remove')?.get('kick') || new Set();
     expect(roles.has('role-remove')).toBe(false);
+    expect(roleCache.has('guild-remove')).toBe(false);
     expect(interaction.editReply).toHaveBeenCalledWith('Removed @TempMods from the **3. Kick User** role list.');
   });
 
@@ -1924,6 +2042,21 @@ describe('handleModCommand', () => {
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
       content: 'Unsupported moderation command.'
     }));
+  });
+
+  test('delegates auto-ban configuration', async () => {
+    const trapSpy = jest.spyOn(autoBanTrap, 'handleTrapConfigCommand').mockResolvedValue(undefined);
+    const interaction = {
+      options: {
+        getSubcommandGroup: () => 'auto-ban',
+        getSubcommand: () => 'status'
+      }
+    };
+
+    await handleModCommand(interaction);
+
+    expect(trapSpy).toHaveBeenCalledWith(interaction);
+    trapSpy.mockRestore();
   });
 });
 
