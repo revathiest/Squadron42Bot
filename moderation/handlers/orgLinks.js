@@ -29,7 +29,7 @@ async function deleteMessage(message, reason) {
     await message.delete(reason);
     return true;
   } catch (err) {
-    console.warn('moderation: failed to delete message', {
+    console.error('moderation: failed to delete message', {
       guildId: message.guildId,
       channelId: message.channelId,
       messageId: message.id,
@@ -63,6 +63,7 @@ async function fetchOrgRecord(guildId, orgCode) {
 
 async function upsertOrgRecord({ guildId, orgCode, channelId, messageId, authorId }, { force } = {}) {
   const pool = getPool();
+
   if (force) {
     await pool.query(
       `
@@ -113,24 +114,31 @@ async function buildOrgReference(client, record) {
   }
 }
 
+async function maybeDeleteEmptyThread(channel, reason) {
+  if (!channel || typeof channel.isThread !== 'function' || !channel.isThread()) {
+    return;
+  }
+
+  try {
+    const messages = await channel.messages.fetch({ limit: 2 });
+    if (messages.size === 0) {
+      await channel.delete(reason);
+    }
+  } catch (err) {
+    console.error('moderation: failed to prune empty thread', {
+      threadId: channel?.id,
+      reason,
+      err: err?.message
+    });
+  }
+}
+
 async function handleReferralCodes(message) {
   REFERRAL_REGEX.lastIndex = 0;
   const matches = message.content.match(REFERRAL_REGEX);
   if (!matches || !matches.length) {
-    console.log('[moderation] referral check completed (no matches)', {
-      guildId: message.guildId,
-      channelId: message.channelId,
-      messageId: message.id
-    });
     return false;
   }
-
-  console.log('[moderation] referral check found codes', {
-    guildId: message.guildId,
-    channelId: message.channelId,
-    messageId: message.id,
-    codes: matches
-  });
 
   const deleted = await deleteMessage(
     message,
@@ -138,16 +146,18 @@ async function handleReferralCodes(message) {
   );
 
   if (deleted) {
-    console.log('[moderation] removed referral code message', {
+    await notifyUser(
+      message.author,
+      'Referral codes should be shared using `/register-referral-code` and `/get-referral-code`. Your message was removed to keep channels tidy.'
+    );
+    await maybeDeleteEmptyThread(message.channel, 'Referral code message removed');
+  } else {
+    console.error('moderation: failed to remove referral code message', {
       guildId: message.guildId,
       channelId: message.channelId,
       messageId: message.id,
       codes: matches
     });
-    await notifyUser(
-      message.author,
-      'Referral codes should be shared using `/register-referral-code` and `/get-referral-code`. Your message was removed to keep channels tidy.'
-    );
   }
 
   return true;
@@ -158,21 +168,10 @@ async function handleOrgLinks(message) {
   if (!orgForumId) {
     if (!missingForumChannelWarned) {
       missingForumChannelWarned = true;
-      console.warn('moderation: ORG_PROMO_FORUM_CHANNEL_ID is not configured; org link enforcement disabled.');
+      console.info('moderation: ORG_PROMO_FORUM_CHANNEL_ID is not configured; org link enforcement disabled.');
     }
-    console.log('[moderation] org link check skipped (missing forum id)', {
-      guildId: message.guildId,
-      channelId: message.channelId,
-      messageId: message.id
-    });
     return;
   }
-
-  console.log('[moderation] org link check started', {
-    guildId: message.guildId,
-    channelId: message.channelId,
-    messageId: message.id
-  });
 
   ORG_REGEX.lastIndex = 0;
   const codes = [];
@@ -185,20 +184,8 @@ async function handleOrgLinks(message) {
   }
 
   if (!codes.length) {
-    console.log('[moderation] org link check completed (no links)', {
-      guildId: message.guildId,
-      channelId: message.channelId,
-      messageId: message.id
-    });
     return;
   }
-
-  console.log('[moderation] org link check detected links', {
-    guildId: message.guildId,
-    channelId: message.channelId,
-    messageId: message.id,
-    orgCodes: codes
-  });
 
   const parentForumId = getParentForumId(message.channel);
   if (parentForumId !== orgForumId) {
@@ -207,32 +194,19 @@ async function handleOrgLinks(message) {
       'Organization links are restricted to the designated forum.'
     );
     if (deleted) {
-      console.log('[moderation] removed org link posted outside forum', {
-        guildId: message.guildId,
-        channelId: message.channelId,
-        messageId: message.id,
-        orgCodes: codes
-      });
       await notifyUser(
         message.author,
         `Organization links belong in <#${orgForumId}>. Please repost there.`
       );
+      await maybeDeleteEmptyThread(message.channel, 'Organization link removed outside forum');
     } else {
-      console.log('[moderation] failed to remove org link outside forum', {
-        guildId: message.guildId,
-        channelId: message.channelId,
-        messageId: message.id,
-        orgCodes: codes
-      });
     }
     return;
   }
 
   for (const code of codes) {
-    // eslint-disable-next-line no-await-in-loop
     const existing = await fetchOrgRecord(message.guildId, code);
     if (!existing) {
-      // eslint-disable-next-line no-await-in-loop
       await upsertOrgRecord({
         guildId: message.guildId,
         orgCode: code,
@@ -240,20 +214,11 @@ async function handleOrgLinks(message) {
         messageId: message.id,
         authorId: message.author.id
       });
-      console.log('[moderation] recorded new org promotion', {
-        guildId: message.guildId,
-        channelId: message.channelId,
-        messageId: message.id,
-        orgCode: code
-      });
       continue;
     }
 
-    // eslint-disable-next-line no-await-in-loop
     const reference = await buildOrgReference(message.client, existing);
     if (!reference) {
-      // Original message disappeared; treat this message as the new canonical entry.
-      // eslint-disable-next-line no-await-in-loop
       await upsertOrgRecord(
         {
           guildId: message.guildId,
@@ -264,12 +229,6 @@ async function handleOrgLinks(message) {
         },
         { force: true }
       );
-      console.log('[moderation] replaced missing org promotion reference', {
-        guildId: message.guildId,
-        channelId: message.channelId,
-        messageId: message.id,
-        orgCode: code
-      });
       continue;
     }
 
@@ -278,19 +237,20 @@ async function handleOrgLinks(message) {
       'Duplicate organization promotion detected.'
     );
     if (deleted) {
-      console.log('[moderation] removed duplicate org promotion', {
-        guildId: message.guildId,
-        channelId: message.channelId,
-        messageId: message.id,
-        orgCode: code,
-        originalMessageUrl: reference.url
-      });
+      await maybeDeleteEmptyThread(message.channel, 'Duplicate organization promotion removed');
       await notifyUser(
         message.author,
         `This organization has already been promoted here: ${reference.url}`
       );
+    } else {
+      console.error('moderation: failed to remove duplicate org promotion', {
+        guildId: message.guildId,
+        channelId: message.channelId,
+        messageId: message.id,
+        orgCode: code
+      });
     }
-    return; // Message already deleted; no need to process additional codes.
+    return;
   }
 }
 
@@ -298,12 +258,6 @@ async function handleMessageCreate(message) {
   if (!message || message.author?.bot || !message.guild) {
     return;
   }
-
-  console.log('[moderation] inspecting message for org links/referral codes', {
-    guildId: message.guildId,
-    channelId: message.channelId,
-    messageId: message.id
-  });
 
   if (await handleReferralCodes(message)) {
     return;
@@ -322,7 +276,7 @@ module.exports = {
     handleReferralCodes,
     fetchOrgRecord,
     upsertOrgRecord,
-    buildOrgReference
+    buildOrgReference,
+    maybeDeleteEmptyThread
   }
 };
-

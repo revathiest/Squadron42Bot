@@ -233,8 +233,8 @@ describe('moderation org link handler without forum configuration', () => {
     jest.resetModules();
   });
 
-  test('logs a warning once and skips enforcement', async () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  test('logs a notice once and skips enforcement', async () => {
+    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
 
     const message = {
       content: 'https://robertsspaceindustries.com/en/orgs/NOFORUM',
@@ -257,8 +257,74 @@ describe('moderation org link handler without forum configuration', () => {
 
     expect(database.__pool.query).not.toHaveBeenCalled();
     expect(message.delete).not.toHaveBeenCalled();
-    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(infoSpy).toHaveBeenCalledWith('moderation: ORG_PROMO_FORUM_CHANNEL_ID is not configured; org link enforcement disabled.');
+    expect(infoSpy).toHaveBeenCalledTimes(1);
 
-    warnSpy.mockRestore();
+    infoSpy.mockRestore();
+  });
+});
+
+describe("maybeDeleteEmptyThread helper", () => {
+  let maybeDeleteEmptyThread;
+
+  beforeEach(() => {
+    jest.resetModules();
+
+    jest.doMock('../database', () => {
+      const pool = {
+        query: jest.fn()
+      };
+      return {
+        getPool: () => pool
+      };
+    });
+
+    ({ __testables: { maybeDeleteEmptyThread } } = require('../moderation/handlers/orgLinks'));
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+  });
+
+  test("deletes empty thread", async () => {
+    const deleteFn = jest.fn().mockResolvedValue(undefined);
+    const channel = {
+      id: 'thread-1',
+      parentId: 'forum-1',
+      isThread: () => true,
+      messages: {
+        fetch: jest.fn().mockResolvedValue(new Map())
+      },
+      delete: deleteFn
+    };
+
+    await maybeDeleteEmptyThread(channel, 'Cleanup');
+
+    expect(channel.messages.fetch).toHaveBeenCalledWith({ limit: 2 });
+    expect(deleteFn).toHaveBeenCalledWith('Cleanup');
+  });
+
+  test("skips when thread not empty or fetch fails", async () => {
+    const nonEmptyChannel = {
+      isThread: () => true,
+      messages: {
+        fetch: jest.fn().mockResolvedValue(new Map([['1', {}]]))
+      },
+      delete: jest.fn()
+    };
+
+    await maybeDeleteEmptyThread(nonEmptyChannel, 'Should not delete');
+    expect(nonEmptyChannel.delete).not.toHaveBeenCalled();
+
+    const errorChannel = {
+      isThread: () => true,
+      messages: {
+        fetch: jest.fn().mockRejectedValue(new Error('failed'))
+      },
+      delete: jest.fn()
+    };
+
+    await maybeDeleteEmptyThread(errorChannel, 'Error path');
+    expect(errorChannel.delete).not.toHaveBeenCalled();
   });
 });

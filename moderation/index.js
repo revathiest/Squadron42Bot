@@ -41,18 +41,11 @@ async function initialize(client) {
       const preview = typeof message?.content === 'string'
         ? message.content.slice(0, 200)
         : '';
-      console.log('[moderation] messageCreate event received', {
-        guildId: message?.guildId || null,
-        channelId: message?.channelId || null,
-        messageId: message?.id || null,
-        authorId: message?.author?.id || null,
-        contentPreview: preview
-      });
       handleOrgLinkMessage(message).catch(err => {
         console.error('moderation: org link moderation failed', err);
       });
     });
-    console.log('[moderation] org link/referral monitor registered');
+    console.info('[moderation] org link/referral monitor registered');
     messageListenerBound = true;
   }
 
@@ -119,3 +112,4 @@ module.exports = {
     }
   }
 };
+
