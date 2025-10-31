@@ -1,4 +1,4 @@
-﻿# Squadron 42 Community Bot
+# Squadron 42 Community Bot
 
 A Discord bot for the **Squadron 42** community server: event coordination, spoiler-safe discussion, announcements, and community utilities. Built to be simple to operate, easy to extend, and impossible to confuse with an actual Idris.
 
@@ -80,8 +80,12 @@ Feature work is organised into self-contained **agents**. Each agent lives under
  ├── commands.js
  ├── handlers/
  ├── utils.js
+ ├── schema.js   # optional
  └── README.md
 ```
+
+- Use `schema.js` for database setup helpers (e.g. `ensureSchema`, cache warm-up). Modules without persistence can omit it and keep helpers in `utils.js`.
+- Keep `commands.js` limited to slash/context builders—handlers and utilities own database calls.
 
 `index.js` must export:
 

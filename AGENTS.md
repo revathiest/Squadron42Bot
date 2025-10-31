@@ -24,7 +24,8 @@ Every module **must** contain the following files:
  ├── index.js        # Entry point wiring the shared lifecycle
  ├── commands.js     # Slash/Context command builders
  ├── handlers/       # Interaction/event handlers (split by concern)
- ├── utils.js        # Module-specific helpers or caches
+ ├── utils.js        # Module helper layer (caches, shared logic)
+ ├── schema.js       # (optional) Database bootstrap helpers
  └── README.md       # Overview, commands, behaviours
 ```
 
@@ -71,15 +72,15 @@ module.exports = {
 ## Database Access
 
 * All SQL queries must use `getPool()` from `database.js`.
-* Guarantee required tables exist inside `initialize` (e.g. via an `ensureSchema` helper).
-* Do not access the database in `commands.js`; keep persistence in handlers or utilities.
+* Database bootstrap helpers (`ensureSchema`, cache warm-up) should live in `schema.js` when present, otherwise `utils.js`. Import those helpers inside `index.js.initialize`.
+* Do not access the database in `commands.js`; keep persistence logic in handlers or utilities.
 
 ---
 
 ## Testing Expectations
 
 * Add Jest coverage for new features.
-* Import the module’s `index.js` (or a core helper) in tests to validate behaviour.
+* Import the module�s `index.js` (or a core helper) in tests to validate behaviour.
 * Coverage thresholds remain enforced globally (92% statements/lines, 90% functions, 80% branches).
 
 ---
