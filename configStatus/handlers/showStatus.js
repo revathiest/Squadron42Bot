@@ -17,6 +17,7 @@ async function showConfigStatus(interaction) {
       [ticketConfig],
       [ticketRoles],
       [modRows],
+      [orgPromoRows],
       [storedCodes],
       [providedCodes],
       [autoBanRows],
@@ -33,6 +34,10 @@ async function showConfigStatus(interaction) {
       ),
       pool.query(
         'SELECT role_id, action FROM moderation_roles WHERE guild_id = ?',
+        [guildId]
+      ),
+      pool.query(
+        'SELECT channel_id FROM moderation_org_forum_channels WHERE guild_id = ?',
         [guildId]
       ),
       pool.query('SELECT COUNT(*) AS count FROM referral_codes'),
@@ -93,6 +98,16 @@ async function showConfigStatus(interaction) {
     embed.addFields({
       name: 'Moderation Roles',
       value: moderationValue,
+      inline: false
+    });
+
+    const orgForumValue = orgPromoRows.length
+      ? orgPromoRows.map(row => `<#${row.channel_id}>`).join('\n')
+      : 'No promotion forums configured. Use `/mod org-promos add` to register a forum.';
+
+    embed.addFields({
+      name: 'Org Promotion Forums',
+      value: orgForumValue,
       inline: false
     });
 

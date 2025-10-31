@@ -84,6 +84,8 @@ describe('configstatus handleInteraction', () => {
     expect(spectrumField?.value).toBe('No Spectrum configuration found.');
     const tempField = embeds[0].data.fields.find(field => field.name === 'Temp Channels');
     expect(tempField?.value).toBe('No temporary channel templates configured.');
+    const promoField = embeds[0].data.fields.find(field => field.name === 'Org Promotion Forums');
+    expect(promoField?.value).toBe('No promotion forums configured. Use `/mod org-promos add` to register a forum.');
   });
 
   test('builds configuration summary embed', async () => {
@@ -91,6 +93,7 @@ describe('configstatus handleInteraction', () => {
       .mockResolvedValueOnce([[{ channel_id: 'ticket-chan', archive_category_id: 'archive-cat' }]])
       .mockResolvedValueOnce([[{ role_id: 'role-a' }, { role_id: 'role-b' }]])
       .mockResolvedValueOnce([[{ role_id: 'role-mod-1', action: 'warn' }, { role_id: 'role-mod-2', action: 'ban' }]])
+      .mockResolvedValueOnce([[{ channel_id: 'forum-123' }, { channel_id: 'forum-456' }]])
       .mockResolvedValueOnce([[{ count: 4 }]])
       .mockResolvedValueOnce([[{ count: 1 }]])
       .mockResolvedValueOnce([[{ trap_role_id: 'trap-role' }]])
@@ -115,6 +118,7 @@ describe('configstatus handleInteraction', () => {
       expect.arrayContaining([
         expect.objectContaining({ name: 'Tickets' }),
         expect.objectContaining({ name: 'Moderation Roles' }),
+        expect.objectContaining({ name: 'Org Promotion Forums' }),
         expect.objectContaining({ name: 'Referral Codes' }),
         expect.objectContaining({ name: 'Honey Trap' }),
         expect.objectContaining({ name: 'Spectrum Patch Bot' }),
