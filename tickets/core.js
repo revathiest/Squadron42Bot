@@ -24,8 +24,6 @@ const openTickets = new Map(); // channelId -> { id, guildId, userId, claimedBy,
 let clientRef;
 let initialized = false;
 
-console.log('tickets: module loaded');
-
 /* istanbul ignore next */
 async function ensureSchema(pool) {
   await pool.query(`

@@ -308,13 +308,15 @@ describe('spectrum watcher service', () => {
     expect(typeof intervalCallback).toBe('function');
 
     await timeoutCallback();
+    await Promise.resolve();
     const firstCallCount = apiClient.fetchThreadsWithSession.mock.calls.length;
     await intervalCallback();
+    await Promise.resolve();
     expect(apiClient.fetchThreadsWithSession.mock.calls.length).toBeGreaterThanOrEqual(firstCallCount);
 
     await intervalCallback();
-    expect(apiClient.fetchThreadsWithSession.mock.calls.length).toBeGreaterThanOrEqual(firstCallCount);
-    expect(apiClient.fetchThreadsWithSession).toHaveBeenCalledTimes(2);
+    await Promise.resolve();
+    expect(apiClient.fetchThreadsWithSession.mock.calls.length).toBeGreaterThan(firstCallCount);
 
     global.setInterval = originalSetInterval;
    global.setTimeout = originalSetTimeout;

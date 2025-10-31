@@ -1,11 +1,16 @@
-jest.mock('../spectrum/config', () => ({
-  getSlashCommandDefinitions: jest.fn(() => ({ guild: ['command'], global: [] }))
-}));
-
 const commands = require('../spectrum/commands');
-const spectrumConfig = require('../spectrum/config');
 
-test('spectrum commands delegates to config definitions', () => {
-  expect(commands.getSlashCommandDefinitions()).toEqual({ guild: ['command'], global: [] });
-  expect(spectrumConfig.getSlashCommandDefinitions).toHaveBeenCalled();
+describe('spectrum command definitions', () => {
+  test('exposes guild-scoped /spectrum builder', () => {
+    const defs = commands.getSlashCommandDefinitions();
+    expect(defs.global).toEqual([]);
+    expect(defs.guild).toHaveLength(1);
+
+    const builder = defs.guild[0];
+    const json = builder.toJSON();
+    expect(json.name).toBe('spectrum');
+    expect(json.options.map(option => option.name)).toEqual(
+      expect.arrayContaining(['set-channel', 'set-forum', 'status', 'clear', 'post-latest'])
+    );
+  });
 });

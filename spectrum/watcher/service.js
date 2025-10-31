@@ -138,9 +138,13 @@ async function checkForNewThreads(client) {
       .getConfigsSnapshot()
       .filter(config => config.forumId && config.announceChannelId);
 
-    for (const config of configs) {
-      await checkForumForGuild(client, config);
+    if (!configs.length) {
+      return;
     }
+
+    await Promise.allSettled(
+      configs.map(config => checkForumForGuild(client, config))
+    );
   } catch (err) {
     console.error('spectrumWatcher: checkForNewThreads failed', err);
   } finally {

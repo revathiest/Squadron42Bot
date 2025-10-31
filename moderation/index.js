@@ -1,7 +1,15 @@
 const { getPool } = require('../database');
 const { ACTIONS, PARDON_COMMAND_NAME, PARDON_COMMAND_DESCRIPTION, HISTORY_CONTEXT_LABEL } = require('./constants');
-const { respondEphemeral, parseReferenceInput, fetchReferenceMessage, toTimestamp, formatTimestamp, formatReason } = require('./utils');
-const { ensureSchema, loadRoleCache } = require('./schema');
+const {
+  respondEphemeral,
+  parseReferenceInput,
+  fetchReferenceMessage,
+  toTimestamp,
+  formatTimestamp,
+  formatReason,
+  ensureSchema,
+  loadRoleCache
+} = require('./utils');
 const { getSlashCommandDefinitions } = require('./commands');
 const autoBanTrap = require('./autoBanTrap');
 const roles = require('./handlers/roles');

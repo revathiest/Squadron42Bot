@@ -13,14 +13,43 @@ async function showConfigStatus(interaction) {
     .setTimestamp();
 
   try {
-    const [ticketConfig] = await pool.query(
-      'SELECT channel_id, archive_category_id FROM ticket_settings WHERE guild_id = ?',
-      [guildId]
-    );
-    const [ticketRoles] = await pool.query(
-      'SELECT role_id FROM ticket_roles WHERE guild_id = ?',
-      [guildId]
-    );
+    const [
+      [ticketConfig],
+      [ticketRoles],
+      [modRows],
+      [storedCodes],
+      [providedCodes],
+      [autoBanRows],
+      [spectrumRows],
+      [tempChannels]
+    ] = await Promise.all([
+      pool.query(
+        'SELECT channel_id, archive_category_id FROM ticket_settings WHERE guild_id = ?',
+        [guildId]
+      ),
+      pool.query(
+        'SELECT role_id FROM ticket_roles WHERE guild_id = ?',
+        [guildId]
+      ),
+      pool.query(
+        'SELECT role_id, action FROM moderation_roles WHERE guild_id = ?',
+        [guildId]
+      ),
+      pool.query('SELECT COUNT(*) AS count FROM referral_codes'),
+      pool.query('SELECT COUNT(*) AS count FROM provided_codes'),
+      pool.query(
+        'SELECT trap_role_id FROM moderation_config WHERE guild_id = ?',
+        [guildId]
+      ),
+      pool.query(
+        'SELECT announce_channel_id, forum_id FROM spectrum_config WHERE guild_id = ?',
+        [guildId]
+      ),
+      pool.query(
+        'SELECT template_channel_id FROM voice_channel_templates WHERE guild_id = ?',
+        [guildId]
+      )
+    ]);
 
     if (ticketConfig.length) {
       const config = ticketConfig[0];
@@ -43,11 +72,6 @@ async function showConfigStatus(interaction) {
         inline: false
       });
     }
-
-    const [modRows] = await pool.query(
-      'SELECT role_id, action FROM moderation_roles WHERE guild_id = ?',
-      [guildId]
-    );
 
     const moderationValue = modRows.length
       ? Object.entries(
@@ -72,8 +96,6 @@ async function showConfigStatus(interaction) {
       inline: false
     });
 
-    const [storedCodes] = await pool.query('SELECT COUNT(*) AS count FROM referral_codes');
-    const [providedCodes] = await pool.query('SELECT COUNT(*) AS count FROM provided_codes');
     const registered = storedCodes[0]?.count ?? 0;
     const provided = providedCodes[0]?.count ?? 0;
     const available = Math.max(registered - provided, 0);
@@ -84,10 +106,6 @@ async function showConfigStatus(interaction) {
       inline: false
     });
 
-    const [autoBanRows] = await pool.query(
-      'SELECT trap_role_id FROM moderation_config WHERE guild_id = ?',
-      [guildId]
-    );
     const trapRoleId = autoBanRows[0]?.trap_role_id;
 
     embed.addFields({
@@ -95,11 +113,6 @@ async function showConfigStatus(interaction) {
       value: trapRoleId ? `Ban on assign: <@&${trapRoleId}>` : 'No trap role configured.',
       inline: false
     });
-
-    const [spectrumRows] = await pool.query(
-      'SELECT announce_channel_id, forum_id FROM spectrum_config WHERE guild_id = ?',
-      [guildId]
-    );
 
     const spectrumValue = spectrumRows.length
       ? `Channel: ${spectrumRows[0].announce_channel_id ? `<#${spectrumRows[0].announce_channel_id}>` : 'Not set'}\n` +
@@ -111,11 +124,6 @@ async function showConfigStatus(interaction) {
       value: spectrumValue,
       inline: false
     });
-
-    const [tempChannels] = await pool.query(
-      'SELECT template_channel_id FROM voice_channel_templates WHERE guild_id = ?',
-      [guildId]
-    );
 
     embed.addFields({
       name: 'Temp Channels',
