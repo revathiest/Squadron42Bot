@@ -2,6 +2,7 @@ const { MessageFlags } = require('discord.js');
 const { getPool } = require('../../database');
 const { ACTIONS } = require('../constants');
 const { respondEphemeral } = require('../utils');
+const { handleOrgPromoCommand } = require('./promoChannels');
 
 const roleCache = new Map(); // guildId -> Map(action -> Set(roleId))
 
@@ -220,6 +221,10 @@ async function handleModCommand(interaction) {
   if (group === 'auto-ban') {
     const { handleTrapConfigCommand } = require('../autoBanTrap');
     return handleTrapConfigCommand(interaction);
+  }
+
+  if (group === 'org-promos') {
+    return handleOrgPromoCommand(interaction);
   }
 
   return respondEphemeral(interaction, 'Unsupported moderation command.');

@@ -1,7 +1,8 @@
 const {
   SlashCommandBuilder,
   ContextMenuCommandBuilder,
-  ApplicationCommandType
+  ApplicationCommandType,
+  ChannelType
 } = require('discord.js');
 const { ACTIONS, PARDON_COMMAND_NAME, PARDON_COMMAND_DESCRIPTION, HISTORY_CONTEXT_LABEL } = require('./constants');
 const { buildRoleChoices } = require('./handlers/roles');
@@ -61,6 +62,41 @@ function buildSlashCommandDefinition() {
             .setDescription('Show the configured trap role.')
         )
     );
+
+  builder.addSubcommandGroup(group =>
+    group
+      .setName('org-promos')
+      .setDescription('Manage which forum channels allow organization promotions.')
+      .addSubcommand(sub =>
+        sub
+          .setName('add')
+          .setDescription('Allow promotion threads in a forum channel.')
+          .addChannelOption(option =>
+            option
+              .setName('channel')
+              .setDescription('Forum channel where organization promotions are allowed.')
+              .addChannelTypes(ChannelType.GuildForum)
+              .setRequired(true)
+          )
+      )
+      .addSubcommand(sub =>
+        sub
+          .setName('remove')
+          .setDescription('Stop allowing promotions in a forum channel.')
+          .addChannelOption(option =>
+            option
+              .setName('channel')
+              .setDescription('Forum channel to remove.')
+              .addChannelTypes(ChannelType.GuildForum)
+              .setRequired(true)
+          )
+      )
+      .addSubcommand(sub =>
+        sub
+          .setName('list')
+          .setDescription('List forums where organization promotions are allowed.')
+      )
+  );
 
   return builder.toJSON();
 }

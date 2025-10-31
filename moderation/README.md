@@ -12,17 +12,23 @@ Provides slash commands, context menu actions, and automated honey-trap tooling 
 | `/mod auto-ban set` | Guild | Configure the trap role that triggers automated bans. |
 | `/mod auto-ban clear` | Guild | Remove the configured trap role. |
 | `/mod auto-ban status` | Guild | Display the current trap role configuration. |
+| `/mod org-promos add` | Guild | Allow a forum channel to host organization promotion threads. |
+| `/mod org-promos remove` | Guild | Remove a forum channel from organization promotion duties. |
+| `/mod org-promos list` | Guild | List the configured promotion forums for the guild. |
 | `/pardon` | Guild | Remove a user''s recorded moderation history. |
 | Context menu: Warn/Kick/Ban/Timeout/View History | Guild | Quick actions for moderators via message or user context menus. |
 
 ## Event Hooks
-- `InteractionCreate` � processes slash commands, context menus, component interactions, and modals.
-- `GuildMemberUpdate` � monitors role assignments for the honey-trap auto ban feature.
+- `InteractionCreate` - processes slash commands, context menus, component interactions, and modals.
+- `GuildMemberUpdate` - monitors role assignments for the honey-trap auto ban feature.
+- `MessageCreate` - enforces referral/org link policies, including duplicate detection inside approved forums.
 
 ## Persistence
 - `moderation_roles`
 - `moderation_actions`
 - `moderation_config`
+- `moderation_org_posts`
+- `moderation_org_forum_channels`
 
 ## Public Interface
 - `initialize(client)` � ensures tables exist, warms caches, registers the auto-ban trap listener, and guards against double initialization.

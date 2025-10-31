@@ -134,7 +134,6 @@ describe('commandManager registerAllCommands', () => {
 
   test('registers global and guild commands when configuration present', async () => {
     process.env.APPLICATION_ID = 'app-9';
-    process.env.GUILD_ID = 'guild-7';
     process.env.CLEAR_GUILD_COMMANDS = 'true';
     process.env.FORCE_REREGISTER = 'true';
 
@@ -147,7 +146,7 @@ describe('commandManager registerAllCommands', () => {
       }
     ];
 
-    await registerAllCommands('token-xyz', modules);
+    await registerAllCommands('token-xyz', modules, ['guild-7']);
 
     expect(REST).toHaveBeenCalledWith({ version: '10' });
     expect(setTokenMock).toHaveBeenCalledWith('token-xyz');
@@ -162,7 +161,7 @@ describe('commandManager registerAllCommands', () => {
     expect(putMock.mock.calls[3]).toEqual(['guild:app-9:guild-7', { body: [{ name: 'guild-one' }] }]);
   });
 
-  test('warns when guild commands exist without GUILD_ID', async () => {
+  test('logs when guild commands exist without connected guilds', async () => {
     process.env.APPLICATION_ID = 'app-1';
     process.env.CLEAR_GUILD_COMMANDS = 'true';
     process.env.FORCE_REREGISTER = 'true';
@@ -173,10 +172,11 @@ describe('commandManager registerAllCommands', () => {
       }
     ];
 
-    await registerAllCommands('token-abc', modules);
+    await registerAllCommands('token-abc', modules, []);
 
-    expect(console.warn).toHaveBeenCalledWith('commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be cleared.');
-    expect(console.warn).toHaveBeenCalledWith('commandManager: Guild-specific commands defined but GUILD_ID is missing; they will not be registered.');
+    expect(console.log).toHaveBeenCalledWith('commandManager: Guild command definitions present but no connected guilds were supplied.');
+    expect(console.log).toHaveBeenCalledWith('commandManager: CLEAR_GUILD_COMMANDS requested but no connected guilds were provided; skipping guild clears.');
+    expect(console.log).toHaveBeenCalledWith('commandManager: Skipping guild command registration; no connected guilds available.');
     expect(putMock).toHaveBeenCalledTimes(1);
     expect(putMock.mock.calls[0]).toEqual(['app:app-1', { body: [] }]);
   });
@@ -214,10 +214,9 @@ describe('commandManager registerAllCommands', () => {
 
   test('skips guild clearing when disabled via env flag', async () => {
     process.env.APPLICATION_ID = 'app-skip';
-    process.env.GUILD_ID = 'guild-skip';
     process.env.CLEAR_GUILD_COMMANDS = 'false';
 
-    await registerAllCommands('token-skip', []);
+    await registerAllCommands('token-skip', [], ['guild-skip']);
 
     expect(console.log).toHaveBeenCalledWith('commandManager: Guild-specific commands not deleted. Forced command clearing disabled.');
     expect(putMock).toHaveBeenCalledTimes(1); // only global clear
@@ -226,7 +225,6 @@ describe('commandManager registerAllCommands', () => {
 
   test('skips guild registration when FORCE_REREGISTER is false', async () => {
     process.env.APPLICATION_ID = 'app-skip-reg';
-    process.env.GUILD_ID = 'guild-skip-reg';
     process.env.FORCE_REREGISTER = 'false';
     process.env.CLEAR_GUILD_COMMANDS = 'true';
 
@@ -238,7 +236,7 @@ describe('commandManager registerAllCommands', () => {
       }
     ];
 
-    await registerAllCommands('token-skip-reg', modules);
+    await registerAllCommands('token-skip-reg', modules, ['guild-skip-reg']);
 
     expect(console.log).toHaveBeenCalledWith('commandManager: Guild commands not registered.  Forced reregister disabled.');
     const guildCalls = putMock.mock.calls.filter(call => call[0].startsWith('guild:'));

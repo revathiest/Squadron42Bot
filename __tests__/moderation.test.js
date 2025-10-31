@@ -9,7 +9,8 @@ jest.mock(require('path').resolve(__dirname, '..', 'database'), () => {
 });
 
 jest.mock('../moderation/handlers/orgLinks', () => ({
-  handleMessageCreate: jest.fn().mockResolvedValue(undefined)
+  handleMessageCreate: jest.fn().mockResolvedValue(undefined),
+  loadOrgForumCache: jest.fn().mockResolvedValue(undefined)
 }));
 
 const path = require('path');

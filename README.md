@@ -49,7 +49,6 @@ Create a `.env` file with the values your deployment needs.
 ```bash
 DISCORD_TOKEN=your_bot_token
 APPLICATION_ID=your_application_id
-GUILD_ID=primary_guild_id          # optional; enables fast guild-scoped command updates
 
 # Database configuration (MySQL/MariaDB)
 DB_SERVER=host
@@ -61,7 +60,6 @@ DB_POOL_LIMIT=5                    # optional, concurrent connections in the poo
 
 LOG_LEVEL=info
 SPECTRUM_POLL_INTERVAL_MS=300000   # optional, override Spectrum watcher polling interval (ms)
-ORG_PROMO_FORUM_CHANNEL_ID=123456789012345678  # Forum channel where organization promotions are allowed
 ```
 
 ---
@@ -70,7 +68,7 @@ ORG_PROMO_FORUM_CHANNEL_ID=123456789012345678  # Forum channel where organizatio
 
 - Every module exports `getSlashCommandDefinitions()` and indicates whether each command is global or guild-scoped.
 - At startup `commandManager.registerAllCommands()` clears all existing global and guild commands, then re-registers only the current definitions. This prevents duplicate entries and ensures guild-specific commands become available immediately.
-- Set `GUILD_ID` when deploying to a single server so guild commands register instantly; omit it if you want global rollout and can tolerate propagation delays.
+- Guild-scoped registrations automatically target every guild the bot is connected to once the client is ready—no static `GUILD_ID` is required.
 
 ---
 

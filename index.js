@@ -34,7 +34,8 @@ client.once(Events.ClientReady, async c => {
   console.log('Logged in as %s.', c.user.tag);
 
   try {
-    await commandManager.registerAllCommands(c.token ?? token, commandModules);
+    const connectedGuildIds = Array.from(c.guilds.cache.keys());
+    await commandManager.registerAllCommands(c.token ?? token, commandModules, connectedGuildIds);
   } catch (err) {
     console.error('Failed to register slash commands:', err);
   }

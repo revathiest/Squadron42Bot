@@ -18,7 +18,10 @@ const actions = require('./handlers/actions');
 const modals = require('./handlers/modal');
 const history = require('./handlers/history');
 const { handleInteraction } = require('./handlers/interaction');
-const { handleMessageCreate: handleOrgLinkMessage } = require('./handlers/orgLinks');
+const {
+  handleMessageCreate: handleOrgLinkMessage,
+  loadOrgForumCache
+} = require('./handlers/orgLinks');
 
 let initialized = false;
 let clientRef;
@@ -33,6 +36,7 @@ async function initialize(client) {
   const pool = getPool();
   await ensureSchema(pool);
   await loadRoleCache(pool);
+  await loadOrgForumCache(pool);
 
   autoBanTrap.registerAutoBanTrap(client);
 

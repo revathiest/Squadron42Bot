@@ -3,9 +3,9 @@ const { getPool } = require('../../database');
 
 const ORG_REGEX = /https:\/\/robertsspaceindustries\.com\/en\/orgs\/([A-Z0-9-]+)/gi;
 const REFERRAL_REGEX = /\bSTAR-[A-Z0-9]{4}-[A-Z0-9]{4}\b/gi;
-const ORG_FORUM_CHANNEL_ID = process.env.ORG_PROMO_FORUM_CHANNEL_ID || null;
 
-let missingForumChannelWarned = false;
+const orgForumCache = new Map(); // guildId -> Set(channelId)
+const missingForumNotice = new Set(); // guildIds warned about missing configuration
 
 function getParentForumId(channel) {
   if (!channel) {
@@ -22,6 +22,113 @@ function getParentForumId(channel) {
     default:
       return null;
   }
+}
+
+function getCachedOrgForums(guildId) {
+  return orgForumCache.get(guildId) || null;
+}
+
+function setOrgForums(guildId, channelIds) {
+  const set = new Set(channelIds);
+  orgForumCache.set(guildId, set);
+  return set;
+}
+
+function addOrgForumToCache(guildId, channelId) {
+  const existing = orgForumCache.get(guildId);
+  if (existing) {
+    existing.add(channelId);
+    return existing;
+  }
+  const set = new Set([channelId]);
+  orgForumCache.set(guildId, set);
+  return set;
+}
+
+function removeOrgForumFromCache(guildId, channelId) {
+  const existing = orgForumCache.get(guildId);
+  if (!existing) {
+    return false;
+  }
+  const deleted = existing.delete(channelId);
+  if (existing.size === 0) {
+    orgForumCache.delete(guildId);
+  }
+  return deleted;
+}
+
+function clearOrgForumCache() {
+  orgForumCache.clear();
+  missingForumNotice.clear();
+}
+
+async function loadOrgForumCache(pool = getPool()) {
+  const [rows] = await pool.query('SELECT guild_id, channel_id FROM moderation_org_forum_channels');
+  orgForumCache.clear();
+  for (const row of rows) {
+    addOrgForumToCache(row.guild_id, row.channel_id);
+  }
+  missingForumNotice.clear();
+}
+
+async function fetchOrgForums(guildId, pool = getPool()) {
+  const [rows] = await pool.query(
+    'SELECT channel_id FROM moderation_org_forum_channels WHERE guild_id = ?',
+    [guildId]
+  );
+  return setOrgForums(guildId, rows.map(row => row.channel_id));
+}
+
+async function getOrgForums(guildId) {
+  if (!guildId) {
+    return new Set();
+  }
+
+  const cached = getCachedOrgForums(guildId);
+  if (cached) {
+    return cached;
+  }
+
+  return fetchOrgForums(guildId);
+}
+
+async function allowOrgForumChannel(guildId, channelId, createdBy) {
+  const pool = getPool();
+  const [result] = await pool.query(
+    `
+      INSERT INTO moderation_org_forum_channels (guild_id, channel_id, created_by)
+      VALUES (?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        created_by = VALUES(created_by),
+        created_at = CURRENT_TIMESTAMP
+    `,
+    [guildId, channelId, createdBy ?? null]
+  );
+
+  addOrgForumToCache(guildId, channelId);
+  missingForumNotice.delete(guildId);
+
+  return Boolean(result?.affectedRows);
+}
+
+async function disallowOrgForumChannel(guildId, channelId) {
+  const pool = getPool();
+  const [result] = await pool.query(
+    'DELETE FROM moderation_org_forum_channels WHERE guild_id = ? AND channel_id = ?',
+    [guildId, channelId]
+  );
+
+  const deleted = removeOrgForumFromCache(guildId, channelId);
+  if (deleted && !orgForumCache.has(guildId)) {
+    missingForumNotice.delete(guildId);
+  }
+
+  return Boolean(result?.affectedRows);
+}
+
+async function listOrgForumChannels(guildId) {
+  const forums = await getOrgForums(guildId);
+  return Array.from(forums);
 }
 
 async function deleteMessage(message, reason) {
@@ -123,6 +230,11 @@ async function maybeDeleteEmptyThread(channel, reason) {
     const messages = await channel.messages.fetch({ limit: 2 });
     if (messages.size === 0) {
       await channel.delete(reason);
+      console.info('[moderation] deleted empty thread after moderation action', {
+        threadId: channel.id,
+        parentId: channel.parentId,
+        reason
+      });
     }
   } catch (err) {
     console.error('moderation: failed to prune empty thread', {
@@ -146,6 +258,12 @@ async function handleReferralCodes(message) {
   );
 
   if (deleted) {
+    console.info('[moderation] removed referral code message', {
+      guildId: message.guildId,
+      channelId: message.channelId,
+      messageId: message.id,
+      codes: matches
+    });
     await notifyUser(
       message.author,
       'Referral codes should be shared using `/register-referral-code` and `/get-referral-code`. Your message was removed to keep channels tidy.'
@@ -164,14 +282,7 @@ async function handleReferralCodes(message) {
 }
 
 async function handleOrgLinks(message) {
-  const orgForumId = ORG_FORUM_CHANNEL_ID;
-  if (!orgForumId) {
-    if (!missingForumChannelWarned) {
-      missingForumChannelWarned = true;
-      console.info('moderation: ORG_PROMO_FORUM_CHANNEL_ID is not configured; org link enforcement disabled.');
-    }
-    return;
-  }
+  const forums = await getOrgForums(message.guildId);
 
   ORG_REGEX.lastIndex = 0;
   const codes = [];
@@ -188,18 +299,39 @@ async function handleOrgLinks(message) {
   }
 
   const parentForumId = getParentForumId(message.channel);
-  if (parentForumId !== orgForumId) {
+  if (!parentForumId || !forums.has(parentForumId)) {
+    if (!forums.size && !missingForumNotice.has(message.guildId)) {
+      missingForumNotice.add(message.guildId);
+      console.info(
+        'moderation: no org promotion forums configured for guild; org links will be removed until /mod org-promos add is used.',
+        { guildId: message.guildId }
+      );
+    }
+
     const deleted = await deleteMessage(
       message,
-      'Organization links are restricted to the designated forum.'
+      'Organization links are restricted to the configured forum channels.'
     );
     if (deleted) {
-      await notifyUser(
-        message.author,
-        `Organization links belong in <#${orgForumId}>. Please repost there.`
-      );
+      console.info('[moderation] removed org link posted outside forum', {
+        guildId: message.guildId,
+        channelId: message.channelId,
+        messageId: message.id,
+        orgCodes: codes
+      });
+      if (forums.size) {
+        const channelMentions = Array.from(forums).map(id => `<#${id}>`).join(', ');
+        await notifyUser(
+          message.author,
+          `Organization links are restricted to the configured forum channels: ${channelMentions}.`
+        );
+      } else {
+        await notifyUser(
+          message.author,
+          'Organization links are restricted to the promotion forum configured by the moderation team. Please contact a moderator for assistance.'
+        );
+      }
       await maybeDeleteEmptyThread(message.channel, 'Organization link removed outside forum');
-    } else {
     }
     return;
   }
@@ -213,6 +345,12 @@ async function handleOrgLinks(message) {
         channelId: message.channelId,
         messageId: message.id,
         authorId: message.author.id
+      });
+      console.info('[moderation] recorded new org promotion', {
+        guildId: message.guildId,
+        channelId: message.channelId,
+        messageId: message.id,
+        orgCode: code
       });
       continue;
     }
@@ -229,6 +367,12 @@ async function handleOrgLinks(message) {
         },
         { force: true }
       );
+      console.info('[moderation] replaced missing org promotion reference', {
+        guildId: message.guildId,
+        channelId: message.channelId,
+        messageId: message.id,
+        orgCode: code
+      });
       continue;
     }
 
@@ -237,6 +381,13 @@ async function handleOrgLinks(message) {
       'Duplicate organization promotion detected.'
     );
     if (deleted) {
+      console.info('[moderation] removed duplicate org promotion', {
+        guildId: message.guildId,
+        channelId: message.channelId,
+        messageId: message.id,
+        orgCode: code,
+        originalMessageUrl: reference.url
+      });
       await maybeDeleteEmptyThread(message.channel, 'Duplicate organization promotion removed');
       await notifyUser(
         message.author,
@@ -268,6 +419,11 @@ async function handleMessageCreate(message) {
 
 module.exports = {
   handleMessageCreate,
+  loadOrgForumCache,
+  allowOrgForumChannel,
+  disallowOrgForumChannel,
+  listOrgForumChannels,
+  clearOrgForumCache,
   __testables: {
     ORG_REGEX,
     REFERRAL_REGEX,
@@ -277,6 +433,11 @@ module.exports = {
     fetchOrgRecord,
     upsertOrgRecord,
     buildOrgReference,
-    maybeDeleteEmptyThread
+    maybeDeleteEmptyThread,
+    getOrgForums,
+    fetchOrgForums,
+    addOrgForumToCache,
+    removeOrgForumFromCache,
+    getCachedOrgForums
   }
 };
