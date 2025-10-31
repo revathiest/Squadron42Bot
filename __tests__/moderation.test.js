@@ -8,6 +8,10 @@ jest.mock(require('path').resolve(__dirname, '..', 'database'), () => {
   };
 });
 
+jest.mock('../moderation/handlers/orgLinks', () => ({
+  handleMessageCreate: jest.fn().mockResolvedValue(undefined)
+}));
+
 const path = require('path');
 const { ApplicationCommandType, ApplicationCommandOptionType, MessageFlags, PermissionFlagsBits, Events } = require('discord.js');
 
@@ -15,8 +19,13 @@ const database = require(path.resolve(__dirname, '..', 'database'));
 const moderation = require('../moderation');
 const autoBanTrap = require('../moderation/autoBanTrap');
 const actionHandlers = require('../moderation/handlers/actions');
+const orgLinkHandler = require('../moderation/handlers/orgLinks');
 
 const flushPromises = () => new Promise(resolve => setImmediate(resolve));
+
+beforeEach(() => {
+  moderation.__testables.resetInitialization();
+});
 
 const {
   ACTIONS,
@@ -1210,6 +1219,15 @@ describe('moderation initialize', () => {
     database.__pool.query.mockReset();
     database.__pool.query.mockResolvedValue([[]]);
   });
+  test('onReady bootstraps when not initialized', async () => {
+    const client = { on: jest.fn() };
+
+    await moderation.onReady(client);
+
+    expect(client.on).toHaveBeenCalledWith(Events.GuildMemberUpdate, expect.any(Function));
+    expect(client.on).toHaveBeenCalledWith(Events.MessageCreate, expect.any(Function));
+  });
+
 
   test('initializes schema and auto-ban listener once', async () => {
     const client = { on: jest.fn() };
@@ -1224,12 +1242,20 @@ describe('moderation initialize', () => {
     expect(queries.some(sql => typeof sql === 'string' && sql.includes('moderation_config'))).toBe(true);
     expect(registerSpy).toHaveBeenCalledWith(client);
     expect(client.on).toHaveBeenCalledWith(Events.GuildMemberUpdate, expect.any(Function));
+    expect(client.on).toHaveBeenCalledWith(Events.MessageCreate, expect.any(Function));
     expect(client.on.mock.calls.some(call => call[0] === Events.InteractionCreate)).toBe(false);
+
+    const messageHandler = client.on.mock.calls.find(call => call[0] === Events.MessageCreate)[1];
+    orgLinkHandler.handleMessageCreate.mockRejectedValueOnce(new Error('boom'));
+    messageHandler({});
+    await flushPromises();
+    expect(errorSpy).toHaveBeenCalledWith('moderation: org link moderation failed', expect.any(Error));
 
     await moderation.initialize(client);
 
     expect(registerSpy).toHaveBeenCalledTimes(1);
     expect(client.on.mock.calls.filter(call => call[0] === Events.GuildMemberUpdate)).toHaveLength(1);
+    expect(client.on.mock.calls.filter(call => call[0] === Events.MessageCreate)).toHaveLength(1);
 
     registerSpy.mockRestore();
     errorSpy.mockRestore();

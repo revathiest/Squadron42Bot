@@ -16,8 +16,8 @@ Provides slash commands, context menu actions, and automated honey-trap tooling 
 | Context menu: Warn/Kick/Ban/Timeout/View History | Guild | Quick actions for moderators via message or user context menus. |
 
 ## Event Hooks
-- `InteractionCreate` – processes slash commands, context menus, component interactions, and modals.
-- `GuildMemberUpdate` – monitors role assignments for the honey-trap auto ban feature.
+- `InteractionCreate` ï¿½ processes slash commands, context menus, component interactions, and modals.
+- `GuildMemberUpdate` ï¿½ monitors role assignments for the honey-trap auto ban feature.
 
 ## Persistence
 - `moderation_roles`
@@ -25,10 +25,10 @@ Provides slash commands, context menu actions, and automated honey-trap tooling 
 - `moderation_config`
 
 ## Public Interface
-- `initialize(client)` – ensures tables exist, warms caches, registers the auto-ban trap listener, and guards against double initialization.
-- `onReady(client)` – guarantees initialization has completed and stores a client reference for submodules.
-- `getSlashCommandDefinitions()` – exposes guild-specific moderation command definitions and context menus.
-- `handleInteraction(interaction)` – routes moderation interactions through the shared registry.
+- `initialize(client)` ï¿½ ensures tables exist, warms caches, registers the auto-ban trap listener, and guards against double initialization.
+- `onReady(client)` ï¿½ guarantees initialization has completed and stores a client reference for submodules.
+- `getSlashCommandDefinitions()` ï¿½ exposes guild-specific moderation command definitions and context menus.
+- `handleInteraction(interaction)` ï¿½ routes moderation interactions through the shared registry.
 
 ## Additional Notes
 - Command handlers live under `moderation/handlers/` with dedicated files for actions, history lookups, modal workflows, and role management.

@@ -1,3 +1,4 @@
+const { Events } = require('discord.js');
 const { getPool } = require('../database');
 const { ACTIONS, PARDON_COMMAND_NAME, PARDON_COMMAND_DESCRIPTION, HISTORY_CONTEXT_LABEL } = require('./constants');
 const {
@@ -17,9 +18,11 @@ const actions = require('./handlers/actions');
 const modals = require('./handlers/modal');
 const history = require('./handlers/history');
 const { handleInteraction } = require('./handlers/interaction');
+const { handleMessageCreate: handleOrgLinkMessage } = require('./handlers/orgLinks');
 
 let initialized = false;
 let clientRef;
+let messageListenerBound = false;
 
 async function initialize(client) {
   if (initialized) {
@@ -32,6 +35,26 @@ async function initialize(client) {
   await loadRoleCache(pool);
 
   autoBanTrap.registerAutoBanTrap(client);
+
+  if (!messageListenerBound) {
+    client.on(Events.MessageCreate, message => {
+      const preview = typeof message?.content === 'string'
+        ? message.content.slice(0, 200)
+        : '';
+      console.log('[moderation] messageCreate event received', {
+        guildId: message?.guildId || null,
+        channelId: message?.channelId || null,
+        messageId: message?.id || null,
+        authorId: message?.author?.id || null,
+        contentPreview: preview
+      });
+      handleOrgLinkMessage(message).catch(err => {
+        console.error('moderation: org link moderation failed', err);
+      });
+    });
+    console.log('[moderation] org link/referral monitor registered');
+    messageListenerBound = true;
+  }
 
   initialized = true;
 }
@@ -89,6 +112,10 @@ module.exports = {
     handleKick: actions.handleKick,
     handleBan: actions.handleBan,
     handleTimeout: actions.handleTimeout,
-    executePardon: actions.executePardon
+    executePardon: actions.executePardon,
+    resetInitialization: () => {
+      initialized = false;
+      messageListenerBound = false;
+    }
   }
 };

@@ -47,6 +47,18 @@ async function ensureSchema(pool) {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS moderation_org_posts (
+      guild_id VARCHAR(20) NOT NULL,
+      org_code VARCHAR(64) NOT NULL,
+      channel_id VARCHAR(20) NOT NULL,
+      message_id VARCHAR(20) NOT NULL,
+      author_id VARCHAR(20) DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (guild_id, org_code)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+
+  await pool.query(`
     ALTER TABLE moderation_actions
     MODIFY COLUMN action ENUM('warn', 'kick', 'ban', 'timeout', 'pardon') NOT NULL
   `).catch(err => {

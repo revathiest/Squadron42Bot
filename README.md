@@ -30,7 +30,10 @@ Planned pillars still on the roadmap:
 - Discord application and bot created in the Developer Portal (invite with the `applications.commands` scope).
 - Bot token with the right **Privileged Gateway Intents** enabled:
   - Server Members
-  - Message Content (only if you truly need it; prefer slash commands)
+  - Message Content (required for org/referral moderation)
+- Gateway intents requested by the bot code:
+  - Guild Messages (delivers `messageCreate` events)
+  - Guild Voice States, Members, Moderation (already required elsewhere)
 - Node.js 20+ and npm (or pnpm/yarn)
 
 Optional, depending on future features:
@@ -58,6 +61,7 @@ DB_POOL_LIMIT=5                    # optional, concurrent connections in the poo
 
 LOG_LEVEL=info
 SPECTRUM_POLL_INTERVAL_MS=300000   # optional, override Spectrum watcher polling interval (ms)
+ORG_PROMO_FORUM_CHANNEL_ID=123456789012345678  # Forum channel where organization promotions are allowed
 ```
 
 ---

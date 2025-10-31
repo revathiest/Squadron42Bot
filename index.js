@@ -20,7 +20,9 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers, // Required for role change detection
     GatewayIntentBits.GuildModeration,    // Needed to execute bans
-    GatewayIntentBits.GuildVoiceStates
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.MessageContent // Required for message monitoring (org/referral enforcement)
   ]
 });
 
