@@ -1,8 +1,0 @@
-<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
-<cp:coreProperties xmlns:cp='http://schemas.openxmlformats.org/package/2006/metadata/core-properties' xmlns:dc='http://purl.org/dc/elements/1.1/' xmlns:dcterms='http://purl.org/dc/terms/' xmlns:dcmitype='http://purl.org/dc/dcmitype/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
-  <dc:title>Squadron 42 Community Bot – User Guide</dc:title>
-  <dc:creator>Squadron42Bot</dc:creator>
-  <cp:lastModifiedBy>Squadron42Bot</cp:lastModifiedBy>
-  <dcterms:created xsi:type='dcterms:W3CDTF'>2025-11-01T14:42:39.445385</dcterms:created>
-  <dcterms:modified xsi:type='dcterms:W3CDTF'>2025-11-01T14:42:39.445401</dcterms:modified>
-</cp:coreProperties>
