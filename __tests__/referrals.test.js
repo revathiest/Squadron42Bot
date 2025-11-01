@@ -1,3 +1,5 @@
+const { MessageFlags } = require('discord.js');
+
 jest.mock('../database', () => {
   const pool = {
     query: jest.fn()
@@ -52,7 +54,7 @@ describe('referrals module interface', () => {
     };
 
     await expect(referrals.handleInteraction(interaction)).resolves.toBe(true);
-    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ ephemeral: true }));
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ flags: MessageFlags.Ephemeral }));
   });
 
   test('handleInteraction executes get command via handler', async () => {
@@ -69,7 +71,7 @@ describe('referrals module interface', () => {
     };
 
     await expect(referrals.handleInteraction(interaction)).resolves.toBe(true);
-    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ ephemeral: true }));
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ flags: MessageFlags.Ephemeral }));
   });
 
   test('handleInteraction returns false for unrelated commands', async () => {
@@ -96,7 +98,7 @@ describe('register referral handler', () => {
     expect(database.__pool.query).not.toHaveBeenCalled();
     expect(interaction.reply).toHaveBeenCalledWith({
       content: 'That code does not match the required format (STAR-XXXX-XXXX).',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   });
 
@@ -114,7 +116,7 @@ describe('register referral handler', () => {
 
     expect(interaction.reply).toHaveBeenCalledWith({
       content: 'That referral code is already registered by another user.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   });
 
@@ -133,7 +135,7 @@ describe('register referral handler', () => {
 
     expect(database.__pool.query).toHaveBeenCalledTimes(2);
     const replyPayload = interaction.reply.mock.calls[0][0];
-    expect(replyPayload.ephemeral).toBe(true);
+    expect(replyPayload.flags).toBe(MessageFlags.Ephemeral);
     expect(replyPayload.embeds[0].data.title).toBe('Referral Code Registered');
     expect(replyPayload.embeds[0].data.description).toContain('STAR-ABCD-EFGH');
   });
@@ -158,7 +160,7 @@ describe('get referral handler', () => {
 
     expect(interaction.reply).toHaveBeenCalledWith({
       content: 'You already have a referral code registered; you cannot claim another one.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   });
 
@@ -178,7 +180,7 @@ describe('get referral handler', () => {
 
     expect(interaction.reply).toHaveBeenCalledWith({
       content: 'No referral codes are available right now. Try again later.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   });
 

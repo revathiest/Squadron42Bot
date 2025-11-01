@@ -1,3 +1,5 @@
+const { MessageFlags } = require('discord.js');
+
 jest.mock('../database', () => {
   const pool = {
     query: jest.fn()
@@ -86,6 +88,8 @@ describe('configstatus handleInteraction', () => {
     expect(tempField?.value).toBe('No temporary channel templates configured.');
     const promoField = embeds[0].data.fields.find(field => field.name === 'Org Promotion Forums');
     expect(promoField?.value).toBe('No promotion forums configured. Use `/mod org-promos add` to register a forum.');
+    const embedAccessField = embeds[0].data.fields.find(field => field.name === 'Embed Template Access');
+    expect(embedAccessField?.value).toBe('No roles allowed to upload embed templates. Use `/embed access add` to authorize one.');
   });
 
   test('builds configuration summary embed', async () => {
@@ -98,7 +102,8 @@ describe('configstatus handleInteraction', () => {
       .mockResolvedValueOnce([[{ count: 1 }]])
       .mockResolvedValueOnce([[{ trap_role_id: 'trap-role' }]])
       .mockResolvedValueOnce([[{ announce_channel_id: 'announce-chan', forum_id: 'forum-42' }]])
-      .mockResolvedValueOnce([[{ template_channel_id: 'template-1' }, { template_channel_id: 'template-2' }]]);
+      .mockResolvedValueOnce([[{ template_channel_id: 'template-1' }, { template_channel_id: 'template-2' }]])
+      .mockResolvedValueOnce([[{ role_id: 'embed-role-1' }, { role_id: 'embed-role-2' }]]);
 
     const interaction = {
       guild: { id: 'guild-1' },
@@ -111,7 +116,7 @@ describe('configstatus handleInteraction', () => {
 
     await expect(configStatus.handleInteraction(interaction)).resolves.toBe(true);
 
-    expect(interaction.deferReply).toHaveBeenCalledWith({ ephemeral: true });
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
     expect(interaction.editReply).toHaveBeenCalledTimes(1);
     const [{ embeds }] = interaction.editReply.mock.calls[0];
     expect(embeds[0].data.fields).toEqual(
@@ -122,7 +127,8 @@ describe('configstatus handleInteraction', () => {
         expect.objectContaining({ name: 'Referral Codes' }),
         expect.objectContaining({ name: 'Honey Trap' }),
         expect.objectContaining({ name: 'Spectrum Patch Bot' }),
-        expect.objectContaining({ name: 'Temp Channels' })
+        expect.objectContaining({ name: 'Temp Channels' }),
+        expect.objectContaining({ name: 'Embed Template Access' })
       ])
     );
   });

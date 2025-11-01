@@ -1,11 +1,18 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { getPool } = require('../../database');
 
 async function showConfigStatus(interaction) {
   const pool = getPool();
   const guildId = interaction.guild.id;
 
-  await interaction.deferReply({ ephemeral: true });
+  if (!interaction.deferred && !interaction.replied) {
+    try {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    } catch (err) {
+      console.error('[config-status] Failed to defer interaction reply:', err);
+      return false;
+    }
+  }
 
   const embed = new EmbedBuilder()
     .setTitle('Bot Configuration Overview')
@@ -22,7 +29,8 @@ async function showConfigStatus(interaction) {
       [providedCodes],
       [autoBanRows],
       [spectrumRows],
-      [tempChannels]
+      [tempChannels],
+      [embedAccessRows]
     ] = await Promise.all([
       pool.query(
         'SELECT channel_id, archive_category_id FROM ticket_settings WHERE guild_id = ?',
@@ -52,6 +60,10 @@ async function showConfigStatus(interaction) {
       ),
       pool.query(
         'SELECT template_channel_id FROM voice_channel_templates WHERE guild_id = ?',
+        [guildId]
+      ),
+      pool.query(
+        'SELECT role_id FROM embed_allowed_roles WHERE guild_id = ?',
         [guildId]
       )
     ]);
@@ -147,6 +159,16 @@ async function showConfigStatus(interaction) {
         : 'No temporary channel templates configured.',
       inline: false
     });
+
+    const embedAccessValue = embedAccessRows.length
+      ? embedAccessRows.map(row => `<@&${row.role_id}>`).join('\n')
+      : 'No roles allowed to upload embed templates. Use `/embed access add` to authorize one.';
+
+    embed.addFields({
+      name: 'Embed Template Access',
+      value: embedAccessValue,
+      inline: false
+    });
   } catch (err) {
     console.error('[config-status] Failed to compile configuration:', err);
     embed.addFields({
@@ -157,6 +179,7 @@ async function showConfigStatus(interaction) {
   }
 
   await interaction.editReply({ embeds: [embed] });
+  return true;
 }
 
 module.exports = {

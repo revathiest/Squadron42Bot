@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { REFERRAL_REGEX, getPool } = require('../utils');
 
 async function handleRegisterReferral(interaction) {
@@ -9,7 +9,7 @@ async function handleRegisterReferral(interaction) {
   if (!REFERRAL_REGEX.test(code)) {
     await interaction.reply({
       content: 'That code does not match the required format (STAR-XXXX-XXXX).',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return true;
   }
@@ -22,7 +22,7 @@ async function handleRegisterReferral(interaction) {
   if (duplicate.length && duplicate[0].user_id !== userId) {
     await interaction.reply({
       content: 'That referral code is already registered by another user.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return true;
   }
@@ -39,7 +39,7 @@ async function handleRegisterReferral(interaction) {
     .setDescription(`Your code **${code}** has been saved.`)
     .setColor(0x00ff99);
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   return true;
 }
 

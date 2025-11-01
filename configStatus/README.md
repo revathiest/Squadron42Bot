@@ -6,13 +6,13 @@ Exposes a guild-scoped `/config-status` command that summarizes configuration ac
 ## Slash Commands
 | Command | Scope | Description |
 |---------|-------|-------------|
-| `/config-status` | Guild | Display ticket, moderation (including org promo forums), referral, spectrum, and voice room configuration for the current guild. |
+| `/config-status` | Guild | Display ticket, moderation (including org promo forums), referral, spectrum, voice room, and embed template access configuration for the current guild. |
 
 ## Event Hooks
 - None.
 
 ## Persistence
-- Reads from: `ticket_settings`, `ticket_roles`, `moderation_roles`, `moderation_org_forum_channels`, `moderation_config`, `referral_codes`, `provided_codes`, `spectrum_config`, `voice_channel_templates`.
+- Reads from: `ticket_settings`, `ticket_roles`, `moderation_roles`, `moderation_org_forum_channels`, `moderation_config`, `referral_codes`, `provided_codes`, `spectrum_config`, `voice_channel_templates`, `embed_allowed_roles`.
 
 ## Public Interface
 - `initialize()` – placeholder for future setup (no work required today).

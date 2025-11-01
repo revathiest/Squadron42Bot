@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { getPool } = require('../utils');
 
 async function handleGetReferral(interaction) {
@@ -13,7 +13,7 @@ async function handleGetReferral(interaction) {
   if (existing.length) {
     await interaction.reply({
       content: 'You already have a referral code registered; you cannot claim another one.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return true;
   }
@@ -34,7 +34,7 @@ async function handleGetReferral(interaction) {
   if (!availableCodes.length) {
     await interaction.reply({
       content: 'No referral codes are available right now. Try again later.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
     return true;
   }
@@ -49,7 +49,7 @@ async function handleGetReferral(interaction) {
     .setDescription(`Use **${randomCode}** when creating your account.`)
     .setColor(0x0099ff);
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   return true;
 }
 

@@ -23,8 +23,7 @@ async function handleInteraction(interaction) {
     return false;
   }
 
-  await showConfigStatus(interaction);
-  return true;
+  return showConfigStatus(interaction);
 }
 
 module.exports = {
