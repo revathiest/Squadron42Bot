@@ -80,6 +80,9 @@ async function handleVote(interaction) {
 
   await interaction.deferUpdate();
 
+  const targetOption = options.find(opt => Number(opt.id) === optionId);
+  const optionNumber = targetOption?.position ?? null;
+
   try {
     if (poll.is_multi) {
       const state = await toggleMultiVote(poll.id, optionId, interaction.user.id);
@@ -89,8 +92,8 @@ async function handleVote(interaction) {
       const votes = await getUserVotes(poll.id, interaction.user.id);
       await interaction.followUp({
         content: state === 'added'
-          ? '✅ Added that option to your selections.'
-          : '✅ Removed that option from your selections.',
+          ? `✅ Added option ${optionNumber ?? optionId} to your selections.`
+          : `✅ Removed option ${optionNumber ?? optionId} from your selections.`,
         flags: MessageFlags.Ephemeral
       }).catch(() => {});
 

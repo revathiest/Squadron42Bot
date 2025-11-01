@@ -106,10 +106,14 @@ async function toggleMultiVote(pollId, optionId, userId, pool = getPool()) {
 
 async function getUserVotes(pollId, userId, pool = getPool()) {
   const [rows] = await pool.query(
-    'SELECT option_id FROM poll_votes WHERE poll_id = ? AND user_id = ?',
+    `SELECT po.position
+     FROM poll_votes pv
+     JOIN poll_options po ON po.id = pv.option_id
+     WHERE pv.poll_id = ? AND pv.user_id = ?
+     ORDER BY po.position ASC`,
     [pollId, userId]
   );
-  return rows.map(row => row.option_id);
+  return rows.map(row => row.position);
 }
 
 async function markPollClosed(pollId, { reason, closedBy, closedAt = new Date() }, pool = getPool()) {
