@@ -11,9 +11,10 @@ const spectrum = require('./spectrum');
 const referrals = require('./referrals');
 const configStatus = require('./configStatus');
 const embeds = require('./embeds');
+const polls = require('./polls');
 
-const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds];
-const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds];
+const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls];
+const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -81,6 +82,12 @@ client.once(Events.ClientReady, async c => {
     await embeds.onReady(c);
   } catch (err) {
     console.error('Failed to finalize embed template module:', err);
+  }
+
+  try {
+    await polls.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize polls module:', err);
   }
 
     // --- Warm up member cache for all guilds ---
@@ -157,6 +164,13 @@ async function bootstrap() {
     await embeds.initialize(client);
   } catch (err) {
     console.error('Failed to initialize embed template module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await polls.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize polls module:', err);
     process.exit(1);
   }
 

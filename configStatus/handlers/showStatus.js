@@ -30,7 +30,8 @@ async function showConfigStatus(interaction) {
       [autoBanRows],
       [spectrumRows],
       [tempChannels],
-      [embedAccessRows]
+      [embedAccessRows],
+      [pollRoleRows]
     ] = await Promise.all([
       pool.query(
         'SELECT channel_id, archive_category_id FROM ticket_settings WHERE guild_id = ?',
@@ -64,6 +65,10 @@ async function showConfigStatus(interaction) {
       ),
       pool.query(
         'SELECT role_id FROM embed_allowed_roles WHERE guild_id = ?',
+        [guildId]
+      ),
+      pool.query(
+        'SELECT role_id FROM poll_allowed_roles WHERE guild_id = ?',
         [guildId]
       )
     ]);
@@ -167,6 +172,16 @@ async function showConfigStatus(interaction) {
     embed.addFields({
       name: 'Embed Template Access',
       value: embedAccessValue,
+      inline: false
+    });
+
+    const pollRolesValue = pollRoleRows.length
+      ? pollRoleRows.map(row => `<@&${row.role_id}>`).join('\n')
+      : 'No poll creator roles configured. Members with Manage Server may create polls.';
+
+    embed.addFields({
+      name: 'Poll Creator Roles',
+      value: pollRolesValue,
       inline: false
     });
   } catch (err) {

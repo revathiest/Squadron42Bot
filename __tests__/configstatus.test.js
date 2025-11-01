@@ -90,6 +90,8 @@ describe('configstatus handleInteraction', () => {
     expect(promoField?.value).toBe('No promotion forums configured. Use `/mod org-promos add` to register a forum.');
     const embedAccessField = embeds[0].data.fields.find(field => field.name === 'Embed Template Access');
     expect(embedAccessField?.value).toBe('No roles allowed to upload embed templates. Use `/embed access add` to authorize one.');
+    const pollRoleField = embeds[0].data.fields.find(field => field.name === 'Poll Creator Roles');
+    expect(pollRoleField?.value).toBe('No poll creator roles configured. Members with Manage Server may create polls.');
   });
 
   test('builds configuration summary embed', async () => {
@@ -103,7 +105,8 @@ describe('configstatus handleInteraction', () => {
       .mockResolvedValueOnce([[{ trap_role_id: 'trap-role' }]])
       .mockResolvedValueOnce([[{ announce_channel_id: 'announce-chan', forum_id: 'forum-42' }]])
       .mockResolvedValueOnce([[{ template_channel_id: 'template-1' }, { template_channel_id: 'template-2' }]])
-      .mockResolvedValueOnce([[{ role_id: 'embed-role-1' }, { role_id: 'embed-role-2' }]]);
+      .mockResolvedValueOnce([[{ role_id: 'embed-role-1' }, { role_id: 'embed-role-2' }]])
+      .mockResolvedValueOnce([[{ role_id: 'poll-role-1' }]]);
 
     const interaction = {
       guild: { id: 'guild-1' },
@@ -128,9 +131,28 @@ describe('configstatus handleInteraction', () => {
         expect.objectContaining({ name: 'Honey Trap' }),
         expect.objectContaining({ name: 'Spectrum Patch Bot' }),
         expect.objectContaining({ name: 'Temp Channels' }),
-        expect.objectContaining({ name: 'Embed Template Access' })
+        expect.objectContaining({ name: 'Embed Template Access' }),
+        expect.objectContaining({ name: 'Poll Creator Roles' })
       ])
     );
+  });
+
+  test('returns false when deferReply fails', async () => {
+    const deferError = new Error('Failed to defer');
+    const interaction = {
+      guild: { id: 'guild-defer' },
+      guildId: 'guild-defer',
+      isChatInputCommand: () => true,
+      commandName: 'config-status',
+      deferReply: jest.fn().mockRejectedValue(deferError),
+      editReply: jest.fn().mockResolvedValue(undefined)
+    };
+
+    await expect(configStatus.handleInteraction(interaction)).resolves.toBe(false);
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
+    expect(console.error).toHaveBeenCalledWith('[config-status] Failed to defer interaction reply:', deferError);
+    expect(interaction.editReply).not.toHaveBeenCalled();
+    expect(database.__pool.query).not.toHaveBeenCalled();
   });
 
   test('adds error field when queries fail', async () => {
