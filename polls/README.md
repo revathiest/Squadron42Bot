@@ -6,13 +6,13 @@ Provides the `/poll` command for guided poll creation and voting. The workflow a
 ## Slash Commands
 | Command | Scope | Description |
 |---------|-------|-------------|
-| `/poll create` | Guild | Launch the interactive poll builder (requires an allowed role or the `Manage Server` permission when no roles are configured). |
+| `/poll create` | Guild | Launch the interactive poll builder (requires a role granted via `/poll access add`). |
 | `/poll access add <role>` | Guild | Allow a role to create polls. |
 | `/poll access remove <role>` | Guild | Remove a role from the allow list. |
 | `/poll access list` | Guild | Display the roles currently allowed to create polls. |
 
 ## Interaction Flow
-- `/poll create` replies ephemerally with a control panel embed. Buttons let the creator set the question, add/remove options, toggle single vs. multiple answers, define expiration, publish, or cancel.
+- `/poll create` replies ephemerally with a control panel embed. Only members with an allowed role can open it.
 - The expiration modal accepts either durations (`2h 30m`, `1d 4h`) or ISO timestamps. Polls must last at least one minute and no longer than 30 days.
 - Once published, the bot posts an embed to the invoking channel. Each answer appears as a button (`poll:<pollId>:<optionId>`). Buttons disable automatically when the poll closes.
 - The creator can manually close the poll via the control panel after publishing.
@@ -22,7 +22,7 @@ Provides the `/poll` command for guided poll creation and voting. The workflow a
 - `polls` - metadata (question, guild/channel message IDs, owner, expiration, closed state).
 - `poll_options` - the answers linked to each poll.
 - `poll_votes` - per-user selections.
-- `poll_allowed_roles` - roles permitted to run `/poll create` (empty table means fallback to `Manage Server` permission).
+- `poll_allowed_roles` - roles permitted to run `/poll create`. Without at least one entry, nobody can start a poll.
 
 ## Lifecycle Hooks
 - `initialize(client)` ensures the schema exists, loads the allow-list cache, and starts the expiration scheduler.
