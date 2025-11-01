@@ -6,9 +6,9 @@ const {
 } = require('../utils');
 
 async function handleAccessCommand(interaction) {
-  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
     await interaction.reply({
-      content: '❌ You need the **Manage Server** permission to update embed access.',
+      content: '❌ You need the **Administrator** permission to update embed access.',
       flags: MessageFlags.Ephemeral
     }).catch(() => {});
     return true;

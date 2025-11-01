@@ -51,7 +51,7 @@ describe('embed access slash command', () => {
     await handleAccessCommand(interaction);
 
     expect(interaction.reply).toHaveBeenCalledWith({
-      content: expect.stringContaining('Manage Server'),
+      content: expect.stringContaining('Administrator'),
       flags: MessageFlags.Ephemeral
     });
     expect(interaction.deferReply).not.toHaveBeenCalled();

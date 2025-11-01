@@ -1,9 +1,10 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 function buildAccessCommand() {
   return new SlashCommandBuilder()
     .setName('embed-access')
     .setDescription('Manage which roles can upload embed templates.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDMPermission(false)
     .addSubcommand(sub =>
       sub
