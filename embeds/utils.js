@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const http = require('node:http');
 const https = require('node:https');
+const { getPool } = require('../database');
 
 const MAX_TEMPLATE_BYTES = 128 * 1024; // 128 KB ceiling per template file.
 const NAMED_COLORS = {
@@ -22,6 +23,135 @@ const NAMED_COLORS = {
   cyan: 0x22d3ee,
   pink: 0xec4899
 };
+
+const allowedRoleCache = new Map();
+
+function getAllowedRoleSet(guildId) {
+  if (!allowedRoleCache.has(guildId)) {
+    allowedRoleCache.set(guildId, new Set());
+  }
+  return allowedRoleCache.get(guildId);
+}
+
+function clearRoleCache() {
+  allowedRoleCache.clear();
+}
+
+function addRoleToCache(guildId, roleId) {
+  const set = getAllowedRoleSet(guildId);
+  set.add(roleId);
+}
+
+function removeRoleFromCache(guildId, roleId) {
+  if (!allowedRoleCache.has(guildId)) {
+    return;
+  }
+  const set = allowedRoleCache.get(guildId);
+  set.delete(roleId);
+  if (set.size === 0) {
+    allowedRoleCache.delete(guildId);
+  }
+}
+
+async function ensureSchema(pool = getPool()) {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS embed_allowed_roles (
+      guild_id VARCHAR(20) NOT NULL,
+      role_id VARCHAR(20) NOT NULL,
+      created_by VARCHAR(20) DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (guild_id, role_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `);
+}
+
+async function loadRoleCache(pool = getPool()) {
+  clearRoleCache();
+  const [rows] = await pool.query('SELECT guild_id, role_id FROM embed_allowed_roles');
+  for (const row of rows) {
+    addRoleToCache(row.guild_id, row.role_id);
+  }
+}
+
+async function allowRoleForGuild(guildId, roleId, actorId, pool = getPool()) {
+  await ensureSchema(pool);
+  const current = getAllowedRoleSet(guildId);
+  if (current.has(roleId)) {
+    return false;
+  }
+
+  await pool.query(
+    `INSERT INTO embed_allowed_roles (guild_id, role_id, created_by)
+     VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE created_at = created_at`,
+    [guildId, roleId, actorId ?? null]
+  );
+
+  addRoleToCache(guildId, roleId);
+  return true;
+}
+
+async function removeRoleForGuild(guildId, roleId, pool = getPool()) {
+  await ensureSchema(pool);
+  const [result] = await pool.query(
+    'DELETE FROM embed_allowed_roles WHERE guild_id = ? AND role_id = ?',
+    [guildId, roleId]
+  );
+
+  if (result?.affectedRows) {
+    removeRoleFromCache(guildId, roleId);
+    return true;
+  }
+
+  return false;
+}
+
+function listAllowedRoles(guildId) {
+  const set = allowedRoleCache.get(guildId);
+  if (!set) {
+    return [];
+  }
+  return Array.from(set);
+}
+
+function canMemberUseTemplates(member) {
+  if (!member || !member.guild) {
+    return false;
+  }
+
+  const allowed = allowedRoleCache.get(member.guild.id);
+  if (!allowed || allowed.size === 0) {
+    return false;
+  }
+
+  const roleCache = member.roles?.cache;
+  if (!roleCache) {
+    return false;
+  }
+
+  const roleMatcher = (candidate) => {
+    const roleId = typeof candidate === 'string' ? candidate : candidate?.id;
+    return roleId && allowed.has(roleId);
+  };
+
+  if (typeof roleCache.has === 'function') {
+    for (const roleId of allowed) {
+      if (roleCache.has(roleId)) {
+        return true;
+      }
+    }
+  } else if (typeof roleCache.some === 'function') {
+    if (roleCache.some(roleMatcher)) {
+      return true;
+    }
+  } else if (Array.isArray(roleCache)) {
+    if (roleCache.some(roleMatcher)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 function createEmptyState() {
   return {
@@ -403,6 +533,13 @@ function downloadAttachmentText(url) {
 }
 
 module.exports = {
+  ensureSchema,
+  loadRoleCache,
+  allowRoleForGuild,
+  removeRoleForGuild,
+  listAllowedRoles,
+  canMemberUseTemplates,
+  clearRoleCache,
   buildEmbedsFromText,
   downloadAttachmentText,
   isTemplateAttachment,
@@ -410,6 +547,10 @@ module.exports = {
   parseColor,
   isLikelyTemplate,
   __testables: {
-    NAMED_COLORS
+    NAMED_COLORS,
+    allowedRoleCache,
+    clearRoleCache,
+    addRoleToCache,
+    removeRoleFromCache
   }
 };

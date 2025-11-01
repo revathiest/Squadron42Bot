@@ -1,6 +1,7 @@
 const { Events } = require('discord.js');
 const {
   buildEmbedsFromText,
+  canMemberUseTemplates,
   downloadAttachmentText,
   isLikelyTemplate,
   isTemplateAttachment
@@ -59,6 +60,24 @@ async function handleTemplateUpload(message) {
   const relevant = Array.from(message.attachments.values()).filter(isTemplateAttachment);
   if (relevant.length === 0) {
     return false;
+  }
+
+  if (message.guild) {
+    let member = message.member || null;
+    if (!member && typeof message.guild.members?.fetch === 'function') {
+      member = await message.guild.members.fetch(message.author.id).catch(() => null);
+    }
+
+    if (!canMemberUseTemplates(member)) {
+      await message.author?.send?.('❌ You do not have permission to upload embed templates.').catch(() => {});
+      if (typeof message.delete === 'function') {
+        const deletion = message.delete();
+        if (deletion && typeof deletion.catch === 'function') {
+          await deletion.catch(() => {});
+        }
+      }
+      return true;
+    }
   }
 
   const processed = relevant.slice(0, MAX_ATTACHMENTS_PER_MESSAGE);

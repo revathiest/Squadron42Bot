@@ -4,27 +4,50 @@ jest.mock('../embeds/utils', () => ({
   buildEmbedsFromText: jest.fn(),
   downloadAttachmentText: jest.fn(),
   isTemplateAttachment: jest.fn(),
-  isLikelyTemplate: jest.fn()
+  isLikelyTemplate: jest.fn(),
+  canMemberUseTemplates: jest.fn(() => true),
+  allowRoleForGuild: jest.fn(),
+  removeRoleForGuild: jest.fn(),
+  listAllowedRoles: jest.fn(),
+  ensureSchema: jest.fn(),
+  loadRoleCache: jest.fn(),
+  clearRoleCache: jest.fn()
 }));
 
 const {
   buildEmbedsFromText,
   downloadAttachmentText,
   isTemplateAttachment,
-  isLikelyTemplate
+  isLikelyTemplate,
+  canMemberUseTemplates
 } = require('../embeds/utils');
 const { handleTemplateUpload, MAX_ATTACHMENTS_PER_MESSAGE } = require('../embeds/handlers/template');
 
 describe('embed template handler', () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    canMemberUseTemplates.mockReturnValue(true);
+  });
+
+  const makeAuthor = () => ({
+    bot: false,
+    send: jest.fn().mockResolvedValue(undefined)
+  });
+
+  const makeMember = () => ({
+    guild: { id: 'guild-1' },
+    permissions: { has: jest.fn().mockReturnValue(true) },
+    roles: { cache: new Map([['role-allowed', true]]) }
   });
 
   test('ignores messages with no qualifying attachments', async () => {
     isTemplateAttachment.mockReturnValue(false);
 
+    const author = makeAuthor();
     const message = {
-      author: { bot: false },
+      author,
+      guild: { id: 'guild-1' },
+      member: makeMember(),
       attachments: new Map([
         ['1', { id: '1', name: 'image.png', contentType: 'image/png' }]
       ])
@@ -54,9 +77,12 @@ describe('embed template handler', () => {
       });
     }
 
+    const author = makeAuthor();
     const message = {
       id: '123',
-      author: { bot: false },
+      author,
+      guild: { id: 'guild-1' },
+      member: makeMember(),
       attachments,
       channel: { send },
       reply,
@@ -84,9 +110,12 @@ describe('embed template handler', () => {
     const send = jest.fn();
     const reply = jest.fn().mockResolvedValue(undefined);
     const deleteFn = jest.fn();
+    const author = makeAuthor();
     const message = {
       id: '456',
-      author: { bot: false },
+      author,
+      guild: { id: 'guild-1' },
+      member: makeMember(),
       attachments: new Map([
         ['1', { id: '1', name: 'broken.txt', size: 100, url: 'https://example.com/broken.txt' }]
       ]),
@@ -115,9 +144,12 @@ describe('embed template handler', () => {
     const reply = jest.fn();
     const deleteFn = jest.fn().mockResolvedValue(undefined);
 
+    const author = makeAuthor();
     const message = {
       id: '789',
-      author: { bot: false },
+      author,
+      guild: { id: 'guild-1' },
+      member: makeMember(),
       attachments: new Map([
         ['1', { id: '1', name: 'notes.txt', size: 50, url: 'https://example.com/notes.txt' }]
       ]),
@@ -150,9 +182,12 @@ describe('embed template handler', () => {
     const reply = jest.fn();
     const deleteFn = jest.fn().mockResolvedValue(undefined);
 
+    const author = makeAuthor();
     const message = {
       id: '890',
-      author: { bot: false },
+      author,
+      guild: { id: 'guild-1' },
+      member: makeMember(),
       attachments: new Map([
         ['1', { id: '1', name: 'emoji.txt', size: 3000, url: 'https://example.com/emoji.txt' }]
       ]),
@@ -177,5 +212,33 @@ describe('embed template handler', () => {
     const combined = send.mock.calls.map(call => call[0].content).join('');
     expect(combined).toBe(emojiString);
     expect(deleteFn).toHaveBeenCalledTimes(1);
+  });
+
+  test('denies uploads when member lacks permission', async () => {
+    canMemberUseTemplates.mockReturnValue(false);
+    isTemplateAttachment.mockReturnValue(true);
+    const reply = jest.fn().mockResolvedValue(undefined);
+    const deleteFn = jest.fn().mockResolvedValue(undefined);
+
+    const author = makeAuthor();
+    const message = {
+      id: '999',
+      author,
+      guild: { id: 'guild-1', members: { fetch: jest.fn().mockResolvedValue(null) } },
+      member: null,
+      attachments: new Map([
+        ['1', { id: '1', name: 'template.txt', size: 10, url: 'https://example.com/template.txt' }]
+      ]),
+      channel: { send: jest.fn() },
+      reply,
+      delete: deleteFn
+    };
+
+    const handled = await handleTemplateUpload(message);
+
+    expect(handled).toBe(true);
+    expect(downloadAttachmentText).not.toHaveBeenCalled();
+    expect(author.send).toHaveBeenCalledWith(expect.stringContaining('permission'));
+    expect(deleteFn).toHaveBeenCalled();
   });
 });

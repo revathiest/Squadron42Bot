@@ -1,4 +1,16 @@
-const { buildEmbedsFromText, parseTemplateText, isLikelyTemplate } = require('../embeds/utils');
+jest.mock('../database', () => ({
+  getPool: () => ({
+    query: jest.fn().mockResolvedValue([[]])
+  })
+}));
+
+const {
+  buildEmbedsFromText,
+  parseTemplateText,
+  isLikelyTemplate,
+  canMemberUseTemplates,
+  __testables: { addRoleToCache, clearRoleCache }
+} = require('../embeds/utils');
 
 describe('embed template parser', () => {
   test('builds embed with title, color, fields, footer and timestamp', () => {
@@ -78,5 +90,32 @@ Second description.
     expect(isLikelyTemplate('*Field:* value')).toBe(true);
     expect(isLikelyTemplate('Plain note without directives')).toBe(false);
     expect(isLikelyTemplate('')).toBe(false);
+  });
+});
+
+describe('canMemberUseTemplates', () => {
+  beforeEach(() => {
+    clearRoleCache();
+  });
+
+  const mockMember = (roles = []) => ({
+    guild: { id: 'guild-1' },
+    roles: {
+      cache: roles instanceof Map ? roles : new Map(roles.map(id => [id, { id }]))
+    },
+    permissions: {
+      has: jest.fn().mockReturnValue(true)
+    }
+  });
+
+  test('returns false when no roles are allowed even with manage permission', () => {
+    const member = mockMember(['role-1']);
+    expect(canMemberUseTemplates(member)).toBe(false);
+  });
+
+  test('returns true when member has an allowed role', () => {
+    addRoleToCache('guild-1', 'role-allowed');
+    const member = mockMember(['role-allowed']);
+    expect(canMemberUseTemplates(member)).toBe(true);
   });
 });
