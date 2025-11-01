@@ -10,9 +10,10 @@ const moderation = require('./moderation');
 const spectrum = require('./spectrum');
 const referrals = require('./referrals');
 const configStatus = require('./configStatus');
+const embeds = require('./embeds');
 
-const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus];
-const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus];
+const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds];
+const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -68,6 +69,18 @@ client.once(Events.ClientReady, async c => {
     await spectrum.onReady(c);
   } catch (err) {
     console.error('Failed to finalize spectrum watcher module:', err);
+  }
+
+  try {
+    await configStatus.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize config status module:', err);
+  }
+
+  try {
+    await embeds.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize embed template module:', err);
   }
 
     // --- Warm up member cache for all guilds ---
@@ -130,6 +143,20 @@ async function bootstrap() {
     await referrals.initialize(client);
   } catch (err) {
     console.error('Failed to initialize referrals module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await configStatus.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize config status module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await embeds.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize embed template module:', err);
     process.exit(1);
   }
 

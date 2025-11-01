@@ -15,6 +15,7 @@ Each agent lives in its own directory at the repository root:
 /configStatus/
 /spectrum/
 /moderation/
+/embeds/
 ```
 
 Every module **must** contain the following files:
