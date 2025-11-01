@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node -e \"process.stdout.write('\\x1Bc')\" && node index.js",
         "dev": "node -e \"process.stdout.write('\\x1Bc')\" && node --watch index.js",
-        "test": "jest --coverage"
+        "test": "node -e \"process.stdout.write('\\x1Bc')\" && jest --coverage"
     },
     "keywords": [],
     "author": "Kenneth Hart",
