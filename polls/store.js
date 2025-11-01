@@ -107,11 +107,10 @@ async function toggleMultiVote(pollId, optionId, userId, pool = getPool()) {
 async function getUserVotes(pollId, userId, pool = getPool()) {
   const [rows] = await pool.query(
     `SELECT po.position
-       FROM poll_votes pv
-       JOIN poll_options po ON po.id = pv.option_id
-      WHERE pv.poll_id = ?
-        AND pv.user_id = ?
-      ORDER BY po.position ASC`,
+     FROM poll_votes pv
+     JOIN poll_options po ON po.id = pv.option_id
+     WHERE pv.poll_id = ? AND pv.user_id = ?
+     ORDER BY po.position ASC`,
     [pollId, userId]
   );
   return rows.map(row => row.position);

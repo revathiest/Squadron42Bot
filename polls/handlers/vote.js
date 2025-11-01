@@ -80,6 +80,9 @@ async function handleVote(interaction) {
 
   await interaction.deferUpdate();
 
+  const targetOption = options.find(opt => Number(opt.id) === optionId);
+  const optionNumber = targetOption?.position ?? null;
+
   try {
     const targetOption = options.find(opt => Number(opt.id) === optionId);
     const optionNumber = targetOption?.position ?? optionId;
@@ -92,8 +95,8 @@ async function handleVote(interaction) {
       const votes = await getUserVotes(poll.id, interaction.user.id);
       await interaction.followUp({
         content: state === 'added'
-          ? `✅ Added option ${optionNumber} to your selections.`
-          : `✅ Removed option ${optionNumber} from your selections.`,
+          ? `✅ Added option ${optionNumber ?? optionId} to your selections.`
+          : `✅ Removed option ${optionNumber ?? optionId} from your selections.`,
         flags: MessageFlags.Ephemeral
       }).catch(() => {});
 
