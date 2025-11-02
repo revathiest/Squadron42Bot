@@ -1,6 +1,6 @@
 // index.js
 require('dotenv/config');
-const { Client, GatewayIntentBits, Events } = require('discord.js');
+const { Client, GatewayIntentBits, Events, Partials } = require('discord.js');
 const { testConnection } = require('./database');
 const commandManager = require('./commandManager');
 const { registerInteractionHandlers } = require('./interactionRegistry');
@@ -12,9 +12,10 @@ const referrals = require('./referrals');
 const configStatus = require('./configStatus');
 const embeds = require('./embeds');
 const polls = require('./polls');
+const engagement = require('./engagement');
 
-const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls];
-const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls];
+const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement];
+const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -24,8 +25,10 @@ const client = new Client({
     GatewayIntentBits.GuildModeration,    // Needed to execute bans
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.MessageContent // Required for message monitoring (org/referral enforcement)
-  ]
+  ],
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
 
 registerInteractionHandlers(client, interactionModules);
@@ -88,6 +91,12 @@ client.once(Events.ClientReady, async c => {
     await polls.onReady(c);
   } catch (err) {
     console.error('Failed to finalize polls module:', err);
+  }
+
+  try {
+    await engagement.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize engagement module:', err);
   }
 
     // --- Warm up member cache for all guilds ---
@@ -171,6 +180,13 @@ async function bootstrap() {
     await polls.initialize(client);
   } catch (err) {
     console.error('Failed to initialize polls module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await engagement.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize engagement module:', err);
     process.exit(1);
   }
 
