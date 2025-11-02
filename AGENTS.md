@@ -16,6 +16,8 @@ Each agent lives in its own directory at the repository root:
 /spectrum/
 /moderation/
 /embeds/
+/polls/
+/engagement/
 ```
 
 Every module **must** contain the following files:
@@ -90,6 +92,22 @@ module.exports = {
 
 The moderation agent has additional subfolders (`actions/`, `history/`, `roleConfig/`, etc.).
 Interaction routing now lives in `moderation/handlers/interaction.js`, keeping `moderation/index.js` consistent with the shared interface. Continue to route new moderation features through these handlers.
+
+## Engagement Module Notes
+
+The engagement agent awards experience for reactions and replies. It tracks emoji metadata, reply authors, and supports per-guild level definitions:
+
+- Reaction handlers run against partial events—ensure any new listeners fetch missing data before acting.
+- Custom levels live in `engagement_levels`; use the helpers in `utils.js` rather than querying directly.
+- Admin commands for level configuration belong in `handlers/commandHandlers.js` so they reuse the shared permission checks in `handlers/interaction.js`.
+
+## Polls Module Notes
+
+The polls agent owns interactive slash-command driven surveys:
+
+- Creation flows live in `handlers/create.js` and rely on persisted state in `store.js`; reuse those helpers to avoid orphaned polls.
+- Scheduled expiration runs via `scheduler.js`; register cron-style tasks from `index.js` only after `ensureSchema()` succeeds.
+- When extending controls, route button/select interactions through `handlers/interaction.js` to keep channel messaging consistent.
 
 ---
 

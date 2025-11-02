@@ -1,4 +1,4 @@
-const { MessageFlags, allowRoleForGuild, removeRoleForGuild, listAllowedRoles } = require('../utils');
+const { MessageFlags, allowRoleForGuild, removeRoleForGuild } = require('../utils');
 const { PermissionFlagsBits } = require('discord.js');
 
 async function handleAccessCommand(interaction) {
@@ -32,24 +32,6 @@ async function handleAccessCommand(interaction) {
       content: removed
         ? `✅ ${role} can no longer create polls.`
         : `${role} was not on the poll creator allow list.`,
-      flags: MessageFlags.Ephemeral
-    });
-    return true;
-  }
-
-  if (subcommand === 'list') {
-    const roles = listAllowedRoles(guildId);
-    if (!roles.length) {
-      await interaction.reply({
-        content: 'No roles are currently required. Members with **Manage Server** may create polls.',
-        flags: MessageFlags.Ephemeral
-      });
-      return true;
-    }
-
-    const mentions = roles.map(roleId => `<@&${roleId}>`).join('\n');
-    await interaction.reply({
-      content: `Roles allowed to create polls:\n${mentions}`,
       flags: MessageFlags.Ephemeral
     });
     return true;

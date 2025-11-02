@@ -6,8 +6,7 @@ jest.mock('../polls/utils', () => {
   return {
     ...actual,
     allowRoleForGuild: jest.fn().mockResolvedValue(true),
-    removeRoleForGuild: jest.fn().mockResolvedValue(true),
-    listAllowedRoles: jest.fn().mockReturnValue(['role-1'])
+    removeRoleForGuild: jest.fn().mockResolvedValue(true)
   };
 });
 
@@ -45,18 +44,4 @@ describe('polls access handler', () => {
     expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ flags: MessageFlags.Ephemeral }));
   });
 
-  test('lists roles when requested', async () => {
-    utils.listAllowedRoles.mockReturnValue(['role-1', 'role-2']);
-    const interaction = {
-      memberPermissions: { has: () => true },
-      guildId: 'guild-b',
-      options: {
-        getSubcommand: () => 'list'
-      },
-      reply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await accessHandler.handleAccessCommand(interaction);
-    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({ flags: MessageFlags.Ephemeral }));
-  });
 });

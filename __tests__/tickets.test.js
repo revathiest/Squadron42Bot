@@ -459,13 +459,15 @@ describe('ticket interaction router', () => {
   });
 
   test('handleInteraction routes chat input commands', async () => {
-    rolesCache.set('guild-router', new Set(['role-router']));
+    rolesCache.set('guild-router', new Set());
+    const role = { id: 'role-router', toString: () => '<@&role-router>' };
 
     const interaction = {
       guildId: 'guild-router',
       options: {
         getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'list'
+        getSubcommand: () => 'add',
+        getRole: () => role
       },
       deferReply: jest.fn().mockResolvedValue(undefined),
       editReply: jest.fn().mockResolvedValue(undefined),
@@ -478,7 +480,7 @@ describe('ticket interaction router', () => {
     await expect(handleInteraction(interaction)).resolves.toBe(true);
 
     expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
-    expect(interaction.editReply).toHaveBeenCalled();
+    expect(interaction.editReply).toHaveBeenCalledWith('Added <@&role-router> as a ticket moderator role.');
   });
 
   test('handleInteraction routes button interactions', async () => {
@@ -602,43 +604,6 @@ describe('ticket role commands', () => {
     expect(interaction.editReply).toHaveBeenCalledWith('Removed <@&role-1> from ticket moderator roles.');
   });
 
-  test('roles list reports configured roles', async () => {
-    rolesCache.set('guild-roles', new Set(['role-1', 'role-2']));
-    const interaction = {
-      guildId: 'guild-roles',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'list'
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleTicketCommand(interaction);
-
-    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
-    const message = interaction.editReply.mock.calls[0][0];
-    expect(message).toContain('<@&role-1>');
-    expect(message).toContain('<@&role-2>');
-  });
-
-  test('roles list warns when empty', async () => {
-    const interaction = {
-      guildId: 'guild-empty',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'list'
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleTicketCommand(interaction);
-
-    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
-    expect(interaction.editReply).toHaveBeenCalledWith('No moderator roles configured. Use /ticket roles add to add one.');
-  });
-
   test('roles add surfaces database errors', async () => {
     const role = { id: 'role-err', toString: () => '<@&role-err>' };
     const interaction = createRolesInteraction('add', role);
@@ -670,28 +635,6 @@ describe('ticket role commands', () => {
     errorSpy.mockRestore();
   });
 
-  test('roles list handles edit failures', async () => {
-    rolesCache.set('guild-roles', new Set(['role-1']));
-    const interaction = {
-      guildId: 'guild-roles',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'list'
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest
-        .fn()
-        .mockRejectedValueOnce(new Error('discord down'))
-        .mockResolvedValue(undefined)
-    };
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
-    await handleTicketCommand(interaction);
-
-    expect(interaction.editReply).toHaveBeenLastCalledWith('Failed to fetch ticket moderator roles.');
-
-    errorSpy.mockRestore();
-  });
 });
 
 describe('ticket archive command', () => {

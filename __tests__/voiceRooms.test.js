@@ -181,63 +181,6 @@ describe('voiceRooms handleInteraction', () => {
     });
   });
 
-  test('lists templates when none exist', async () => {
-    const reply = jest.fn().mockResolvedValue(undefined);
-    const interaction = {
-      isChatInputCommand: () => true,
-      commandName: 'voice-rooms',
-      inGuild: () => true,
-      memberPermissions: { has: () => true },
-      guildId: 'guild-4',
-      guild: { channels: { cache: { get: () => null } } },
-      options: {
-        getSubcommand: () => 'list'
-      },
-      reply
-    };
-
-    await handleInteraction(interaction);
-
-    expect(reply).toHaveBeenCalledWith({
-      content: 'No dynamic voice lobbies are configured yet.',
-      flags: MessageFlags.Ephemeral
-    });
-  });
-
-  test('lists existing templates with channel names', async () => {
-    const reply = jest.fn().mockResolvedValue(undefined);
-    const guildChannels = new Map();
-    guildChannels.set('voice-5', { toString: () => '<#voice-5>' });
-
-    templateCache.set('guild-5', new Set(['voice-5']));
-
-    const interaction = {
-      isChatInputCommand: () => true,
-      commandName: 'voice-rooms',
-      inGuild: () => true,
-      memberPermissions: { has: () => true },
-      guildId: 'guild-5',
-      guild: {
-        channels: {
-          cache: {
-            get: (id) => guildChannels.get(id)
-          }
-        }
-      },
-      options: {
-        getSubcommand: () => 'list'
-      },
-      reply
-    };
-
-    await handleInteraction(interaction);
-
-    expect(reply).toHaveBeenCalledWith({
-      content: 'Configured lobbies:\n- <#voice-5>',
-      flags: MessageFlags.Ephemeral
-    });
-  });
-
   test('reports failure via reply when not deferred', async () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const reply = jest.fn().mockResolvedValue(undefined);

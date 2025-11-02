@@ -40,11 +40,6 @@ function buildCommandDefinition() {
     )
     .addSubcommand(sub =>
       sub
-        .setName('status')
-        .setDescription('Show the current Spectrum Watcher configuration.')
-    )
-    .addSubcommand(sub =>
-      sub
         .setName('clear')
         .setDescription('Remove Spectrum Watcher configuration for this server.')
     )

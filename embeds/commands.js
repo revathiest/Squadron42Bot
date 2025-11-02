@@ -27,11 +27,6 @@ function buildAccessCommand() {
             .setDescription('Role to remove from the embed template allow list.')
             .setRequired(true)
         )
-    )
-    .addSubcommand(sub =>
-      sub
-        .setName('list')
-        .setDescription('List roles that are allowed to upload embed templates.')
     );
 }
 
