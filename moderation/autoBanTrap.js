@@ -78,21 +78,6 @@ async function handleTrapConfigCommand(interaction) {
     return;
   }
 
-  if (subcommand === 'status') {
-    try {
-      const roleId = await fetchTrapRoleId(guildId);
-      if (!roleId) {
-        await interaction.editReply('No trap role configured yet.');
-        return;
-      }
-      await interaction.editReply(`Current trap role: <@&${roleId}>`);
-    } catch (err) {
-      console.error('autoBanTrap: failed to load trap role status', { guildId }, err);
-      await interaction.editReply('Failed to fetch the trap role. Please try again later.');
-    }
-    return;
-  }
-
   await interaction.editReply('Unsupported trap role command.');
 }
 

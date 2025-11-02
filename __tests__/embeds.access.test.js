@@ -8,7 +8,6 @@ jest.mock('../embeds/utils', () => ({
   canMemberUseTemplates: jest.fn(),
   allowRoleForGuild: jest.fn(),
   removeRoleForGuild: jest.fn(),
-  listAllowedRoles: jest.fn(),
   ensureSchema: jest.fn(),
   loadRoleCache: jest.fn(),
   clearRoleCache: jest.fn()
@@ -16,15 +15,13 @@ jest.mock('../embeds/utils', () => ({
 
 const {
   allowRoleForGuild,
-  removeRoleForGuild,
-  listAllowedRoles
+  removeRoleForGuild
 } = require('../embeds/utils');
 const { handleAccessCommand } = require('../embeds/handlers/access');
 
 describe('embed access slash command', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    listAllowedRoles.mockReturnValue([]);
     allowRoleForGuild.mockResolvedValue(true);
     removeRoleForGuild.mockResolvedValue(true);
   });
@@ -113,27 +110,4 @@ describe('embed access slash command', () => {
     });
   });
 
-  test('lists allowed roles', async () => {
-    listAllowedRoles.mockReturnValue(['role-1', 'role-2']);
-    const interaction = baseInteraction();
-    interaction.options.getSubcommand.mockReturnValue('list');
-
-    await handleAccessCommand(interaction);
-
-    expect(interaction.editReply).toHaveBeenCalledWith({
-      content: expect.stringContaining('<@&role-1>')
-    });
-  });
-
-  test('list reports empty state', async () => {
-    listAllowedRoles.mockReturnValue([]);
-    const interaction = baseInteraction();
-    interaction.options.getSubcommand.mockReturnValue('list');
-
-    await handleAccessCommand(interaction);
-
-    expect(interaction.editReply).toHaveBeenCalledWith({
-      content: expect.stringContaining('No roles are currently')
-    });
-  });
 });

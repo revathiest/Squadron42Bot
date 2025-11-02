@@ -70,30 +70,6 @@ async function handleSetForum(interaction) {
   return { action: 'set-forum', config };
 }
 
-async function handleStatus(interaction) {
-  const guildId = interaction.guildId;
-  if (!guildId) {
-    await replyEphemeral(interaction, 'This command can only be used inside a guild.');
-    return { action: 'noop' };
-  }
-
-  const config = await fetchConfig(guildId);
-  if (!config) {
-    await replyEphemeral(interaction, 'Spectrum Watcher is not configured for this server.');
-    return { action: 'status', config: null };
-  }
-
-  const channelMention = config.announceChannelId ? `<#${config.announceChannelId}>` : '*not set*';
-  const forumLabel = config.forumId ? `**${config.forumId}**` : '*not set*';
-
-  await replyEphemeral(
-    interaction,
-    `Spectrum Watcher status:\n- Channel: ${channelMention}\n- Forum: ${forumLabel}`
-  );
-
-  return { action: 'status', config };
-}
-
 async function handleClear(interaction) {
   const guildId = interaction.guildId;
   if (!guildId) {
@@ -170,8 +146,6 @@ async function handleSpectrumCommand(interaction) {
       return handleSetChannel(interaction);
     case 'set-forum':
       return handleSetForum(interaction);
-    case 'status':
-      return handleStatus(interaction);
     case 'clear':
       return handleClear(interaction);
     case 'post-latest':

@@ -10,8 +10,7 @@ describe('moderation org promo commands', () => {
 
     orgLinksMock = {
       allowOrgForumChannel: jest.fn().mockResolvedValue(true),
-      disallowOrgForumChannel: jest.fn().mockResolvedValue(true),
-      listOrgForumChannels: jest.fn().mockResolvedValue(['forum-1', 'forum-2'])
+      disallowOrgForumChannel: jest.fn().mockResolvedValue(true)
     };
 
     respondEphemeralMock = jest.fn().mockResolvedValue(undefined);
@@ -87,30 +86,15 @@ describe('moderation org promo commands', () => {
     expect(interaction.editReply).toHaveBeenCalledWith('Removed <#forum-2> from organization promotion forums.');
   });
 
-  test('lists configured forums', async () => {
+  test('returns error for unsupported subcommand', async () => {
     const interaction = baseInteraction({
       options: {
-        getSubcommand: jest.fn().mockReturnValue('list')
+        getSubcommand: jest.fn().mockReturnValue('unknown')
       }
     });
 
     await promoHandlers.handleOrgPromoCommand(interaction);
 
-    expect(orgLinksMock.listOrgForumChannels).toHaveBeenCalledWith('guild-1');
-    expect(interaction.editReply).toHaveBeenCalledWith(expect.stringContaining('<#forum-1>'));
-    expect(interaction.editReply).toHaveBeenCalledWith(expect.stringContaining('<#forum-2>'));
-  });
-
-  test('handles empty forum list', async () => {
-    orgLinksMock.listOrgForumChannels.mockResolvedValueOnce([]);
-    const interaction = baseInteraction({
-      options: {
-        getSubcommand: jest.fn().mockReturnValue('list')
-      }
-    });
-
-    await promoHandlers.handleOrgPromoCommand(interaction);
-
-    expect(interaction.editReply).toHaveBeenCalledWith('No forum channels have been configured for organization promotions yet.');
+    expect(respondEphemeralMock).toHaveBeenCalledWith(interaction, 'Unsupported organization promotion command.');
   });
 });

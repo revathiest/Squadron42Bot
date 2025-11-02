@@ -1969,27 +1969,6 @@ describe('handleModCommand', () => {
     expect(interaction.editReply).toHaveBeenCalledWith('Removed @TempMods from the **3. Kick User** role list.');
   });
 
-  test('lists configured roles', async () => {
-    addRoleToCache('guild-list', 'warn', 'role-a');
-    addRoleToCache('guild-list', 'ban', 'role-b');
-    const interaction = {
-      guildId: 'guild-list',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'list'
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleModCommand(interaction);
-
-    expect(interaction.deferReply).toHaveBeenCalled();
-    const [message] = interaction.editReply.mock.calls[interaction.editReply.mock.calls.length - 1];
-    expect(message).toContain('<@&role-a>');
-    expect(message).toContain('<@&role-b>');
-  });
-
   test('returns when deferReply fails during add', async () => {
     const role = { id: 'role-fail', toString: () => '@FailRole' };
     const interaction = {
@@ -2076,7 +2055,7 @@ describe('handleModCommand', () => {
     const interaction = {
       options: {
         getSubcommandGroup: () => 'auto-ban',
-        getSubcommand: () => 'status'
+        getSubcommand: () => 'set'
       }
     };
 
@@ -2420,44 +2399,6 @@ describe('handleTrapConfigCommand', () => {
     expect(interaction.editReply).toHaveBeenCalledWith('Cleared the configured trap role.');
   });
 
-  test('reports status for configured role', async () => {
-    database.__pool.query.mockResolvedValueOnce([[{ trap_role_id: 'role-trap' }]]);
-
-    const interaction = {
-      guildId: 'guild-trap',
-      options: {
-        getSubcommand: () => 'status'
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleTrapConfigCommand(interaction);
-
-    expect(database.__pool.query).toHaveBeenCalledWith(
-      expect.stringContaining('SELECT trap_role_id'),
-      ['guild-trap']
-    );
-    expect(interaction.editReply).toHaveBeenCalledWith('Current trap role: <@&role-trap>');
-  });
-
-  test('status indicates when no role configured', async () => {
-    database.__pool.query.mockResolvedValueOnce([[]]);
-
-    const interaction = {
-      guildId: 'guild-none',
-      options: {
-        getSubcommand: () => 'status'
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleTrapConfigCommand(interaction);
-
-    expect(interaction.editReply).toHaveBeenCalledWith('No trap role configured yet.');
-  });
-
   test('handles query failures gracefully', async () => {
     const error = new Error('db down');
     database.__pool.query.mockRejectedValueOnce(error);
@@ -2494,23 +2435,6 @@ describe('handleTrapConfigCommand', () => {
     await handleTrapConfigCommand(interaction);
 
     expect(interaction.editReply).toHaveBeenCalledWith('Failed to clear the trap role. Please try again later.');
-  });
-
-  test('handles status failures gracefully', async () => {
-    database.__pool.query.mockRejectedValueOnce(new Error('status failed'));
-
-    const interaction = {
-      guildId: 'guild-trap',
-      options: {
-        getSubcommand: () => 'status'
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleTrapConfigCommand(interaction);
-
-    expect(interaction.editReply).toHaveBeenCalledWith('No trap role configured yet.');
   });
 
   test('handles unsupported subcommand', async () => {

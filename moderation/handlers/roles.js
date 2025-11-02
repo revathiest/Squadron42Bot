@@ -184,22 +184,6 @@ async function handleRoleRemove(interaction) {
   }
 }
 
-async function handleRoleList(interaction) {
-  try {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  } catch {
-    return;
-  }
-
-  const summary = buildRoleList(interaction.guildId);
-  try {
-    await interaction.editReply(summary);
-  } catch (err) {
-    console.error('moderation: Failed to return moderation role list', { guildId: interaction.guildId }, err);
-    await interaction.editReply('Failed to fetch moderation roles.');
-  }
-}
-
 async function handleModCommand(interaction) {
   const group = interaction.options.getSubcommandGroup(false);
 
@@ -211,10 +195,6 @@ async function handleModCommand(interaction) {
 
     if (subcommand === 'remove') {
       return handleRoleRemove(interaction);
-    }
-
-    if (subcommand === 'list') {
-      return handleRoleList(interaction);
     }
   }
 
@@ -241,6 +221,5 @@ module.exports = {
   buildRoleChoices,
   handleRoleAdd,
   handleRoleRemove,
-  handleRoleList,
   handleModCommand
 };

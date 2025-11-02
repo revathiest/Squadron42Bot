@@ -29,11 +29,6 @@ function buildCommand() {
             .addChannelTypes(ChannelType.GuildVoice)
             .setRequired(true)
         )
-    )
-    .addSubcommand(sub =>
-      sub
-        .setName('list')
-        .setDescription('Show the current dynamic voice lobby channels.')
     );
 }
 

@@ -63,11 +63,6 @@ function buildTicketCommand() {
                 .setRequired(true)
             )
         )
-        .addSubcommand(sub =>
-          sub
-            .setName('list')
-            .setDescription('List current moderator roles for tickets.')
-        )
     );
 }
 

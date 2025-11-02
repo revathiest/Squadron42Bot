@@ -2,8 +2,7 @@ const { ChannelType, MessageFlags } = require('discord.js');
 const { respondEphemeral } = require('../utils');
 const {
   allowOrgForumChannel,
-  disallowOrgForumChannel,
-  listOrgForumChannels
+  disallowOrgForumChannel
 } = require('./orgLinks');
 
 async function handleOrgPromoAdd(interaction) {
@@ -58,30 +57,6 @@ async function handleOrgPromoRemove(interaction) {
   }
 }
 
-async function handleOrgPromoList(interaction) {
-  try {
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  } catch {
-    return;
-  }
-
-  try {
-    const channels = await listOrgForumChannels(interaction.guildId);
-    if (!channels.length) {
-      await interaction.editReply('No forum channels have been configured for organization promotions yet.');
-      return;
-    }
-
-    const mentions = channels.map(id => `<#${id}>`).join('\n');
-    await interaction.editReply(`Organization promotions are allowed in:\n${mentions}`);
-  } catch (err) {
-    console.error('moderation: failed to list organization promotion forums', {
-      guildId: interaction.guildId
-    }, err);
-    await interaction.editReply('Failed to list organization promotion forums. Please try again later.');
-  }
-}
-
 async function handleOrgPromoCommand(interaction) {
   const subcommand = interaction.options.getSubcommand();
 
@@ -93,16 +68,11 @@ async function handleOrgPromoCommand(interaction) {
     return handleOrgPromoRemove(interaction);
   }
 
-  if (subcommand === 'list') {
-    return handleOrgPromoList(interaction);
-  }
-
   return respondEphemeral(interaction, 'Unsupported organization promotion command.');
 }
 
 module.exports = {
   handleOrgPromoCommand,
   handleOrgPromoAdd,
-  handleOrgPromoRemove,
-  handleOrgPromoList
+  handleOrgPromoRemove
 };

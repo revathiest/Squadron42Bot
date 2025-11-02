@@ -10,7 +10,7 @@ describe('spectrum command definitions', () => {
     const json = builder.toJSON();
     expect(json.name).toBe('spectrum');
     expect(json.options.map(option => option.name)).toEqual(
-      expect.arrayContaining(['set-channel', 'set-forum', 'status', 'clear', 'post-latest'])
+      expect.arrayContaining(['set-channel', 'set-forum', 'clear', 'post-latest'])
     );
   });
 });

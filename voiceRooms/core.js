@@ -140,21 +140,6 @@ async function handleInteraction(interaction) {
         content: `Removed ${channel.toString()} from the dynamic voice lobby list.`,
         flags: MessageFlags.Ephemeral
       });
-    } else if (subcommand === 'list') {
-      const templates = templateCache.get(guildId);
-
-      if (!templates || templates.size === 0) {
-        await interaction.reply({ content: 'No dynamic voice lobbies are configured yet.', flags: MessageFlags.Ephemeral });
-        return true;
-      }
-
-      const lines = [];
-      for (const channelId of templates) {
-        const channel = interaction.guild.channels.cache.get(channelId);
-        lines.push(channel ? `- ${channel.toString()}` : `- Channel ID ${channelId}`);
-      }
-
-      await interaction.reply({ content: `Configured lobbies:\n${lines.join('\n')}`, flags: MessageFlags.Ephemeral });
     }
   } catch (err) {
     console.error('voiceRooms: interaction handler failed', err);

@@ -378,25 +378,6 @@ async function handleRolesRemove(interaction) {
   }
 }
 
-async function handleRolesList(interaction) {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-  try {
-    const guildId = interaction.guildId;
-    const set = getModeratorRoles(guildId);
-    if (!set || set.size === 0) {
-      await interaction.editReply('No moderator roles configured. Use /ticket roles add to add one.');
-      return;
-    }
-
-    const mentions = [...set].map(roleId => `<@&${roleId}>`).join('\n');
-    await interaction.editReply(`Current ticket moderator roles:\n${mentions}`);
-  } catch (err) {
-    console.error('tickets: Failed to list ticket roles', err);
-    await interaction.editReply('Failed to fetch ticket moderator roles.');
-  }
-}
-
 async function handleTicketCommand(interaction) {
   const subcommandGroup = interaction.options.getSubcommandGroup(false);
   /* istanbul ignore next */
@@ -416,8 +397,6 @@ async function handleTicketCommand(interaction) {
       await handleRolesAdd(interaction);
     } else if (subcommand === 'remove') {
       await handleRolesRemove(interaction);
-    } else if (subcommand === 'list') {
-      await handleRolesList(interaction);
     }
     return;
   }

@@ -1,4 +1,4 @@
-# Polls Module
+﻿# Polls Module
 
 ## Purpose
 Provides the `/poll` command for guided poll creation and voting. The workflow asks the creator to supply a question, up to 25 answers, an expiration time, and whether voters can pick one or multiple options. Polls are posted in the current channel with buttons for each answer; results update live as members vote.
@@ -9,7 +9,6 @@ Provides the `/poll` command for guided poll creation and voting. The workflow a
 | `/poll create` | Guild | Launch the interactive poll builder (requires a role granted via `/poll access add`). |
 | `/poll access add <role>` | Guild | Allow a role to create polls. |
 | `/poll access remove <role>` | Guild | Remove a role from the allow list. |
-| `/poll access list` | Guild | Display the roles currently allowed to create polls. |
 
 ## Interaction Flow
 - `/poll create` replies ephemerally with a control panel embed. Only members with an allowed role can open it.
@@ -33,4 +32,4 @@ Provides the `/poll` command for guided poll creation and voting. The workflow a
 - Poll messages are updated in place with fresh vote totals after each interaction.
 - When a poll closes (either at expiration or manually), buttons are disabled and the embed footer displays the final status.
 - Poll messages include a **Close Poll** button. Only the poll owner or members allowed to create polls can activate it; everyone else receives an ephemeral denial.
-- `config-status` includes a new "Poll Creator Roles" section that reflects the allow list returned by `listAllowedRoles()`.
+- `/config-status` surfaces the current "Poll Creator Roles" section so you can review allowed roles without additional commands.

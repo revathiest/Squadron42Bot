@@ -30,11 +30,6 @@ function buildSlashCommandDefinition() {
               .setDescription('Remove a role from a moderation action.')
           )
         )
-        .addSubcommand(sub =>
-          sub
-            .setName('list')
-            .setDescription('List configured moderation roles.')
-        )
     )
     .addSubcommandGroup(group =>
       group
@@ -55,11 +50,6 @@ function buildSlashCommandDefinition() {
           sub
             .setName('clear')
             .setDescription('Clear the configured trap role.')
-        )
-        .addSubcommand(sub =>
-          sub
-            .setName('status')
-            .setDescription('Show the configured trap role.')
         )
     );
 
@@ -90,11 +80,6 @@ function buildSlashCommandDefinition() {
               .addChannelTypes(ChannelType.GuildForum)
               .setRequired(true)
           )
-      )
-      .addSubcommand(sub =>
-        sub
-          .setName('list')
-          .setDescription('List forums where organization promotions are allowed.')
       )
   );
 

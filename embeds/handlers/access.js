@@ -1,8 +1,7 @@
 const { MessageFlags, PermissionFlagsBits } = require('discord.js');
 const {
   allowRoleForGuild,
-  removeRoleForGuild,
-  listAllowedRoles
+  removeRoleForGuild
 } = require('../utils');
 
 async function handleAccessCommand(interaction) {
@@ -54,22 +53,6 @@ async function handleAccessCommand(interaction) {
         content: `✅ ${role} can no longer upload embed templates.`
       }).catch(() => {});
     }
-    return true;
-  }
-
-  if (subcommand === 'list') {
-    const roles = listAllowedRoles(guildId);
-    if (!roles.length) {
-      await interaction.editReply({
-        content: 'No roles are currently allowed to upload embed templates.'
-      }).catch(() => {});
-      return true;
-    }
-
-    const mentions = roles.map(roleId => `<@&${roleId}>`).join('\n');
-    await interaction.editReply({
-      content: `Roles allowed to upload embed templates:\n${mentions}`
-    }).catch(() => {});
     return true;
   }
 

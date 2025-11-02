@@ -29,11 +29,7 @@ function getSlashCommandDefinitions() {
               opt
                 .setName('role')
                 .setDescription('Role to remove from the allow list.')
-                .setRequired(true)))
-        .addSubcommand(sub =>
-          sub
-            .setName('list')
-            .setDescription('List the roles allowed to create polls.')));
+                .setRequired(true))));
 
   return {
     global: [],

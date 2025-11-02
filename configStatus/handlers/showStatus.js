@@ -19,6 +19,8 @@ async function showConfigStatus(interaction) {
     .setColor(0x00ae86)
     .setTimestamp();
 
+  const sections = [];
+
   try {
     const [
       [ticketConfig],
@@ -31,7 +33,9 @@ async function showConfigStatus(interaction) {
       [spectrumRows],
       [tempChannels],
       [embedAccessRows],
-      [pollRoleRows]
+      [pollRoleRows],
+      [engagementConfigRows],
+      [engagementLevelRows]
     ] = await Promise.all([
       pool.query(
         'SELECT channel_id, archive_category_id FROM ticket_settings WHERE guild_id = ?',
@@ -70,6 +74,20 @@ async function showConfigStatus(interaction) {
       pool.query(
         'SELECT role_id FROM poll_allowed_roles WHERE guild_id = ?',
         [guildId]
+      ),
+      pool.query(
+        `SELECT reaction_points, reply_points, cooldown_seconds, announce_channel_id, announce_enabled, dm_enabled
+         FROM engagement_config
+         WHERE guild_id = ?
+         LIMIT 1`,
+        [guildId]
+      ),
+      pool.query(
+        `SELECT level_rank, level_name, points_required
+         FROM engagement_levels
+         WHERE guild_id = ?
+         ORDER BY points_required ASC`,
+        [guildId]
       )
     ]);
 
@@ -80,18 +98,16 @@ async function showConfigStatus(interaction) {
         ? ticketRoles.map(row => `<@&${row.role_id}>`).join(', ')
         : 'No ticket roles configured.';
 
-      embed.addFields({
+      sections.push({
         name: 'Tickets',
         value: `Registered Channel: <#${config.channel_id}>\n` +
           `Archive Category: ${archiveMention}\n` +
-          `Authorized Roles: ${roleMentions}`,
-        inline: false
+          `Authorized Roles: ${roleMentions}`
       });
     } else {
-      embed.addFields({
+      sections.push({
         name: 'Tickets',
-        value: 'No configuration found.',
-        inline: false
+        value: 'No configuration found.'
       });
     }
 
@@ -112,38 +128,34 @@ async function showConfigStatus(interaction) {
         .join('\n')
       : 'No roles configured.';
 
-    embed.addFields({
+    sections.push({
       name: 'Moderation Roles',
-      value: moderationValue,
-      inline: false
+      value: moderationValue
     });
 
     const orgForumValue = orgPromoRows.length
       ? orgPromoRows.map(row => `<#${row.channel_id}>`).join('\n')
       : 'No promotion forums configured. Use `/mod org-promos add` to register a forum.';
 
-    embed.addFields({
+    sections.push({
       name: 'Org Promotion Forums',
-      value: orgForumValue,
-      inline: false
+      value: orgForumValue
     });
 
     const registered = storedCodes[0]?.count ?? 0;
     const provided = providedCodes[0]?.count ?? 0;
     const available = Math.max(registered - provided, 0);
 
-    embed.addFields({
+    sections.push({
       name: 'Referral Codes',
-      value: `Registered: ${registered}\nProvided: ${provided}\nAvailable: ${available}`,
-      inline: false
+      value: `Registered: ${registered}\nProvided: ${provided}\nAvailable: ${available}`
     });
 
     const trapRoleId = autoBanRows[0]?.trap_role_id;
 
-    embed.addFields({
+    sections.push({
       name: 'Honey Trap',
-      value: trapRoleId ? `Ban on assign: <@&${trapRoleId}>` : 'No trap role configured.',
-      inline: false
+      value: trapRoleId ? `Ban on assign: <@&${trapRoleId}>` : 'No trap role configured.'
     });
 
     const spectrumValue = spectrumRows.length
@@ -151,47 +163,93 @@ async function showConfigStatus(interaction) {
         `Forum ID: ${spectrumRows[0].forum_id || 'Not set'}`
       : 'No Spectrum configuration found.';
 
-    embed.addFields({
+    sections.push({
       name: 'Spectrum Patch Bot',
-      value: spectrumValue,
-      inline: false
+      value: spectrumValue
     });
 
-    embed.addFields({
+    sections.push({
       name: 'Temp Channels',
       value: tempChannels.length
         ? tempChannels.map(row => `- <#${row.template_channel_id}>`).join('\n')
-        : 'No temporary channel templates configured.',
-      inline: false
+        : 'No temporary channel templates configured.'
     });
 
     const embedAccessValue = embedAccessRows.length
       ? embedAccessRows.map(row => `<@&${row.role_id}>`).join('\n')
       : 'No roles allowed to upload embed templates. Use `/embed access add` to authorize one.';
 
-    embed.addFields({
+    sections.push({
       name: 'Embed Template Access',
-      value: embedAccessValue,
-      inline: false
+      value: embedAccessValue
     });
 
     const pollRolesValue = pollRoleRows.length
       ? pollRoleRows.map(row => `<@&${row.role_id}>`).join('\n')
       : 'No poll creator roles configured. Members with Manage Server may create polls.';
 
-    embed.addFields({
+    sections.push({
       name: 'Poll Creator Roles',
-      value: pollRolesValue,
-      inline: false
+      value: pollRolesValue
+    });
+
+    const engagementConfig = engagementConfigRows?.[0] ?? null;
+    const reactionPoints = Number(engagementConfig?.reaction_points ?? 1);
+    const replyPoints = Number(engagementConfig?.reply_points ?? 5);
+    const cooldownSeconds = Number(engagementConfig?.cooldown_seconds ?? 60);
+    const announceChannelMention = engagementConfig?.announce_channel_id ? `<#${engagementConfig.announce_channel_id}>` : 'Not set';
+    const announceState = engagementConfig ? (engagementConfig.announce_enabled ? 'enabled' : 'disabled') : 'disabled (default)';
+    const dmState = engagementConfig ? (engagementConfig.dm_enabled ? 'enabled' : 'disabled') : 'disabled (default)';
+
+    const customLevels = Array.isArray(engagementLevelRows) ? engagementLevelRows : [];
+    let levelSummary;
+    if (customLevels.length) {
+      const preview = customLevels
+        .slice(0, 3)
+        .map(level => `L${level.level_rank}: ${level.level_name} (${level.points_required} pts)`)
+        .join('\n');
+      const remainder = customLevels.length > 3
+        ? `\n… plus ${customLevels.length - 3} more.`
+        : '';
+      levelSummary = `${preview}${remainder}`;
+    } else {
+      levelSummary = 'No custom levels defined.';
+    }
+
+    const engagementLines = [];
+    if (!engagementConfig) {
+      engagementLines.push('No custom configuration found. Defaults in use.');
+    }
+    engagementLines.push(`Reaction Points: **${reactionPoints}**`);
+    engagementLines.push(`Reply Points: **${replyPoints}**`);
+    engagementLines.push(`Cooldown: **${cooldownSeconds}s**`);
+    engagementLines.push(`Announcements: ${announceChannelMention} (${announceState})`);
+    engagementLines.push(`DM Notifications: ${dmState}`);
+    engagementLines.push(`Custom Levels (${customLevels.length}): ${levelSummary}`);
+
+    sections.push({
+      name: 'Engagement',
+      value: engagementLines.join('\n')
     });
   } catch (err) {
     console.error('[config-status] Failed to compile configuration:', err);
-    embed.addFields({
+    sections.push({
       name: 'Error',
-      value: 'Failed to load one or more configurations. Check logs.',
-      inline: false
+      value: 'Failed to load one or more configurations. Check logs.'
     });
   }
+
+  sections.forEach((section, index) => {
+    const value = index < sections.length - 1
+      ? `${section.value}\n────────────────────`
+      : section.value;
+
+    embed.addFields({
+      name: section.name,
+      value,
+      inline: false
+    });
+  });
 
   await interaction.editReply({ embeds: [embed] });
   return true;
