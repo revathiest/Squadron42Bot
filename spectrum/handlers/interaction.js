@@ -120,7 +120,13 @@ async function handlePostLatest(interaction) {
     // Lazy-load to avoid cyclic dependency issues.
     // eslint-disable-next-line global-require
     const watcher = require('../../spectrumWatcher');
-    const result = await watcher.postLatestThreadForGuild(client, guildId);
+    const postLatest = watcher?.postLatestThreadForGuild;
+
+    if (typeof postLatest !== 'function') {
+      throw new Error('Spectrum watcher is not ready to post threads yet.');
+    }
+
+    const result = await postLatest(client, guildId);
 
     if (!result?.ok) {
       await interaction.editReply(result?.message || 'Unable to post the latest Spectrum thread right now.');
@@ -134,7 +140,8 @@ async function handlePostLatest(interaction) {
     return { action: 'post-latest', ok: true, config, result };
   } catch (err) {
     console.error('spectrumConfig: failed to post latest thread', err);
-    await interaction.editReply('Something went wrong while trying to post the latest thread.');
+    const suffix = err?.message ? ` (${err.message})` : '';
+    await interaction.editReply(`Something went wrong while trying to post the latest thread.${suffix}`);
     return { action: 'post-latest', ok: false, error: err };
   }
 }

@@ -3,6 +3,7 @@ const descriptionBuilder = require('../spectrum/watcher/descriptionBuilder');
 const session = require('../spectrum/watcher/session');
 
 const ORIGINAL_NOW = Date.now;
+const TRUNCATION_NOTICE = '\n\n... View the full post on Spectrum for more details.';
 
 describe('threadUtils', () => {
   test('parseInterval falls back to default for invalid values', () => {
@@ -87,8 +88,8 @@ describe('descriptionBuilder', () => {
     ];
 
     const description = descriptionBuilder.buildDescriptionFromBlocks(blocks);
-    expect(description).toHaveLength(3903);
-    expect(description.endsWith('...')).toBe(true);
+    expect(description.length).toBeLessThan(longLine.length);
+    expect(description.endsWith(TRUNCATION_NOTICE)).toBe(true);
   });
 
   test('buildDescriptionFromThread renders different block types', () => {
@@ -134,6 +135,81 @@ describe('descriptionBuilder', () => {
     };
 
     expect(descriptionBuilder.buildDescriptionFromThread(threadDetails)).toBe('*No content found.*');
+  });
+
+  test('buildDescriptionFromThread summarizes lengthy content without cutting sentences', () => {
+    const paragraph = Array.from({ length: 300 }, (_, idx) => `Sentence ${idx + 1}.`).join(' ');
+    const threadDetails = {
+      content_blocks: [
+        {
+          data: {
+            blocks: [{ type: 'unstyled', text: paragraph }]
+          }
+        }
+      ]
+    };
+
+    const description = descriptionBuilder.buildDescriptionFromThread(threadDetails);
+    expect(description).toContain('Sentence 1.');
+    expect(description.endsWith(TRUNCATION_NOTICE)).toBe(true);
+    const summaryBody = description.slice(0, -TRUNCATION_NOTICE.length).trim();
+    expect(summaryBody.endsWith('.')).toBe(true);
+  });
+
+  test('buildDescriptionFromThread summarizes known issues and bug fixes into counts', () => {
+    const threadDetails = {
+      content_blocks: [
+        {
+          data: {
+            blocks: [
+              { type: 'header-one', text: 'Known Issues' },
+              { type: 'unordered-list-item', text: 'Issue 1' },
+              { type: 'unordered-list-item', text: 'Issue 2' },
+              { type: 'header-one', text: 'Bug Fixes' },
+              { type: 'unordered-list-item', text: 'Fix 1' },
+              { type: 'header-one', text: 'Features & Gameplay' },
+              { type: 'unordered-list-item', text: 'Feature highlight' }
+            ]
+          }
+        }
+      ]
+    };
+
+    const description = descriptionBuilder.buildDescriptionFromThread(threadDetails);
+    expect(description).toContain('Features & Gameplay');
+    expect(description).toContain('- Feature highlight');
+    expect(description).toContain('* Known Issues: 2');
+    expect(description).toContain('* Bug Fixes: 1');
+    expect(description).not.toContain('Issue 1');
+    expect(description).not.toContain('Fix 1');
+  });
+
+  test('buildDescriptionFromThread places known-issue notes at top of technical summary', () => {
+    const threadDetails = {
+      content_blocks: [
+        {
+          data: {
+            blocks: [
+              { type: 'header-one', text: 'Technical' },
+              { type: 'unordered-list-item', text: 'Existing tech note' },
+              { type: 'header-one', text: 'Known Issues' },
+              { type: 'unstyled', text: 'Servers may take longer to respond.' },
+              { type: 'ordered-list-item', text: 'Issue bullet' },
+              { type: 'header-one', text: 'Bug Fixes' },
+              { type: 'unordered-list-item', text: 'Fix bullet' }
+            ]
+          }
+        }
+      ]
+    };
+
+    const description = descriptionBuilder.buildDescriptionFromThread(threadDetails);
+    expect(description).toContain('**Technical**\nExisting tech note');
+    expect(description).toContain('Servers may take longer to respond.');
+    expect(description).toContain('* Known Issues: 1');
+    expect(description).toContain('* Bug Fixes: 1');
+    expect(description).not.toContain('Issue bullet');
+    expect(description).not.toContain('Fix bullet');
   });
 
   test('extractImageUrl prefers large then direct URL', () => {
