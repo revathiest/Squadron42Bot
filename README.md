@@ -128,23 +128,24 @@ The `engagement/` agent tracks how much excitement a member generates:
 The polls agent guides moderators through building time-boxed surveys:
 
 - `/poll create` launches an interactive wizard that collects the question, options, duration, and audience permissions, then posts a message with custom buttons.
-- `/poll access add|remove|list` manages the allow-list of roles permitted to run polls; state is cached for performance and persisted via MySQL.
+- `/poll access add|remove` manages the allow-list of roles permitted to run polls; the current role list is visible in `/config-status`.
 - Automatic closing and archival is handled by the scheduler; expired polls are cleaned up on startup and via recurring tasks.
 
 ## Embed Templates
 
 Custom embeds live under the embeds agent:
 
-- `/embed template create|edit|publish` workflows produce reusable message layouts stored in MySQL and protected by per-role access policies.
+- Staff upload `.txt` or `.md` attachments that follow the template format; the bot renders the embeds automatically once validated.
+- `/embed-access add|remove` controls which roles may upload templates, and `/config-status` surfaces the current allow list.
 - Handlers in `handlers/interaction.js` centralise routing for buttons, modals, and select menus—extend them when adding new actions.
 
 ## Referrals
 
 Referral tracking ensures each recruit is attributed correctly:
 
-- `/referral register` binds a recruit to a sponsor, writing metadata to the database for future audits.
-- `/referral get` surfaces a memberâ€™s current referral assignment and history.
-- Additional utilities enforce referral-only channels and can be extended from the shared helpers in `referrals/utils.js`.
+- `/register-referral-code` (global) lets members store or update their personal Star Citizen referral code.
+- `/get-referral-code` (global) hands back an unused community code so new recruits can sign up.
+- Additional utilities can be built atop the helpers in `referrals/utils.js` to enforce referral-only channels when needed.
 
 ## Spectrum Watcher
 
@@ -186,7 +187,7 @@ The moderation agent wraps automated safety nets and manual workflows:
 ## Ticketing System
 
 - Configure the lobby with `/ticket set-channel` (optionally specify an archive category).
-- Manage moderator roles with `/ticket roles add|remove|list`.
+- Manage moderator roles with `/ticket roles add|remove`; review the configured roles via `/config-status`.
 - The bot posts a persistent embed + button panel; users click **Open Ticket** to submit a modal.
 - Tickets spawn private channels named `ticket-<username>-<id>` visible to the reporter and moderators.
 - Claim/close tickets via the buttons inside each ticket; closing moves the channel to the configured archive category and locks it.

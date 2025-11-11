@@ -1,5 +1,14 @@
 const { MessageFlags } = require('discord.js');
 
+const SECTION_DIVIDER = '--------------------';
+const stripDivider = value => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+  const suffix = `\n${SECTION_DIVIDER}`;
+  return value.endsWith(suffix) ? value.slice(0, -suffix.length) : value;
+};
+
 jest.mock('../database', () => {
   const pool = {
     query: jest.fn()
@@ -81,17 +90,17 @@ describe('configstatus handleInteraction', () => {
 
     const [{ embeds }] = interaction.editReply.mock.calls[0];
     const ticketField = embeds[0].data.fields.find(field => field.name === 'Tickets');
-    expect(ticketField?.value).toBe('No configuration found.');
+    expect(stripDivider(ticketField?.value)).toBe('No configuration found.');
     const spectrumField = embeds[0].data.fields.find(field => field.name === 'Spectrum Patch Bot');
-    expect(spectrumField?.value).toBe('No Spectrum configuration found.');
+    expect(stripDivider(spectrumField?.value)).toBe('No Spectrum configuration found.');
     const tempField = embeds[0].data.fields.find(field => field.name === 'Temp Channels');
-    expect(tempField?.value).toBe('No temporary channel templates configured.');
+    expect(stripDivider(tempField?.value)).toBe('No temporary channel templates configured.');
     const promoField = embeds[0].data.fields.find(field => field.name === 'Org Promotion Forums');
-    expect(promoField?.value).toBe('No promotion forums configured. Use `/mod org-promos add` to register a forum.');
+    expect(stripDivider(promoField?.value)).toBe('No promotion forums configured. Use `/mod org-promos add` to register a forum.');
     const embedAccessField = embeds[0].data.fields.find(field => field.name === 'Embed Template Access');
-    expect(embedAccessField?.value).toBe('No roles allowed to upload embed templates. Use `/embed access add` to authorize one.');
+    expect(stripDivider(embedAccessField?.value)).toBe('No roles allowed to upload embed templates. Use `/embed access add` to authorize one.');
     const pollRoleField = embeds[0].data.fields.find(field => field.name === 'Poll Creator Roles');
-    expect(pollRoleField?.value).toBe('No poll creator roles configured. Members with Manage Server may create polls.');
+    expect(stripDivider(pollRoleField?.value)).toBe('No poll creator roles configured. Members with Manage Server may create polls.');
     const engagementField = embeds[0].data.fields.find(field => field.name === 'Engagement');
     expect(engagementField?.value).toContain('Defaults in use.');
   });
@@ -147,6 +156,78 @@ describe('configstatus handleInteraction', () => {
         expect.objectContaining({ name: 'Engagement' })
       ])
     );
+  });
+
+  test('surfaces partial configuration details with fallbacks', async () => {
+    database.__pool.query
+      .mockResolvedValueOnce([[{ channel_id: 'ticket-chan', archive_category_id: null }]])
+      .mockResolvedValueOnce([[]])
+      .mockResolvedValueOnce([[{ role_id: 'role-warn-1', action: 'warn' }, { role_id: 'role-warn-2', action: 'warn' }]])
+      .mockResolvedValueOnce([[]])
+      .mockResolvedValueOnce([[{ count: 2 }]])
+      .mockResolvedValueOnce([[{ count: 5 }]])
+      .mockResolvedValueOnce([[{ trap_role_id: null }]])
+      .mockResolvedValueOnce([[{ announce_channel_id: null, forum_id: null }]])
+      .mockResolvedValueOnce([[{ template_channel_id: 'temp-unique' }]])
+      .mockResolvedValueOnce([[]])
+      .mockResolvedValueOnce([[]])
+      .mockResolvedValueOnce([[{
+        reaction_points: 0,
+        reply_points: 0,
+        cooldown_seconds: 0,
+        announce_channel_id: null,
+        announce_enabled: 0,
+        dm_enabled: 0
+      }]])
+      .mockResolvedValueOnce([[{
+        level_rank: 1,
+        level_name: 'Scout',
+        points_required: 5
+      }, {
+        level_rank: 2,
+        level_name: 'Pilot',
+        points_required: 15
+      }, {
+        level_rank: 3,
+        level_name: 'Ace',
+        points_required: 30
+      }, {
+        level_rank: 4,
+        level_name: 'Legend',
+        points_required: 60
+      }]]);
+
+    const interaction = {
+      guild: { id: 'guild-partial' },
+      guildId: 'guild-partial',
+      isChatInputCommand: () => true,
+      commandName: 'config-status',
+      deferReply: jest.fn().mockResolvedValue(undefined),
+      editReply: jest.fn().mockResolvedValue(undefined)
+    };
+
+    await expect(configStatus.handleInteraction(interaction)).resolves.toBe(true);
+
+    const [{ embeds }] = interaction.editReply.mock.calls[0];
+    const ticketField = embeds[0].data.fields.find(field => field.name === 'Tickets');
+    expect(stripDivider(ticketField?.value)).toContain('Archive Category: Not set');
+    expect(stripDivider(ticketField?.value)).toContain('Authorized Roles: No ticket roles configured.');
+
+    const moderationField = embeds[0].data.fields.find(field => field.name === 'Moderation Roles');
+    expect(moderationField?.value).toContain('<@&role-warn-1>, <@&role-warn-2>');
+
+    const referralField = embeds[0].data.fields.find(field => field.name === 'Referral Codes');
+    expect(referralField?.value).toContain('Available: 0');
+
+    const spectrumField = embeds[0].data.fields.find(field => field.name === 'Spectrum Patch Bot');
+    expect(stripDivider(spectrumField?.value)).toContain('Channel: Not set');
+
+    const tempField = embeds[0].data.fields.find(field => field.name === 'Temp Channels');
+    expect(stripDivider(tempField?.value)).toBe('- <#temp-unique>');
+
+    const engagementField = embeds[0].data.fields.find(field => field.name === 'Engagement');
+    expect(engagementField?.value).toContain('Announcements: Not set (disabled)');
+    expect(engagementField?.value).toContain('... plus 1 more.');
   });
 
   test('returns false when deferReply fails', async () => {

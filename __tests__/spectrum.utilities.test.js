@@ -50,6 +50,11 @@ describe('descriptionBuilder', () => {
     expect(descriptionBuilder.formatPlainText(input)).toBe('Hello\n\nworld');
   });
 
+  test('formatPlainText returns empty string for falsy input', () => {
+    expect(descriptionBuilder.formatPlainText('')).toBe('');
+    expect(descriptionBuilder.formatPlainText(null)).toBe('');
+  });
+
   test('buildDescriptionFromBlocks handles ordered and unordered lists', () => {
     const blocks = [
       {
@@ -68,6 +73,22 @@ describe('descriptionBuilder', () => {
     expect(description).toContain('- First bullet');
     expect(description).toContain('1. Number one');
     expect(description).toContain('2. Number two');
+  });
+
+  test('buildDescriptionFromBlocks truncates extremely long content', () => {
+    const longLine = 'A'.repeat(4005);
+    const blocks = [
+      {
+        type: 'text',
+        data: {
+          blocks: [{ type: 'unstyled', text: longLine }]
+        }
+      }
+    ];
+
+    const description = descriptionBuilder.buildDescriptionFromBlocks(blocks);
+    expect(description).toHaveLength(3903);
+    expect(description.endsWith('...')).toBe(true);
   });
 
   test('buildDescriptionFromThread renders different block types', () => {
@@ -99,6 +120,20 @@ describe('descriptionBuilder', () => {
 
   test('buildDescriptionFromThread returns fallback when content missing', () => {
     expect(descriptionBuilder.buildDescriptionFromThread({})).toBeNull();
+  });
+
+  test('buildDescriptionFromThread returns placeholder when content collapses to empty', () => {
+    const threadDetails = {
+      content_blocks: [
+        {
+          data: {
+            blocks: [{ type: 'unstyled', text: '   ' }]
+          }
+        }
+      ]
+    };
+
+    expect(descriptionBuilder.buildDescriptionFromThread(threadDetails)).toBe('*No content found.*');
   });
 
   test('extractImageUrl prefers large then direct URL', () => {

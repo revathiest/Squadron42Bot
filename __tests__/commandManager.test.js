@@ -181,6 +181,38 @@ describe('commandManager registerAllCommands', () => {
     expect(putMock.mock.calls[0]).toEqual(['app:app-1', { body: [] }]);
   });
 
+  test('logs when guild command set is empty', async () => {
+    process.env.APPLICATION_ID = 'app-empty';
+    process.env.CLEAR_GUILD_COMMANDS = 'true';
+    process.env.FORCE_REREGISTER = 'true';
+
+    const modules = [
+      {
+        getSlashCommandDefinitions: () => ({ global: [{ name: 'one' }] })
+      }
+    ];
+
+    await registerAllCommands('token-empty', modules, ['guild-empty']);
+
+    expect(console.log).toHaveBeenCalledWith('commandManager: No guild commands to register.');
+  });
+
+  test('skips guild registration when forced rereregister disabled', async () => {
+    process.env.APPLICATION_ID = 'app-skip';
+    process.env.CLEAR_GUILD_COMMANDS = 'true';
+    process.env.FORCE_REREGISTER = 'false';
+
+    const modules = [
+      {
+        getSlashCommandDefinitions: () => ({ guild: [{ name: 'guild-cmd' }] })
+      }
+    ];
+
+    await registerAllCommands('token-skip', modules, ['guild-ab']);
+
+    expect(console.log).toHaveBeenCalledWith('commandManager: Guild commands not registered.  Forced reregister disabled.');
+  });
+
   test('logs errors when registering global commands fails', async () => {
     process.env.APPLICATION_ID = 'app-err';
 
