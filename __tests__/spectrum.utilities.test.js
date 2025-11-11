@@ -204,7 +204,8 @@ describe('descriptionBuilder', () => {
     };
 
     const description = descriptionBuilder.buildDescriptionFromThread(threadDetails);
-    expect(description).toContain('**Technical**\nExisting tech note');
+    expect(description).toContain('**Technical**\nServers may take longer to respond.');
+    expect(description).toContain('- Existing tech note');
     expect(description).toContain('Servers may take longer to respond.');
     expect(description).toContain('* Known Issues: 1');
     expect(description).toContain('* Bug Fixes: 1');
