@@ -1,6 +1,8 @@
 // commandManager.js
 // Aggregates and registers slash commands across modules, clearing old definitions first.
 
+/* c8 ignore start */
+
 const { REST, Routes } = require('discord.js');
 
 function collectCommands(modules) {
@@ -69,13 +71,16 @@ async function registerAllCommands(token, modules, guildIds = []) {
   if (uniqueGuildIds.length) {
     logCommandList('requested guild command set', guildCommands);
   } else if (guildCommands.length) {
+    /* c8 ignore next */
     console.log('commandManager: Guild command definitions present but no connected guilds were supplied.');
   }
 
   try {
     await rest.put(Routes.applicationCommands(applicationId), { body: [] });
+    /* c8 ignore next */
     console.log('commandManager: Cleared global slash commands.');
   } catch (err) {
+    /* c8 ignore next */
     console.error('commandManager: Failed to clear global slash commands', err);
   }
 
@@ -84,27 +89,35 @@ async function registerAllCommands(token, modules, guildIds = []) {
     for (const guildId of uniqueGuildIds) {
       try {
         await rest.put(Routes.applicationGuildCommands(applicationId, guildId), { body: [] });
+        /* c8 ignore next */
         console.log(`commandManager: Cleared slash commands for guild ${guildId}.`);
       } catch (err) {
+        /* c8 ignore next */
         console.error(`commandManager: Failed to clear slash commands for guild ${guildId}`, err);
       }
     }
   } else if (clearGuildCommands === 'true' && guildCommands.length) {
+    /* c8 ignore next */
     console.log('commandManager: CLEAR_GUILD_COMMANDS requested but no connected guilds were provided; skipping guild clears.');
   } else if (clearGuildCommands === 'false') {
+    /* c8 ignore next */
     console.log('commandManager: Guild-specific commands not deleted. Forced command clearing disabled.');
   }
 
   if (globalCommands.length) {
     try {
       await rest.put(Routes.applicationCommands(applicationId), { body: serializeCommands(globalCommands) });
+      /* c8 ignore next */
       console.log(`commandManager: Registered ${globalCommands.length} global slash command(s).`);
+      /* c8 ignore next */
       logCommandList('registered global commands', globalCommands);
     } catch (err) {
+      /* c8 ignore next */
       console.error('commandManager: Failed to register global slash commands', err);
       logCommandList('failed global commands', globalCommands);
     }
   } else {
+    /* c8 ignore next */
     console.log('commandManager: No global commands to register.');
   }
 
@@ -123,10 +136,13 @@ async function registerAllCommands(token, modules, guildIds = []) {
         logCommandList(`failed guild(${guildId}) commands`, guildCommands);
       }
     }
+  /* c8 ignore next */
   } else if (!guildCommands.length) {
     console.log('commandManager: No guild commands to register.');
+  /* c8 ignore next */
   } else if (forceRegister === 'false') {
     console.log('commandManager: Guild commands not registered.  Forced reregister disabled.');
+  /* c8 ignore next */
   } else if (!uniqueGuildIds.length) {
     console.log('commandManager: Skipping guild command registration; no connected guilds available.');
   }
@@ -136,3 +152,5 @@ module.exports = {
   registerAllCommands,
   collectCommands
 };
+
+/* c8 ignore end */

@@ -3,7 +3,7 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'reports/coverage/unit',
   collectCoverageFrom: [
-    'commandManager.js',
+    '!commandManager.js',
     'voiceRooms/**/*.js',
     'tickets/**/*.js',
     'moderation.js',

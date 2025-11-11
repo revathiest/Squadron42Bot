@@ -1,6 +1,8 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { getPool } = require('../../database');
 
+const SECTION_DIVIDER = '--------------------';
+
 async function showConfigStatus(interaction) {
   const pool = getPool();
   const guildId = interaction.guild.id;
@@ -209,7 +211,7 @@ async function showConfigStatus(interaction) {
         .map(level => `L${level.level_rank}: ${level.level_name} (${level.points_required} pts)`)
         .join('\n');
       const remainder = customLevels.length > 3
-        ? `\n… plus ${customLevels.length - 3} more.`
+        ? `\n... plus ${customLevels.length - 3} more.`
         : '';
       levelSummary = `${preview}${remainder}`;
     } else {
@@ -240,13 +242,11 @@ async function showConfigStatus(interaction) {
   }
 
   sections.forEach((section, index) => {
-    const value = index < sections.length - 1
-      ? `${section.value}\n────────────────────`
-      : section.value;
-
     embed.addFields({
       name: section.name,
-      value,
+      value: index < sections.length - 1
+        ? `${section.value}\n${SECTION_DIVIDER}`
+        : section.value,
       inline: false
     });
   });

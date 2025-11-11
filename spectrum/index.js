@@ -24,6 +24,9 @@ module.exports = {
   initialize,
   onReady,
   getSlashCommandDefinitions,
-  handleInteraction
+  handleInteraction,
+  postLatestThreadForGuild: watcher.postLatestThreadForGuild,
+  getLatestThreadSnapshot: watcher.getLatestThreadSnapshot,
+  checkForNewThreads: watcher.checkForNewThreads
 };
 

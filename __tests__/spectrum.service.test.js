@@ -114,6 +114,73 @@ describe('spectrum watcher service', () => {
     expect(stateStore.setLastSeenThread).toHaveBeenCalledWith('guild-2', '100');
   });
 
+  test('postLatestThreadForGuild returns failure when Spectrum response is empty', async () => {
+    spectrumConfig.fetchConfig.mockResolvedValue({
+      guildId: 'guild-empty',
+      forumId: '77',
+      announceChannelId: 'chan-empty'
+    });
+
+    apiClient.fetchThreadsWithSession.mockResolvedValue({
+      threads: [],
+      session: { token: 'session' }
+    });
+
+    const result = await service.postLatestThreadForGuild({}, 'guild-empty');
+    expect(result).toEqual({ ok: false, message: 'Unable to retrieve threads from Spectrum at the moment.' });
+  });
+
+  test('postLatestThreadForGuild returns failure when no valid thread ids exist', async () => {
+    spectrumConfig.fetchConfig.mockResolvedValue({
+      guildId: 'guild-invalid',
+      forumId: '78',
+      announceChannelId: 'chan-invalid'
+    });
+
+    apiClient.fetchThreadsWithSession.mockResolvedValue({
+      threads: [{ id: null }, { thread_id: undefined }],
+      session: { token: 'session' }
+    });
+
+    const result = await service.postLatestThreadForGuild({}, 'guild-invalid');
+    expect(result).toEqual({ ok: false, message: 'No valid threads were returned by Spectrum.' });
+  });
+
+  test('postLatestThreadForGuild returns failure when thread slug missing', async () => {
+    spectrumConfig.fetchConfig.mockResolvedValue({
+      guildId: 'guild-noslug',
+      forumId: '79',
+      announceChannelId: 'chan-noslug'
+    });
+
+    apiClient.fetchThreadsWithSession.mockResolvedValue({
+      threads: [{ id: 123 }],
+      session: { token: 'session' }
+    });
+
+    const result = await service.postLatestThreadForGuild({}, 'guild-noslug');
+    expect(result).toEqual({ ok: false, message: 'The latest thread is missing a slug, so it cannot be posted.' });
+  });
+
+  test('postLatestThreadForGuild returns failure when posting to Discord fails', async () => {
+    spectrumConfig.fetchConfig.mockResolvedValue({
+      guildId: 'guild-postfail',
+      forumId: '80',
+      announceChannelId: 'chan-postfail'
+    });
+
+    apiClient.fetchThreadsWithSession.mockResolvedValue({
+      threads: [{ id: 456, slug: 'post-failed' }],
+      session: { token: 'session' }
+    });
+    apiClient.fetchThreadDetails.mockResolvedValue({ blocks: [] });
+    poster.postToDiscord.mockResolvedValue(false);
+
+    const result = await service.postLatestThreadForGuild({}, 'guild-postfail');
+    expect(result).toEqual({ ok: false, message: 'Failed to send the latest thread to the configured channel.' });
+    expect(stateStore.setLastSeenThread).not.toHaveBeenCalled();
+  });
+
   test('postLatestThreadForGuild returns failure when details cannot be loaded', async () => {
     spectrumConfig.fetchConfig.mockResolvedValue({
       guildId: 'guild-err',
@@ -384,5 +451,56 @@ describe('spectrum watcher service', () => {
     resolveFetch({ threads: [], session: {} });
 
     await Promise.all([inFlight, skipped]);
+  });
+
+  test('onReady initializes when service was not bootstrapped', async () => {
+    const originalSetInterval = global.setInterval;
+    const originalSetTimeout = global.setTimeout;
+    global.setInterval = jest.fn(() => ({ unref: jest.fn() }));
+    global.setTimeout = jest.fn();
+
+    const client = { id: 'client-init' };
+    await service.onReady(client);
+
+    expect(spectrumConfig.initialize).toHaveBeenCalledWith(client);
+
+    global.setInterval = originalSetInterval;
+    global.setTimeout = originalSetTimeout;
+  });
+
+  test('schedulePolling clears existing intervals and unreferences timers', async () => {
+    const originalSetInterval = global.setInterval;
+    const originalClearInterval = global.clearInterval;
+    const originalSetTimeout = global.setTimeout;
+    const firstHandle = { unref: jest.fn() };
+    const secondHandle = { unref: jest.fn() };
+    const handles = [firstHandle, secondHandle];
+
+    global.setInterval = jest.fn(() => handles.shift());
+    global.clearInterval = jest.fn();
+    global.setTimeout = jest.fn();
+
+    await service.initialize({});
+
+    await service.__testables.schedulePolling();
+    await service.__testables.schedulePolling();
+
+    expect(global.setInterval).toHaveBeenCalledTimes(2);
+    expect(handles[0]?.unref).not.toBeDefined(); // first handle shifted out
+    expect(global.clearInterval).toHaveBeenCalledTimes(1);
+    expect(global.clearInterval).toHaveBeenCalledWith(firstHandle);
+    expect(firstHandle.unref).toHaveBeenCalled();
+    expect(secondHandle.unref).toHaveBeenCalled();
+
+    global.setInterval = originalSetInterval;
+    global.clearInterval = originalClearInterval;
+    global.setTimeout = originalSetTimeout;
+  });
+
+  test('getSlashCommandDefinitions proxies spectrum config definitions', () => {
+    const defs = { global: [{ name: 'foo' }], guild: [] };
+    spectrumConfig.getSlashCommandDefinitions.mockReturnValue(defs);
+    expect(service.getSlashCommandDefinitions()).toBe(defs);
+    expect(spectrumConfig.getSlashCommandDefinitions).toHaveBeenCalled();
   });
 });

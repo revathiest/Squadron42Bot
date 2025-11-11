@@ -592,10 +592,46 @@ describe('spectrum config module', () => {
 
     const resultError = await spectrumConfig.handleSpectrumCommand(interaction);
     expect(resultError.ok).toBe(false);
-    expect(interaction.editReply).toHaveBeenCalledWith('Something went wrong while trying to post the latest thread.');
+    expect(interaction.editReply).toHaveBeenCalledWith('Something went wrong while trying to post the latest thread. (boom)');
     expect(consoleSpy).toHaveBeenCalledWith('spectrumConfig: failed to post latest thread', expect.any(Error));
 
     consoleSpy.mockRestore();
+  });
+
+  test('handleSpectrumCommand post-latest reports when watcher bridge lacks export', async () => {
+    spectrumConfig.__testables.configCache.set('guild-10', {
+      guildId: 'guild-10',
+      announceChannelId: 'chan-10',
+      forumId: 'forum-10',
+      updatedBy: null,
+      updatedAt: new Date()
+    });
+
+    const interaction = {
+      guildId: 'guild-10',
+      client: {},
+      replied: false,
+      deferred: false,
+      options: {
+        getSubcommand: () => 'post-latest'
+      },
+      deferReply: jest.fn().mockImplementation(() => {
+        interaction.deferred = true;
+        return Promise.resolve();
+      }),
+      editReply: jest.fn().mockResolvedValue(undefined),
+      reply: jest.fn(),
+      followUp: jest.fn()
+    };
+
+    const originalFn = watcher.postLatestThreadForGuild;
+    delete watcher.postLatestThreadForGuild;
+
+    const result = await spectrumConfig.handleSpectrumCommand(interaction);
+    expect(result.ok).toBe(false);
+    expect(interaction.editReply).toHaveBeenCalledWith('Something went wrong while trying to post the latest thread. (Spectrum watcher is not ready to post threads yet.)');
+
+    watcher.postLatestThreadForGuild = originalFn;
   });
 
   test('initialize only performs schema work once', async () => {
