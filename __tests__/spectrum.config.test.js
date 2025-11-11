@@ -627,9 +627,12 @@ describe('spectrum config module', () => {
     const originalFn = watcher.postLatestThreadForGuild;
     delete watcher.postLatestThreadForGuild;
 
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const result = await spectrumConfig.handleSpectrumCommand(interaction);
     expect(result.ok).toBe(false);
     expect(interaction.editReply).toHaveBeenCalledWith('Something went wrong while trying to post the latest thread. (Spectrum watcher is not ready to post threads yet.)');
+    expect(consoleSpy).toHaveBeenCalledWith('spectrumConfig: failed to post latest thread', expect.any(Error));
+    consoleSpy.mockRestore();
 
     watcher.postLatestThreadForGuild = originalFn;
   });
