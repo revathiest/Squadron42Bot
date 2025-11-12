@@ -1,7 +1,7 @@
 // spectrum/watcher/descriptionBuilder.js
 // Builds human readable descriptions for Spectrum embeds.
 
-const DEFAULT_SOFT_LIMIT = 1600;
+const DEFAULT_SOFT_LIMIT = 3600;
 const HARD_CHAR_LIMIT = 3900;
 const TRUNCATION_NOTICE = '\n\n... View the full post on Spectrum for more details.';
 
@@ -89,6 +89,34 @@ function summarizeLines(lines, options = {}) {
   return summary;
 }
 
+function collectDraftNodes(contentBlocks) {
+  if (!Array.isArray(contentBlocks)) {
+    return [];
+  }
+
+  const nodes = [];
+  contentBlocks.forEach(block => {
+    if (!block) {
+      return;
+    }
+    const isTextBlock = !block.type || block.type === 'text';
+    if (!isTextBlock) {
+      return;
+    }
+    const draftBlocks = block.data?.blocks;
+    if (!Array.isArray(draftBlocks) || !draftBlocks.length) {
+      return;
+    }
+    draftBlocks.forEach(node => {
+      if (node && typeof node.text === 'string') {
+        nodes.push(node);
+      }
+    });
+  });
+
+  return nodes;
+}
+
 function buildDescriptionFromBlocks(contentBlocks) {
   if (!Array.isArray(contentBlocks)) return '';
 
@@ -130,8 +158,8 @@ function buildDescriptionFromBlocks(contentBlocks) {
 }
 
 function buildDescriptionFromThread(threadDetails) {
-  const blocks = threadDetails?.content_blocks?.[0]?.data?.blocks || [];
-  if (!Array.isArray(blocks) || blocks.length === 0) return null;
+  const blocks = collectDraftNodes(threadDetails?.content_blocks);
+  if (!blocks.length) return null;
 
   const lines = [];
   const orderedCounters = new Map();
@@ -172,6 +200,7 @@ function buildDescriptionFromThread(threadDetails) {
       }
       if (isTechnicalSection(currentSection)) {
         technicalHeaderLabel = currentSection;
+        technicalHeaderIndex = lines.length;
       }
       if (shouldSummarize(currentSection)) {
         continue;
@@ -196,7 +225,11 @@ function buildDescriptionFromThread(threadDetails) {
     const inBugSection = currentSection && isBugFixSection(currentSection);
 
     if (shouldSummarize(currentSection)) {
-      if (['unordered-list-item', 'ordered-list-item'].includes(node.type)) {
+      const isListItem = ['unordered-list-item', 'ordered-list-item'].includes(node.type);
+      const trimmed = text.trim();
+      const looksLikeBullet = !isListItem && /^[•*\-]/.test(trimmed);
+
+      if (isListItem || looksLikeBullet) {
         if (inKnownSection) {
           knownIssuesCount += 1;
         } else if (inBugSection) {
@@ -205,8 +238,8 @@ function buildDescriptionFromThread(threadDetails) {
         continue;
       }
 
-      if (inKnownSection) {
-        knownIssuesFreeform.push(text);
+      if (inKnownSection && trimmed) {
+        knownIssuesFreeform.push(trimmed);
       }
       continue;
     }
@@ -241,9 +274,6 @@ function buildDescriptionFromThread(threadDetails) {
       summaryLines.push(...knownIssuesFreeform);
     }
     if (bugFixesCount > 0 || knownIssuesCount > 0) {
-      if (summaryLines.length) {
-        summaryLines.push('');
-      }
       if (bugFixesCount > 0) {
         const label = bugFixesHeader || 'Bug Fixes';
         summaryLines.push(`* ${label}: ${bugFixesCount}`);

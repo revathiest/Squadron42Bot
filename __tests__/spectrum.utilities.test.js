@@ -182,6 +182,42 @@ describe('descriptionBuilder', () => {
     expect(description).toContain('* Bug Fixes: 1');
     expect(description).not.toContain('Issue 1');
     expect(description).not.toContain('Fix 1');
+    expect(description).not.toContain('\n\n* Known Issues');
+  });
+
+  test('buildDescriptionFromThread merges multiple content blocks so later sections remain', () => {
+    const threadDetails = {
+      content_blocks: [
+        {
+          data: {
+            blocks: [
+              { type: 'header-one', text: 'Features & Gameplay' },
+              { type: 'unordered-list-item', text: 'Gameplay updates' }
+            ]
+          }
+        },
+        {
+          data: {
+            blocks: [
+              { type: 'header-one', text: 'Known Issues' },
+              { type: 'unordered-list-item', text: 'Issue 1' },
+              { type: 'unordered-list-item', text: 'Issue 2' },
+              { type: 'header-one', text: 'Bug Fixes' },
+              { type: 'unordered-list-item', text: 'Fix 1' }
+            ]
+          }
+        }
+      ]
+    };
+
+    const description = descriptionBuilder.buildDescriptionFromThread(threadDetails);
+    expect(description).toContain('**Features & Gameplay**');
+    expect(description).toContain('- Gameplay updates');
+    expect(description).toContain('**Technical**');
+    expect(description).toContain('* Known Issues: 2');
+    expect(description).toContain('* Bug Fixes: 1');
+    expect(description).not.toContain('Issue 1');
+    expect(description).not.toContain('Fix 1');
   });
 
   test('buildDescriptionFromThread places known-issue notes at top of technical summary', () => {
@@ -211,6 +247,7 @@ describe('descriptionBuilder', () => {
     expect(description).toContain('* Bug Fixes: 1');
     expect(description).not.toContain('Issue bullet');
     expect(description).not.toContain('Fix bullet');
+    expect(description).not.toContain('* Known Issues: 1\n\n-');
   });
 
   test('extractImageUrl prefers large then direct URL', () => {
