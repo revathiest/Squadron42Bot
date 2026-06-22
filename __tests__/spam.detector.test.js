@@ -365,6 +365,70 @@ describe('checkNewAccount', () => {
 });
 
 // ---------------------------------------------------------------------------
+// getTrustTier / getRequiredSignals
+// ---------------------------------------------------------------------------
+
+describe('getTrustTier', () => {
+  const config = { new_account_days: 3, established_member_days: 30 };
+
+  function member({ accountDaysAgo, joinedDaysAgo }) {
+    return {
+      user: { createdTimestamp: Date.now() - accountDaysAgo * 86_400_000 },
+      joinedTimestamp: joinedDaysAgo != null ? Date.now() - joinedDaysAgo * 86_400_000 : null,
+    };
+  }
+
+  test('suspicious when account is newer than threshold', () => {
+    expect(detector.getTrustTier(member({ accountDaysAgo: 1, joinedDaysAgo: 5 }), config)).toBe('suspicious');
+  });
+
+  test('suspicious when joined server less than 1 day ago', () => {
+    expect(detector.getTrustTier(member({ accountDaysAgo: 365, joinedDaysAgo: 0.5 }), config)).toBe('suspicious');
+  });
+
+  test('suspicious when both account and server join are new', () => {
+    expect(detector.getTrustTier(member({ accountDaysAgo: 1, joinedDaysAgo: 0.5 }), config)).toBe('suspicious');
+  });
+
+  test('established when server tenure meets the threshold', () => {
+    expect(detector.getTrustTier(member({ accountDaysAgo: 365, joinedDaysAgo: 30 }), config)).toBe('established');
+  });
+
+  test('established when server tenure exceeds the threshold', () => {
+    expect(detector.getTrustTier(member({ accountDaysAgo: 365, joinedDaysAgo: 90 }), config)).toBe('established');
+  });
+
+  test('standard for a member with old account and moderate server tenure', () => {
+    expect(detector.getTrustTier(member({ accountDaysAgo: 30, joinedDaysAgo: 10 }), config)).toBe('standard');
+  });
+
+  test('suspicious takes priority even with long server tenure when account is new', () => {
+    expect(detector.getTrustTier(member({ accountDaysAgo: 1, joinedDaysAgo: 60 }), config)).toBe('suspicious');
+  });
+
+  test('suspicious when joinedTimestamp is null (unknown join date)', () => {
+    expect(detector.getTrustTier(member({ accountDaysAgo: 365, joinedDaysAgo: null }), config)).toBe('suspicious');
+  });
+});
+
+describe('getRequiredSignals', () => {
+  test('suspicious tier always requires 1 signal regardless of threshold', () => {
+    expect(detector.getRequiredSignals('suspicious', 1)).toBe(1);
+    expect(detector.getRequiredSignals('suspicious', 5)).toBe(1);
+  });
+
+  test('standard tier uses the configured threshold', () => {
+    expect(detector.getRequiredSignals('standard', 2)).toBe(2);
+    expect(detector.getRequiredSignals('standard', 4)).toBe(4);
+  });
+
+  test('established tier requires one more than the threshold', () => {
+    expect(detector.getRequiredSignals('established', 2)).toBe(3);
+    expect(detector.getRequiredSignals('established', 4)).toBe(5);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // clearUserState
 // ---------------------------------------------------------------------------
 

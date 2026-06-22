@@ -123,6 +123,36 @@ function checkNewAccount(member, thresholdDays) {
   return ageDays < thresholdDays;
 }
 
+const TRUST = {
+  SUSPICIOUS: 'suspicious',
+  STANDARD: 'standard',
+  ESTABLISHED: 'established',
+};
+
+function getTrustTier(member, config) {
+  const now = Date.now();
+  const accountAgeDays = (now - member.user.createdTimestamp) / 86_400_000;
+  const serverTenureDays = member.joinedTimestamp
+    ? (now - member.joinedTimestamp) / 86_400_000
+    : 0;
+
+  if (accountAgeDays < config.new_account_days || serverTenureDays < 1) {
+    return TRUST.SUSPICIOUS;
+  }
+
+  if (serverTenureDays >= config.established_member_days) {
+    return TRUST.ESTABLISHED;
+  }
+
+  return TRUST.STANDARD;
+}
+
+function getRequiredSignals(tier, threshold) {
+  if (tier === TRUST.SUSPICIOUS) return 1;
+  if (tier === TRUST.ESTABLISHED) return threshold + 1;
+  return threshold;
+}
+
 function clearUserState(guildId, userId) {
   const key = windowKey(guildId, userId);
   messageWindows.delete(key);
@@ -138,6 +168,9 @@ module.exports = {
   checkMentionSpam,
   checkInviteLink,
   checkNewAccount,
+  getTrustTier,
+  getRequiredSignals,
   clearUserState,
   SPAM_PATTERNS,
+  TRUST,
 };

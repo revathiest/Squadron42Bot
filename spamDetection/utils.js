@@ -15,6 +15,8 @@ function getDefaultConfig(guildId) {
     whitelistRoleIds: [],
     whitelistChannelIds: [],
     new_account_days: 3,
+    signal_threshold: 2,
+    established_member_days: 30,
   };
 }
 
@@ -61,7 +63,7 @@ async function upsertConfig(guildId, updates) {
   invalidateCache(guildId);
 }
 
-async function sendAlert(client, guildId, alertChannelId, { member, reason, action, messageContent, channelId }) {
+async function sendAlert(client, guildId, alertChannelId, { member, reason, action, messageContent, channelId, tier }) {
   if (!alertChannelId) return;
 
   try {
@@ -78,6 +80,7 @@ async function sendAlert(client, guildId, alertChannelId, { member, reason, acti
         { name: 'Action', value: action === 'ban' ? '🔨 Banned' : '⏱️ Timed out (1h)', inline: true },
         { name: 'Channel', value: `<#${channelId}>`, inline: true },
         { name: 'Account Age', value: `${accountAgeDays} day${accountAgeDays !== 1 ? 's' : ''}`, inline: true },
+        { name: 'Trust Tier', value: tier ?? 'unknown', inline: true },
         { name: 'Reason', value: reason },
       )
       .setTimestamp();

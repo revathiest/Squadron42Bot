@@ -48,15 +48,23 @@ async function handleStatus(interaction) {
     ? config.whitelistChannelIds.map(id => `<#${id}>`).join(', ')
     : 'None';
 
+  const threshold = config.signal_threshold ?? 2;
+  const established = config.established_member_days ?? 30;
+
   const lines = [
     `**Spam Detection**`,
     `Enabled: **${config.enabled ? 'Yes' : 'No'}**`,
     `Alert Channel: ${config.alert_channel_id ? `<#${config.alert_channel_id}>` : 'Not set'}`,
-    `Rate Limit: **${config.rate_limit_count}** messages per **${config.rate_limit_window_ms / 1000}s**`,
     `Action: **${config.auto_action}**`,
-    `New Account Threshold: **${config.new_account_days} days**`,
-    `Whitelisted Roles: ${roleList}`,
-    `Whitelisted Channels: ${channelList}`,
+    ``,
+    `**Trust Model**`,
+    `Suspicious tier  — account < **${config.new_account_days}d** old OR joined server < 1d ago → requires **1** signal`,
+    `Standard tier    — everyone else → requires **${threshold}** signal${threshold !== 1 ? 's' : ''}`,
+    `Established tier — in server ≥ **${established}d** → requires **${threshold + 1}** signal${threshold + 1 !== 1 ? 's' : ''}`,
+    ``,
+    `**Rate Limit:** ${config.rate_limit_count} messages per ${config.rate_limit_window_ms / 1000}s`,
+    `**Whitelisted Roles:** ${roleList}`,
+    `**Whitelisted Channels:** ${channelList}`,
   ];
 
   await interaction.reply({ content: lines.join('\n'), flags: MessageFlags.Ephemeral });
@@ -105,6 +113,26 @@ async function handleConfigure(interaction, subcommand) {
     const type = interaction.options.getString('type');
     await upsertConfig(guildId, { auto_action: type });
     await interaction.reply({ content: `Detection action set to **${type}**.`, flags: MessageFlags.Ephemeral });
+    return true;
+  }
+
+  if (subcommand === 'signal-threshold') {
+    const count = interaction.options.getInteger('count');
+    await upsertConfig(guildId, { signal_threshold: count });
+    await interaction.reply({
+      content: `Signal threshold set to **${count}**. Suspicious members still trigger at 1; established members require **${count + 1}**.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return true;
+  }
+
+  if (subcommand === 'established-days') {
+    const days = interaction.options.getInteger('days');
+    await upsertConfig(guildId, { established_member_days: days });
+    await interaction.reply({
+      content: `Members who have been in the server for **${days} days** or more are now considered established.`,
+      flags: MessageFlags.Ephemeral,
+    });
     return true;
   }
 

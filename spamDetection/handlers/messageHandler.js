@@ -1,5 +1,14 @@
 const { loadConfig, sendAlert } = require('../utils');
-const { checkRateLimit, checkDuplicates, checkCrossChannelDuplicate, checkSpamPatterns, checkMentionSpam, checkInviteLink, checkNewAccount } = require('../detector');
+const {
+  checkRateLimit,
+  checkDuplicates,
+  checkCrossChannelDuplicate,
+  checkSpamPatterns,
+  checkMentionSpam,
+  checkInviteLink,
+  getTrustTier,
+  getRequiredSignals,
+} = require('../detector');
 const { logAction } = require('../../moderation/handlers/actions');
 
 let clientRef = null;
@@ -19,6 +28,9 @@ async function handleMessageCreate(message) {
 
   if (config.whitelistChannelIds.includes(channel.id)) return;
   if (config.whitelistRoleIds.some(id => member.roles.cache.has(id))) return;
+
+  const tier = getTrustTier(member, config);
+  const required = getRequiredSignals(tier, config.signal_threshold ?? 2);
 
   const detections = [];
 
@@ -42,13 +54,13 @@ async function handleMessageCreate(message) {
     detections.push(`mass mentions (${message.mentions.users.size + message.mentions.roles.size})`);
   }
 
-  if (checkInviteLink(message.content) && checkNewAccount(member, config.new_account_days)) {
-    detections.push('invite link from new account');
+  if (checkInviteLink(message.content)) {
+    detections.push('Discord invite link');
   }
 
-  if (detections.length === 0) return;
+  if (detections.length < required) return;
 
-  const reason = `Spam detection: ${detections.join('; ')}`;
+  const reason = `Spam detection [${tier}]: ${detections.join('; ')}`;
   const savedContent = message.content;
   const channelId = channel.id;
   const botUser = guild.members.me?.user;
@@ -86,6 +98,7 @@ async function handleMessageCreate(message) {
       action: config.auto_action,
       messageContent: savedContent,
       channelId,
+      tier,
     });
   }
 }
