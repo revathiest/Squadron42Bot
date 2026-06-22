@@ -16,7 +16,8 @@ async function ensureSchema() {
       new_account_days        INT                   NOT NULL DEFAULT 3,
       signal_threshold        INT                   NOT NULL DEFAULT 2,
       established_member_days INT                   NOT NULL DEFAULT 30,
-      secondary_action        ENUM('timeout','ban') NOT NULL DEFAULT 'timeout',
+      secondary_action              ENUM('timeout','ban') NOT NULL DEFAULT 'timeout',
+      secondary_timeout_duration_ms BIGINT                NOT NULL DEFAULT 3600000,
       PRIMARY KEY (guild_id)
     )
   `);
@@ -26,6 +27,7 @@ async function ensureSchema() {
     `ALTER TABLE spam_config ADD COLUMN signal_threshold INT NOT NULL DEFAULT 2`,
     `ALTER TABLE spam_config ADD COLUMN established_member_days INT NOT NULL DEFAULT 30`,
     `ALTER TABLE spam_config ADD COLUMN secondary_action ENUM('timeout','ban') NOT NULL DEFAULT 'timeout'`,
+    `ALTER TABLE spam_config ADD COLUMN secondary_timeout_duration_ms BIGINT NOT NULL DEFAULT 3600000`,
   ]) {
     try {
       await pool.query(alter);
