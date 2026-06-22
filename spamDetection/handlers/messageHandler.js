@@ -1,5 +1,5 @@
 const { loadConfig, sendAlert } = require('../utils');
-const { checkRateLimit, checkDuplicates, checkMentionSpam, checkInviteLink, checkNewAccount } = require('../detector');
+const { checkRateLimit, checkDuplicates, checkCrossChannelDuplicate, checkSpamPatterns, checkMentionSpam, checkInviteLink, checkNewAccount } = require('../detector');
 const { logAction } = require('../../moderation/handlers/actions');
 
 let clientRef = null;
@@ -28,6 +28,14 @@ async function handleMessageCreate(message) {
 
   if (checkDuplicates(guild.id, message.author.id, message.content)) {
     detections.push('repeated identical messages');
+  }
+
+  if (checkCrossChannelDuplicate(guild.id, message.author.id, channel.id, message.content)) {
+    detections.push('same message sent to multiple channels');
+  }
+
+  for (const match of checkSpamPatterns(message.content)) {
+    detections.push(`spam pattern: ${match}`);
   }
 
   if (checkMentionSpam(message)) {
