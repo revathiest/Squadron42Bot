@@ -79,11 +79,15 @@ async function handleMessageCreate(message) {
     // Message may already be deleted
   }
 
+  const timeoutDurationMs = hitsSecondary
+    ? (config.secondary_timeout_duration_ms ?? 3600000)
+    : (config.timeout_duration_ms ?? 3600000);
+
   try {
     if (actionToTake === 'ban') {
       await member.ban({ reason });
     } else {
-      await member.timeout(config.timeout_duration_ms, reason);
+      await member.timeout(timeoutDurationMs, reason);
     }
 
     if (botUser) {
@@ -104,6 +108,7 @@ async function handleMessageCreate(message) {
       member,
       reason,
       action: actionToTake,
+      durationMs: timeoutDurationMs,
       messageContent: savedContent,
       channelId,
       tier,

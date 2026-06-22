@@ -18,6 +18,7 @@ function getDefaultConfig(guildId) {
     signal_threshold: 2,
     established_member_days: 30,
     secondary_action: 'timeout',
+    secondary_timeout_duration_ms: 3600000,
   };
 }
 
@@ -64,7 +65,15 @@ async function upsertConfig(guildId, updates) {
   invalidateCache(guildId);
 }
 
-async function sendAlert(client, guildId, alertChannelId, { member, reason, action, messageContent, channelId, tier }) {
+function formatDuration(ms) {
+  const totalMinutes = Math.round(ms / 60000);
+  if (totalMinutes < 60) return `${totalMinutes}m`;
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
+
+async function sendAlert(client, guildId, alertChannelId, { member, reason, action, durationMs, messageContent, channelId, tier }) {
   if (!alertChannelId) return;
 
   try {
@@ -78,7 +87,7 @@ async function sendAlert(client, guildId, alertChannelId, { member, reason, acti
       .setColor(action === 'ban' ? 0xff2222 : 0xff8c00)
       .addFields(
         { name: 'User', value: `<@${member.id}> (${member.user.tag})`, inline: true },
-        { name: 'Action', value: action === 'ban' ? '🔨 Banned' : '⏱️ Timed out (1h)', inline: true },
+        { name: 'Action', value: action === 'ban' ? '🔨 Banned' : `⏱️ Timed out (${formatDuration(durationMs ?? 3600000)})`, inline: true },
         { name: 'Channel', value: `<#${channelId}>`, inline: true },
         { name: 'Account Age', value: `${accountAgeDays} day${accountAgeDays !== 1 ? 's' : ''}`, inline: true },
         { name: 'Trust Tier', value: tier ?? 'unknown', inline: true },
@@ -96,4 +105,4 @@ async function sendAlert(client, guildId, alertChannelId, { member, reason, acti
   }
 }
 
-module.exports = { loadConfig, invalidateCache, upsertConfig, sendAlert, getDefaultConfig };
+module.exports = { loadConfig, invalidateCache, upsertConfig, sendAlert, getDefaultConfig, formatDuration };

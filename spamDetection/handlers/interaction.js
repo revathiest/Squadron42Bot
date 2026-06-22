@@ -1,5 +1,5 @@
 const { MessageFlags } = require('discord.js');
-const { loadConfig, upsertConfig } = require('../utils');
+const { loadConfig, upsertConfig, formatDuration } = require('../utils');
 const { roleCache } = require('../../moderation/handlers/roles');
 
 function hasAnyModRole(guildId, member) {
@@ -52,19 +52,29 @@ async function handleStatus(interaction) {
   const established = config.established_member_days ?? 30;
 
   const secondary = config.secondary_action ?? 'timeout';
+  const primaryDuration = config.timeout_duration_ms ?? 3600000;
+  const secondaryDuration = config.secondary_timeout_duration_ms ?? 3600000;
+
+  const primaryLabel = config.auto_action === 'timeout'
+    ? `timeout (${formatDuration(primaryDuration)})`
+    : config.auto_action;
+  const secondaryLabel = secondary === 'timeout'
+    ? `timeout (${formatDuration(secondaryDuration)})`
+    : secondary;
 
   const lines = [
     `**Spam Detection**`,
     `Enabled: **${config.enabled ? 'Yes' : 'No'}**`,
     `Alert Channel: ${config.alert_channel_id ? `<#${config.alert_channel_id}>` : 'Not set'}`,
-    `Primary Action: **${config.auto_action}**`,
-    `Secondary Action (established compromise): **${secondary}**`,
+    `Primary Action: **${primaryLabel}**`,
+    `Secondary Action (established compromise): **${secondaryLabel}**`,
     ``,
     `**Trust Model**`,
-    `Suspicious tier  — account < **${config.new_account_days}d** old OR joined server < 1d ago → requires **1** signal → ${config.auto_action}`,
-    `Standard tier    — everyone else → requires **${threshold}** signal${threshold !== 1 ? 's' : ''} → ${config.auto_action}`,
-    `Established tier — in server ≥ **${established}d** → **${threshold}** signal${threshold !== 1 ? 's' : ''} → ${secondary} (compromise); **${threshold + 1}** → ${config.auto_action}`,
+    `Suspicious tier  — account < **${config.new_account_days}d** old OR joined server < 1d ago → requires **1** signal → ${primaryLabel}`,
+    `Standard tier    — everyone else → requires **${threshold}** signal${threshold !== 1 ? 's' : ''} → ${primaryLabel}`,
+    `Established tier — in server ≥ **${established}d** → **${threshold}** signal${threshold !== 1 ? 's' : ''} → ${secondaryLabel} (compromise); **${threshold + 1}** → ${primaryLabel}`,
     ``,
+    `**Signals:** rate limit, duplicate messages, cross-channel duplicate, spam patterns, mention spam, invite links`,
     `**Rate Limit:** ${config.rate_limit_count} messages per ${config.rate_limit_window_ms / 1000}s`,
     `**Whitelisted Roles:** ${roleList}`,
     `**Whitelisted Channels:** ${channelList}`,
@@ -114,8 +124,14 @@ async function handleConfigure(interaction, subcommand) {
 
   if (subcommand === 'action') {
     const type = interaction.options.getString('type');
-    await upsertConfig(guildId, { auto_action: type });
-    await interaction.reply({ content: `Detection action set to **${type}**.`, flags: MessageFlags.Ephemeral });
+    const durationMinutes = interaction.options.getInteger('duration');
+    const updates = { auto_action: type };
+    if (type === 'timeout' && durationMinutes !== null) {
+      updates.timeout_duration_ms = durationMinutes * 60000;
+    }
+    await upsertConfig(guildId, updates);
+    const durationNote = type === 'timeout' && durationMinutes !== null ? ` (${formatDuration(durationMinutes * 60000)})` : '';
+    await interaction.reply({ content: `Detection action set to **${type}${durationNote}**.`, flags: MessageFlags.Ephemeral });
     return true;
   }
 
@@ -161,9 +177,15 @@ async function handleConfigure(interaction, subcommand) {
 
   if (subcommand === 'secondary-action') {
     const type = interaction.options.getString('type');
-    await upsertConfig(guildId, { secondary_action: type });
+    const durationMinutes = interaction.options.getInteger('duration');
+    const updates = { secondary_action: type };
+    if (type === 'timeout' && durationMinutes !== null) {
+      updates.secondary_timeout_duration_ms = durationMinutes * 60000;
+    }
+    await upsertConfig(guildId, updates);
+    const durationNote = type === 'timeout' && durationMinutes !== null ? ` (${formatDuration(durationMinutes * 60000)})` : '';
     await interaction.reply({
-      content: `Secondary action (established member compromise) set to **${type}**.`,
+      content: `Secondary action (established member compromise) set to **${type}${durationNote}**.`,
       flags: MessageFlags.Ephemeral,
     });
     return true;

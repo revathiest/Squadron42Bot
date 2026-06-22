@@ -56,9 +56,15 @@ function getSlashCommandDefinitions() {
           .setDescription('Action to take')
           .setRequired(true)
           .addChoices(
-            { name: 'Timeout (1 hour)', value: 'timeout' },
+            { name: 'Timeout', value: 'timeout' },
             { name: 'Ban', value: 'ban' }
           )
+        )
+        .addIntegerOption(opt => opt
+          .setName('duration')
+          .setDescription('Timeout duration in minutes (only used when action is timeout)')
+          .setMinValue(1)
+          .setMaxValue(40320)
         )
       )
       .addSubcommand(sub => sub
@@ -91,9 +97,15 @@ function getSlashCommandDefinitions() {
           .setDescription('Action to take for possible account compromise')
           .setRequired(true)
           .addChoices(
-            { name: 'Timeout (1 hour)', value: 'timeout' },
+            { name: 'Timeout', value: 'timeout' },
             { name: 'Ban', value: 'ban' }
           )
+        )
+        .addIntegerOption(opt => opt
+          .setName('duration')
+          .setDescription('Timeout duration in minutes (only used when action is timeout)')
+          .setMinValue(1)
+          .setMaxValue(40320)
         )
       )
       .addSubcommand(sub => sub
