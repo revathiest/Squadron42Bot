@@ -4,7 +4,7 @@ function getSlashCommandDefinitions() {
   const spam = new SlashCommandBuilder()
     .setName('spam')
     .setDescription('Spam bot detection settings')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+    .setDefaultMemberPermissions(null)
     .addSubcommand(sub => sub
       .setName('status')
       .setDescription('Show current spam detection configuration')
