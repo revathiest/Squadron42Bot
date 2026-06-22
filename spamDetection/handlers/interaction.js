@@ -1,5 +1,17 @@
 const { MessageFlags } = require('discord.js');
 const { loadConfig, upsertConfig } = require('../utils');
+const { roleCache } = require('../../moderation/handlers/roles');
+
+function hasAnyModRole(guildId, member) {
+  const actionMap = roleCache.get(guildId);
+  if (!actionMap) return false;
+  for (const roleSet of actionMap.values()) {
+    for (const roleId of roleSet) {
+      if (member.roles.cache.has(roleId)) return true;
+    }
+  }
+  return false;
+}
 
 async function handleInteraction(interaction) {
   if (!interaction.isChatInputCommand() || interaction.commandName !== 'spam') return false;
@@ -19,6 +31,14 @@ async function handleInteraction(interaction) {
 }
 
 async function handleStatus(interaction) {
+  const isAdmin = interaction.memberPermissions?.has('ManageGuild');
+  const isMod = hasAnyModRole(interaction.guildId, interaction.member);
+
+  if (!isAdmin && !isMod) {
+    await interaction.reply({ content: 'You need a moderation role to view spam detection status.', flags: MessageFlags.Ephemeral });
+    return true;
+  }
+
   const config = await loadConfig(interaction.guildId);
 
   const roleList = config.whitelistRoleIds.length
