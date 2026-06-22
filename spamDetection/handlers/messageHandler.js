@@ -8,6 +8,7 @@ const {
   checkInviteLink,
   getTrustTier,
   getRequiredSignals,
+  TRUST,
 } = require('../detector');
 const { logAction } = require('../../moderation/handlers/actions');
 
@@ -30,7 +31,8 @@ async function handleMessageCreate(message) {
   if (config.whitelistRoleIds.some(id => member.roles.cache.has(id))) return;
 
   const tier = getTrustTier(member, config);
-  const required = getRequiredSignals(tier, config.signal_threshold ?? 2);
+  const threshold = config.signal_threshold ?? 2;
+  const required = getRequiredSignals(tier, threshold);
 
   const detections = [];
 
@@ -58,9 +60,15 @@ async function handleMessageCreate(message) {
     detections.push('Discord invite link');
   }
 
-  if (detections.length < required) return;
+  const isEstablished = tier === TRUST.ESTABLISHED;
+  const hitsSecondary = isEstablished && detections.length >= threshold && detections.length < required;
+  const hitsPrimary = detections.length >= required;
 
-  const reason = `Spam detection [${tier}]: ${detections.join('; ')}`;
+  if (!hitsSecondary && !hitsPrimary) return;
+
+  const actionToTake = hitsSecondary ? (config.secondary_action ?? 'timeout') : config.auto_action;
+  const reasonPrefix = hitsSecondary ? 'Possible account compromise' : 'Spam detection';
+  const reason = `${reasonPrefix} [${tier}]: ${detections.join('; ')}`;
   const savedContent = message.content;
   const channelId = channel.id;
   const botUser = guild.members.me?.user;
@@ -72,7 +80,7 @@ async function handleMessageCreate(message) {
   }
 
   try {
-    if (config.auto_action === 'ban') {
+    if (actionToTake === 'ban') {
       await member.ban({ reason });
     } else {
       await member.timeout(config.timeout_duration_ms, reason);
@@ -81,7 +89,7 @@ async function handleMessageCreate(message) {
     if (botUser) {
       await logAction({
         guildId: guild.id,
-        action: config.auto_action,
+        action: actionToTake,
         targetUser: message.author,
         moderator: botUser,
         reason,
@@ -95,7 +103,7 @@ async function handleMessageCreate(message) {
     await sendAlert(clientRef, guild.id, config.alert_channel_id, {
       member,
       reason,
-      action: config.auto_action,
+      action: actionToTake,
       messageContent: savedContent,
       channelId,
       tier,
