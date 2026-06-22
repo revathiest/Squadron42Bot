@@ -1,0 +1,66 @@
+// In-memory per-user state — single-instance bot, no cross-restart persistence needed.
+const messageWindows = new Map(); // key -> timestamp[]
+const recentMessages = new Map(); // key -> { content, timestamp }[]
+
+const INVITE_RE = /discord(?:\.gg|app\.com\/invite|\.com\/invite)\/[a-zA-Z0-9-]+/i;
+const DUPLICATE_WINDOW_MS = 60_000;
+
+function windowKey(guildId, userId) {
+  return `${guildId}_${userId}`;
+}
+
+function checkRateLimit(guildId, userId, limitCount, windowMs) {
+  const key = windowKey(guildId, userId);
+  const now = Date.now();
+
+  let timestamps = messageWindows.get(key) ?? [];
+  timestamps = timestamps.filter(t => now - t < windowMs);
+  timestamps.push(now);
+  messageWindows.set(key, timestamps);
+
+  return timestamps.length >= limitCount;
+}
+
+function checkDuplicates(guildId, userId, content, threshold = 3) {
+  if (!content || content.length < 10) return false;
+
+  const key = windowKey(guildId, userId);
+  const now = Date.now();
+
+  let msgs = recentMessages.get(key) ?? [];
+  msgs = msgs.filter(m => now - m.timestamp < DUPLICATE_WINDOW_MS);
+
+  const normalized = content.toLowerCase().replace(/\s+/g, ' ').trim();
+  msgs.push({ content: normalized, timestamp: now });
+  recentMessages.set(key, msgs);
+
+  return msgs.filter(m => m.content === normalized).length >= threshold;
+}
+
+function checkMentionSpam(message, threshold = 5) {
+  return (message.mentions.users.size + message.mentions.roles.size) >= threshold;
+}
+
+function checkInviteLink(content) {
+  return INVITE_RE.test(content);
+}
+
+function checkNewAccount(member, thresholdDays) {
+  const ageDays = (Date.now() - member.user.createdTimestamp) / 86_400_000;
+  return ageDays < thresholdDays;
+}
+
+function clearUserState(guildId, userId) {
+  const key = windowKey(guildId, userId);
+  messageWindows.delete(key);
+  recentMessages.delete(key);
+}
+
+module.exports = {
+  checkRateLimit,
+  checkDuplicates,
+  checkMentionSpam,
+  checkInviteLink,
+  checkNewAccount,
+  clearUserState,
+};
