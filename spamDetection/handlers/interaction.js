@@ -44,6 +44,11 @@ async function handleStatus(interaction) {
 }
 
 async function handleConfigure(interaction, subcommand) {
+  if (!interaction.memberPermissions?.has('ManageGuild')) {
+    await interaction.reply({ content: 'Configuring spam detection requires the **Manage Server** permission.', flags: MessageFlags.Ephemeral });
+    return true;
+  }
+
   const guildId = interaction.guildId;
 
   if (subcommand === 'enable') {
