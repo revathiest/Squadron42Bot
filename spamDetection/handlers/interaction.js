@@ -51,16 +51,19 @@ async function handleStatus(interaction) {
   const threshold = config.signal_threshold ?? 2;
   const established = config.established_member_days ?? 30;
 
+  const secondary = config.secondary_action ?? 'timeout';
+
   const lines = [
     `**Spam Detection**`,
     `Enabled: **${config.enabled ? 'Yes' : 'No'}**`,
     `Alert Channel: ${config.alert_channel_id ? `<#${config.alert_channel_id}>` : 'Not set'}`,
-    `Action: **${config.auto_action}**`,
+    `Primary Action: **${config.auto_action}**`,
+    `Secondary Action (established compromise): **${secondary}**`,
     ``,
     `**Trust Model**`,
-    `Suspicious tier  — account < **${config.new_account_days}d** old OR joined server < 1d ago → requires **1** signal`,
-    `Standard tier    — everyone else → requires **${threshold}** signal${threshold !== 1 ? 's' : ''}`,
-    `Established tier — in server ≥ **${established}d** → requires **${threshold + 1}** signal${threshold + 1 !== 1 ? 's' : ''}`,
+    `Suspicious tier  — account < **${config.new_account_days}d** old OR joined server < 1d ago → requires **1** signal → ${config.auto_action}`,
+    `Standard tier    — everyone else → requires **${threshold}** signal${threshold !== 1 ? 's' : ''} → ${config.auto_action}`,
+    `Established tier — in server ≥ **${established}d** → **${threshold}** signal${threshold !== 1 ? 's' : ''} → ${secondary} (compromise); **${threshold + 1}** → ${config.auto_action}`,
     ``,
     `**Rate Limit:** ${config.rate_limit_count} messages per ${config.rate_limit_window_ms / 1000}s`,
     `**Whitelisted Roles:** ${roleList}`,
@@ -151,6 +154,16 @@ async function handleConfigure(interaction, subcommand) {
     await upsertConfig(guildId, { whitelist_role_ids: JSON.stringify(ids) });
     await interaction.reply({
       content: `Role ${role} ${op === 'add' ? 'added to' : 'removed from'} spam bypass list.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return true;
+  }
+
+  if (subcommand === 'secondary-action') {
+    const type = interaction.options.getString('type');
+    await upsertConfig(guildId, { secondary_action: type });
+    await interaction.reply({
+      content: `Secondary action (established member compromise) set to **${type}**.`,
       flags: MessageFlags.Ephemeral,
     });
     return true;

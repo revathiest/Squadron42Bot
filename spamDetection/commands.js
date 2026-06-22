@@ -84,6 +84,19 @@ function getSlashCommandDefinitions() {
         )
       )
       .addSubcommand(sub => sub
+        .setName('secondary-action')
+        .setDescription('Action taken when an established member hits the signal threshold (possible compromise)')
+        .addStringOption(opt => opt
+          .setName('type')
+          .setDescription('Action to take for possible account compromise')
+          .setRequired(true)
+          .addChoices(
+            { name: 'Timeout (1 hour)', value: 'timeout' },
+            { name: 'Ban', value: 'ban' }
+          )
+        )
+      )
+      .addSubcommand(sub => sub
         .setName('whitelist-role')
         .setDescription('Add or remove a role from the spam detection bypass list')
         .addStringOption(opt => opt

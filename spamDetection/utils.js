@@ -17,6 +17,7 @@ function getDefaultConfig(guildId) {
     new_account_days: 3,
     signal_threshold: 2,
     established_member_days: 30,
+    secondary_action: 'timeout',
   };
 }
 
