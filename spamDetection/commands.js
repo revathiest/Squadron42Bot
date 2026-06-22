@@ -62,6 +62,28 @@ function getSlashCommandDefinitions() {
         )
       )
       .addSubcommand(sub => sub
+        .setName('signal-threshold')
+        .setDescription('Signals required before acting on a standard-trust member')
+        .addIntegerOption(opt => opt
+          .setName('count')
+          .setDescription('Number of signals required (suspicious members always trigger at 1)')
+          .setRequired(true)
+          .setMinValue(1)
+          .setMaxValue(10)
+        )
+      )
+      .addSubcommand(sub => sub
+        .setName('established-days')
+        .setDescription('Days a member must be in the server to reach established trust')
+        .addIntegerOption(opt => opt
+          .setName('days')
+          .setDescription('Server tenure in days')
+          .setRequired(true)
+          .setMinValue(1)
+          .setMaxValue(365)
+        )
+      )
+      .addSubcommand(sub => sub
         .setName('whitelist-role')
         .setDescription('Add or remove a role from the spam detection bypass list')
         .addStringOption(opt => opt
