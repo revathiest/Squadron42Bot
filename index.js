@@ -13,9 +13,10 @@ const configStatus = require('./configStatus');
 const embeds = require('./embeds');
 const polls = require('./polls');
 const engagement = require('./engagement');
+const spamDetection = require('./spamDetection');
 
-const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement];
-const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement];
+const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement, spamDetection];
+const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement, spamDetection];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -97,6 +98,12 @@ client.once(Events.ClientReady, async c => {
     await engagement.onReady(c);
   } catch (err) {
     console.error('Failed to finalize engagement module:', err);
+  }
+
+  try {
+    await spamDetection.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize spam detection module:', err);
   }
 
     // --- Warm up member cache for all guilds ---
@@ -187,6 +194,13 @@ async function bootstrap() {
     await engagement.initialize(client);
   } catch (err) {
     console.error('Failed to initialize engagement module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await spamDetection.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize spam detection module:', err);
     process.exit(1);
   }
 
