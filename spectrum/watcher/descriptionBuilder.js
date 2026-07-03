@@ -169,7 +169,6 @@ function buildDescriptionFromThread(threadDetails) {
   let knownIssuesCount = 0;
   let bugFixesCount = 0;
 
-  const knownIssuesFreeform = [];
   let technicalHeaderIndex = null;
   let technicalHeaderLabel = null;
 
@@ -235,12 +234,8 @@ function buildDescriptionFromThread(threadDetails) {
         } else if (inBugSection) {
           bugFixesCount += 1;
         }
-        continue;
       }
-
-      if (inKnownSection && trimmed) {
-        knownIssuesFreeform.push(trimmed);
-      }
+      // Skip all content in Known Issues and Bug Fixes sections
       continue;
     }
 
@@ -259,29 +254,20 @@ function buildDescriptionFromThread(threadDetails) {
         lines.push(`> ${text}`);
         break;
       default:
-        if (inKnownSection) {
-          knownIssuesFreeform.push(text);
-        } else {
-          lines.push(text);
-        }
+        lines.push(text);
         break;
     }
   }
 
   const summaryLines = [];
-  if (knownIssuesFreeform.length || bugFixesCount > 0 || knownIssuesCount > 0) {
-    if (knownIssuesFreeform.length) {
-      summaryLines.push(...knownIssuesFreeform);
+  if (bugFixesCount > 0 || knownIssuesCount > 0) {
+    if (bugFixesCount > 0) {
+      const label = bugFixesHeader || 'Bug Fixes';
+      summaryLines.push(`* ${label}: ${bugFixesCount}`);
     }
-    if (bugFixesCount > 0 || knownIssuesCount > 0) {
-      if (bugFixesCount > 0) {
-        const label = bugFixesHeader || 'Bug Fixes';
-        summaryLines.push(`* ${label}: ${bugFixesCount}`);
-      }
-      if (knownIssuesCount > 0) {
-        const label = knownIssuesHeader || 'Known Issues';
-        summaryLines.push(`* ${label}: ${knownIssuesCount}`);
-      }
+    if (knownIssuesCount > 0) {
+      const label = knownIssuesHeader || 'Known Issues';
+      summaryLines.push(`* ${label}: ${knownIssuesCount}`);
     }
   }
 

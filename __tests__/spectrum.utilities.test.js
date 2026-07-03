@@ -220,7 +220,7 @@ describe('descriptionBuilder', () => {
     expect(description).not.toContain('Fix 1');
   });
 
-  test('buildDescriptionFromThread places known-issue notes at top of technical summary', () => {
+  test('buildDescriptionFromThread fully collapses known issues and bug fixes', () => {
     const threadDetails = {
       content_blocks: [
         {
@@ -240,14 +240,16 @@ describe('descriptionBuilder', () => {
     };
 
     const description = descriptionBuilder.buildDescriptionFromThread(threadDetails);
-    expect(description).toContain('**Technical**\nServers may take longer to respond.');
+    // Technical section with existing note should be preserved
+    expect(description).toContain('**Technical**');
     expect(description).toContain('- Existing tech note');
-    expect(description).toContain('Servers may take longer to respond.');
-    expect(description).toContain('* Known Issues: 1');
+    // Summary counts should be present under Technical
     expect(description).toContain('* Bug Fixes: 1');
+    expect(description).toContain('* Known Issues: 1');
+    // All Known Issues content (both freeform and list items) should be collapsed
+    expect(description).not.toContain('Servers may take longer to respond.');
     expect(description).not.toContain('Issue bullet');
     expect(description).not.toContain('Fix bullet');
-    expect(description).not.toContain('* Known Issues: 1\n\n-');
   });
 
   test('extractImageUrl prefers large then direct URL', () => {
