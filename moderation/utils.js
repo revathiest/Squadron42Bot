@@ -1,4 +1,5 @@
 const { MessageFlags } = require('discord.js');
+const { getPool } = require('../database');
 
 let rolesModule;
 
@@ -25,7 +26,7 @@ async function ensureSchema(pool) {
     CREATE TABLE IF NOT EXISTS moderation_actions (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
       guild_id VARCHAR(20) NOT NULL,
-      action ENUM('warn', 'kick', 'ban', 'timeout', 'pardon') NOT NULL,
+      action VARCHAR(20) NOT NULL,
       target_id VARCHAR(20) NOT NULL,
       target_tag VARCHAR(40) DEFAULT NULL,
       executor_id VARCHAR(20) NOT NULL,
@@ -69,14 +70,6 @@ async function ensureSchema(pool) {
   `);
 
   await pool.query(`
-    ALTER TABLE moderation_actions
-    MODIFY COLUMN action ENUM('warn', 'kick', 'ban', 'timeout', 'pardon') NOT NULL
-  `).catch(err => {
-    if (err?.code !== 'ER_BAD_FIELD_ERROR' && err?.code !== 'ER_CANT_MODIFY_USED_TABLE') {
-      throw err;
-    }
-  });
-  await pool.query(`
     ALTER TABLE moderation_roles
     MODIFY COLUMN action VARCHAR(20) NOT NULL
   `).catch(err => {
@@ -112,122 +105,31 @@ async function respondEphemeral(interaction, payload) {
   return interaction.reply(response).catch(() => null);
 }
 
-function parseReferenceInput(input) {
-  if (!input) {
-    return null;
-  }
-
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  const urlMatch = trimmed.match(
-    /^https?:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(\d+)\/(\d+)\/(\d+)(?:\/)?$/i
-  );
-  if (urlMatch) {
-    return {
-      guildId: urlMatch[1],
-      channelId: urlMatch[2],
-      messageId: urlMatch[3],
-      raw: trimmed
-    };
-  }
-
-  const idPair = trimmed.match(/^(\d+):(\d+)$/);
-  if (idPair) {
-    return {
-      channelId: idPair[1],
-      messageId: idPair[2],
-      raw: trimmed
-    };
-  }
-
-  return { raw: trimmed };
-}
-
-async function fetchReferenceMessage(client, guild, reference) {
-  if (!reference || !reference.channelId || !reference.messageId || !guild) {
-    return { url: reference?.raw ?? null, content: null };
-  }
-
-  if (reference.guildId && reference.guildId !== guild.id) {
-    return { url: reference.raw, content: null };
-  }
-
+async function logAction({ guildId, action, targetUser, moderator, reason }) {
   try {
-    const channel = await guild.channels.fetch(reference.channelId);
-    if (!channel || typeof channel.messages?.fetch !== 'function') {
-      return { url: reference.raw, content: null };
-    }
-
-    const message = await channel.messages.fetch(reference.messageId);
-    if (!message) {
-      return { url: reference.raw, content: null };
-    }
-
-    const content = typeof message.content === 'string' ? message.content : null;
-    return {
-      url: `https://discord.com/channels/${guild.id}/${reference.channelId}/${reference.messageId}`,
-      content: content ? content.slice(0, 1900) : null
-    };
+    const pool = getPool();
+    await pool.query(
+      `INSERT INTO moderation_actions
+         (guild_id, action, target_id, target_tag, executor_id, executor_tag, reason)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        guildId,
+        action,
+        targetUser.id,
+        targetUser.tag ?? targetUser.username ?? null,
+        moderator.id,
+        moderator.tag ?? moderator.username ?? null,
+        reason,
+      ]
+    );
   } catch (err) {
-    console.warn('moderation: Failed to fetch reference message', {
-      guildId: guild.id,
-      channelId: reference.channelId,
-      messageId: reference.messageId
-    }, err);
-    return { url: reference.raw, content: null };
+    console.error('moderation: failed to log action', { guildId, action, targetId: targetUser.id }, err);
   }
-}
-
-function toTimestamp(value) {
-  if (!value) {
-    return null;
-  }
-
-  if (value instanceof Date) {
-    return value.getTime();
-  }
-
-  const parsed = Date.parse(value);
-  return Number.isNaN(parsed) ? null : parsed;
-}
-
-function formatTimestamp(value) {
-  const timestamp = toTimestamp(value);
-  if (!timestamp) {
-    return 'Unknown time';
-  }
-
-  const iso = new Date(timestamp).toISOString();
-  return iso.replace('T', ' ').replace('Z', ' UTC');
-}
-
-function formatReason(reason) {
-  if (!reason) {
-    return 'No reason provided.';
-  }
-
-  const collapsed = reason.replace(/\s+/g, ' ').trim();
-  if (!collapsed) {
-    return 'No reason provided.';
-  }
-
-  if (collapsed.length > 180) {
-    return `${collapsed.slice(0, 177)}...`;
-  }
-
-  return collapsed;
 }
 
 module.exports = {
   respondEphemeral,
-  parseReferenceInput,
-  fetchReferenceMessage,
-  toTimestamp,
-  formatTimestamp,
-  formatReason,
   ensureSchema,
-  loadRoleCache
+  loadRoleCache,
+  logAction,
 };

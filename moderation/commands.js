@@ -1,10 +1,7 @@
 const {
   SlashCommandBuilder,
-  ContextMenuCommandBuilder,
-  ApplicationCommandType,
   ChannelType
 } = require('discord.js');
-const { ACTIONS, PARDON_COMMAND_NAME, PARDON_COMMAND_DESCRIPTION, HISTORY_CONTEXT_LABEL } = require('./constants');
 const { buildRoleChoices } = require('./handlers/roles');
 
 function buildSlashCommandDefinition() {
@@ -86,46 +83,10 @@ function buildSlashCommandDefinition() {
   return builder.toJSON();
 }
 
-function buildActionContextCommand(action) {
-  return new ContextMenuCommandBuilder()
-    .setName(ACTIONS[action].label)
-    .setType(ApplicationCommandType.User)
-    .setDMPermission(false)
-    .toJSON();
-}
-
-function buildPardonSlashCommand() {
-  return new SlashCommandBuilder()
-    .setName(PARDON_COMMAND_NAME)
-    .setDescription(PARDON_COMMAND_DESCRIPTION)
-    .setDMPermission(false)
-    .addUserOption(option =>
-      option
-        .setName('user')
-        .setDescription('User to pardon.')
-        .setRequired(true)
-    )
-    .toJSON();
-}
-
-function buildHistoryContextCommand() {
-  return new ContextMenuCommandBuilder()
-    .setName(HISTORY_CONTEXT_LABEL)
-    .setType(ApplicationCommandType.User)
-    .setDMPermission(false)
-    .toJSON();
-}
-
 function getSlashCommandDefinitions() {
   return {
     guild: [
-      buildSlashCommandDefinition(),
-      buildActionContextCommand('warn'),
-      buildActionContextCommand('kick'),
-      buildActionContextCommand('ban'),
-      buildActionContextCommand('timeout'),
-      buildPardonSlashCommand(),
-      buildHistoryContextCommand()
+      buildSlashCommandDefinition()
     ],
     global: []
   };
@@ -133,9 +94,6 @@ function getSlashCommandDefinitions() {
 
 module.exports = {
   getSlashCommandDefinitions,
-  buildSlashCommandDefinition,
-  buildActionContextCommand,
-  buildPardonSlashCommand,
-  buildHistoryContextCommand
+  buildSlashCommandDefinition
 };
 

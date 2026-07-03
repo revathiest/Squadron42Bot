@@ -10,7 +10,7 @@ const {
   getRequiredSignals,
   TRUST,
 } = require('../detector');
-const { logAction } = require('../../moderation/handlers/actions');
+const { logAction } = require('../../moderation/utils');
 
 let clientRef = null;
 

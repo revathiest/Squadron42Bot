@@ -1,7 +1,6 @@
 const { Events, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { getPool } = require('../database');
 const { memberHasRole } = require('./handlers/roles');
-const { handleBan } = require('./handlers/actions');
 
 const TRAP_REASON = 'Assigned the configured moderation trap role.';
 
@@ -93,19 +92,6 @@ function isTrapRoleNewlyAssigned(oldMember, newMember, trapRoleId) {
   return !memberHasRole(oldMember, trapRoleId);
 }
 
-function buildSyntheticInteraction(guild, botUser) {
-  return {
-    guild,
-    guildId: guild.id,
-    user: botUser ?? { id: guild.members?.me?.id ?? null, tag: guild.members?.me?.user?.tag ?? null },
-    deferred: true,
-    replied: true,
-    editReply: () => Promise.resolve(),
-    reply: () => Promise.resolve(),
-    followUp: () => Promise.resolve()
-  };
-}
-
 async function handleGuildMemberUpdate(oldMember, newMember, client) {
   const guild = newMember?.guild;
   if (!guild || !newMember?.user) {
@@ -140,16 +126,10 @@ async function handleGuildMemberUpdate(oldMember, newMember, client) {
   }
 
   const targetUser = newMember.user;
-  const interaction = buildSyntheticInteraction(guild, client?.user);
 
   try {
-    await handleBan({
-      interaction,
-      context: {},
-      reason: TRAP_REASON,
-      reference: null,
-      targetUser
-    });
+    await guild.members.ban(targetUser.id, { reason: TRAP_REASON });
+    console.info('autoBanTrap: banned user', { guildId, userId: targetUser.id });
   } catch (err) {
     console.error('autoBanTrap: failed to execute trap ban', { guildId, userId: targetUser.id }, err);
   }
@@ -171,7 +151,6 @@ module.exports = {
   handleGuildMemberUpdate,
   fetchTrapRoleId,
   isTrapRoleNewlyAssigned,
-  buildSyntheticInteraction,
   setTrapRoleId,
   clearTrapRoleId,
   handleTrapConfigCommand

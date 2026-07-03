@@ -133,7 +133,13 @@ async function runCommLinksCycle(client) {
   const guilds = configStore.getConfigsSnapshot().filter(g => g.channelId);
   if (!guilds.length) return;
 
-  const items = await fetchCommLinks();
+  let items;
+  try {
+    items = await fetchCommLinks();
+  } catch (err) {
+    console.warn('sq42news: commlinks fetch failed, skipping cycle:', err.message);
+    return;
+  }
   if (!items) return;
 
   await Promise.allSettled(guilds.map(g => pollCommLinksForGuild(client, g, items)));
@@ -143,7 +149,13 @@ async function runPressCycle(client) {
   const guilds = configStore.getConfigsSnapshot().filter(g => g.channelId);
   if (!guilds.length) return;
 
-  const items = await fetchPressNews();
+  let items;
+  try {
+    items = await fetchPressNews();
+  } catch (err) {
+    console.warn('sq42news: press fetch failed, skipping cycle:', err.message);
+    return;
+  }
   if (!items) return;
 
   await Promise.allSettled(guilds.map(g => pollPressForGuild(client, g, items)));
@@ -153,7 +165,13 @@ async function runYouTubeCycle(client) {
   const guilds = configStore.getConfigsSnapshot().filter(g => g.channelId);
   if (!guilds.length) return;
 
-  const items = await fetchYouTube();
+  let items;
+  try {
+    items = await fetchYouTube();
+  } catch (err) {
+    console.warn('sq42news: youtube fetch failed, skipping cycle:', err.message);
+    return;
+  }
   if (!items) return;
 
   await Promise.allSettled(guilds.map(g => pollYouTubeForGuild(client, g, items)));

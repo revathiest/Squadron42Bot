@@ -1,22 +1,10 @@
 const { Events } = require('discord.js');
 const { getPool } = require('../database');
-const { ACTIONS, PARDON_COMMAND_NAME, PARDON_COMMAND_DESCRIPTION, HISTORY_CONTEXT_LABEL } = require('./constants');
-const {
-  respondEphemeral,
-  parseReferenceInput,
-  fetchReferenceMessage,
-  toTimestamp,
-  formatTimestamp,
-  formatReason,
-  ensureSchema,
-  loadRoleCache
-} = require('./utils');
+const { ACTIONS } = require('./constants');
+const { respondEphemeral, ensureSchema, loadRoleCache } = require('./utils');
 const { getSlashCommandDefinitions } = require('./commands');
 const autoBanTrap = require('./autoBanTrap');
 const roles = require('./handlers/roles');
-const actions = require('./handlers/actions');
-const modals = require('./handlers/modal');
-const history = require('./handlers/history');
 const { handleInteraction } = require('./handlers/interaction');
 const {
   handleMessageCreate: handleOrgLinkMessage,
@@ -42,9 +30,6 @@ async function initialize(client) {
 
   if (!messageListenerBound) {
     client.on(Events.MessageCreate, message => {
-      const preview = typeof message?.content === 'string'
-        ? message.content.slice(0, 200)
-        : '';
       handleOrgLinkMessage(message).catch(err => {
         console.error('moderation: org link moderation failed', err);
       });
@@ -71,9 +56,6 @@ module.exports = {
   handleInteraction,
   __testables: {
     ACTIONS,
-    PARDON_COMMAND_NAME,
-    PARDON_COMMAND_DESCRIPTION,
-    HISTORY_CONTEXT_LABEL,
     roleCache: roles.roleCache,
     addRoleToCache: roles.addRoleToCache,
     removeRoleFromCache: roles.removeRoleFromCache,
@@ -81,39 +63,16 @@ module.exports = {
     hasActionPermission: roles.hasActionPermission,
     buildRoleList: roles.buildRoleList,
     buildRoleChoices: roles.buildRoleChoices,
-    parseReferenceInput,
-    fetchReferenceMessage,
     respondEphemeral,
-    toTimestamp,
-    formatTimestamp,
-    formatReason,
     handleModCommand: roles.handleModCommand,
-    handleActionRequest: modals.handleActionRequest,
-    handlePardonCommand: modals.handlePardonCommand,
-    handleModal: modals.handleModal,
-    resolveTimeoutChoice: modals.resolveTimeoutChoice,
     handleInteraction,
-    handleHistoryContext: history.handleHistoryContext,
     handleAutoBanRoleUpdate: autoBanTrap.handleGuildMemberUpdate,
     handleTrapConfigCommand: autoBanTrap.handleTrapConfigCommand,
     fetchTrapRoleId: autoBanTrap.fetchTrapRoleId,
     isTrapRoleNewlyAssigned: autoBanTrap.isTrapRoleNewlyAssigned,
-    buildSyntheticTrapInteraction: autoBanTrap.buildSyntheticInteraction,
-    logAction: actions.logAction,
-    hasHistoryPermission: history.hasHistoryPermission,
-    filterEntriesForModerators: history.filterEntriesForModerators,
-    buildHistoryLines: history.buildHistoryLines,
-    buildHistoryContent: history.buildHistoryContent,
-    fetchHistoryRows: history.fetchHistoryRows,
-    handleWarn: actions.handleWarn,
-    handleKick: actions.handleKick,
-    handleBan: actions.handleBan,
-    handleTimeout: actions.handleTimeout,
-    executePardon: actions.executePardon,
     resetInitialization: () => {
       initialized = false;
       messageListenerBound = false;
     }
   }
 };
-
