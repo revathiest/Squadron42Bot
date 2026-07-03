@@ -14,9 +14,10 @@ const embeds = require('./embeds');
 const polls = require('./polls');
 const engagement = require('./engagement');
 const spamDetection = require('./spamDetection');
+const sq42news = require('./sq42news');
 
-const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement, spamDetection];
-const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement, spamDetection];
+const commandModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement, spamDetection, sq42news];
+const interactionModules = [voiceRooms, tickets, moderation, spectrum, referrals, configStatus, embeds, polls, engagement, spamDetection, sq42news];
 
 // Minimal intents: connect, manage guild state, and listen to voice updates
 const client = new Client({
@@ -104,6 +105,12 @@ client.once(Events.ClientReady, async c => {
     await spamDetection.onReady(c);
   } catch (err) {
     console.error('Failed to finalize spam detection module:', err);
+  }
+
+  try {
+    await sq42news.onReady(c);
+  } catch (err) {
+    console.error('Failed to finalize SQ42 news watcher module:', err);
   }
 
     // --- Warm up member cache for all guilds ---
@@ -201,6 +208,13 @@ async function bootstrap() {
     await spamDetection.initialize(client);
   } catch (err) {
     console.error('Failed to initialize spam detection module:', err);
+    process.exit(1);
+  }
+
+  try {
+    await sq42news.initialize(client);
+  } catch (err) {
+    console.error('Failed to initialize SQ42 news watcher module:', err);
     process.exit(1);
   }
 
