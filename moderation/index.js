@@ -1,7 +1,6 @@
 const { Events } = require('discord.js');
 const { getPool } = require('../database');
-const { ACTIONS } = require('./constants');
-const { respondEphemeral, ensureSchema, loadRoleCache } = require('./utils');
+const { respondEphemeral, ensureSchema } = require('./utils');
 const { getSlashCommandDefinitions } = require('./commands');
 const autoBanTrap = require('./autoBanTrap');
 const roles = require('./handlers/roles');
@@ -23,7 +22,6 @@ async function initialize(client) {
   clientRef = client;
   const pool = getPool();
   await ensureSchema(pool);
-  await loadRoleCache(pool);
   await loadOrgForumCache(pool);
 
   autoBanTrap.registerAutoBanTrap(client);
@@ -55,14 +53,7 @@ module.exports = {
   onReady,
   handleInteraction,
   __testables: {
-    ACTIONS,
-    roleCache: roles.roleCache,
-    addRoleToCache: roles.addRoleToCache,
-    removeRoleFromCache: roles.removeRoleFromCache,
     memberHasRole: roles.memberHasRole,
-    hasActionPermission: roles.hasActionPermission,
-    buildRoleList: roles.buildRoleList,
-    buildRoleChoices: roles.buildRoleChoices,
     respondEphemeral,
     handleModCommand: roles.handleModCommand,
     handleInteraction,

@@ -14,7 +14,7 @@ jest.mock('../moderation/handlers/orgLinks', () => ({
 }));
 
 const path = require('path');
-const { ApplicationCommandType, ApplicationCommandOptionType, MessageFlags, PermissionFlagsBits, Events } = require('discord.js');
+const { Events } = require('discord.js');
 
 const database = require(path.resolve(__dirname, '..', 'database'));
 const moderation = require('../moderation');
@@ -29,12 +29,7 @@ beforeEach(() => {
 });
 
 const {
-  ACTIONS,
-  roleCache,
-  addRoleToCache,
-  removeRoleFromCache,
   memberHasRole,
-  hasActionPermission,
   handleModCommand,
   handleInteraction,
   handleTrapConfigCommand,
@@ -119,8 +114,8 @@ describe('moderation command definitions', () => {
     const slash = defs.guild.find(def => def.name === 'mod');
     expect(slash).toBeDefined();
     expect(slash.options).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'roles' }),
-      expect.objectContaining({ name: 'auto-ban' })
+      expect.objectContaining({ name: 'auto-ban' }),
+      expect.objectContaining({ name: 'org-promos' })
     ]));
 
     expect(defs.guild.length).toBe(1);
@@ -198,97 +193,6 @@ describe('moderation initialize', () => {
 
     registerSpy.mockRestore();
     errorSpy.mockRestore();
-  });
-});
-
-describe('hasActionPermission', () => {
-  beforeEach(() => {
-    roleCache.clear();
-  });
-
-  test('grants access when member has configured role', () => {
-    addRoleToCache('guild-1', 'warn', 'role-123');
-    const member = {
-      roles: { cache: { has: roleId => roleId === 'role-123' } },
-      permissions: { has: () => false }
-    };
-
-    expect(hasActionPermission('guild-1', member, 'warn')).toBe(true);
-  });
-
-  test('denies access when no roles configured even with permission bits', () => {
-    const member = {
-      permissions: { has: perm => perm === PermissionFlagsBits.ModerateMembers }
-    };
-
-    expect(hasActionPermission('guild-2', member, 'warn')).toBe(false);
-  });
-
-  test('denies access when missing role and permission', () => {
-    addRoleToCache('guild-3', 'kick', 'role-abc');
-    const member = {
-      roles: { cache: { has: () => false } },
-      permissions: { has: () => false }
-    };
-
-    expect(hasActionPermission('guild-3', member, 'kick')).toBe(false);
-  });
-
-  test('supports Collection.some fallback detection', () => {
-    addRoleToCache('guild-4', 'warn', 'role-some');
-    const member = {
-      roles: {
-        cache: {
-          has: undefined,
-          some: fn => fn({ id: 'role-some' })
-        }
-      },
-      permissions: { has: () => false }
-    };
-
-    expect(hasActionPermission('guild-4', member, 'warn')).toBe(true);
-  });
-
-  test('supports array style role cache', () => {
-    addRoleToCache('guild-5', 'ban', 'role-array');
-    const member = {
-      roles: { cache: [{ id: 'role-array' }] },
-      permissions: { has: () => false }
-    };
-
-    expect(hasActionPermission('guild-5', member, 'ban')).toBe(true);
-  });
-
-  test('removeRoleFromCache ignores missing action maps', () => {
-    addRoleToCache('guild-6', 'warn', 'role-remove');
-    removeRoleFromCache('guild-6', 'ban', 'role-x');
-    expect(roleCache.get('guild-6').get('warn').has('role-remove')).toBe(true);
-  });
-
-  test('hasActionPermission returns false when member roles missing', () => {
-    addRoleToCache('guild-7', 'warn', 'role-7');
-    const member = {
-      roles: null,
-      permissions: { has: () => false }
-    };
-
-    expect(hasActionPermission('guild-7', member, 'warn')).toBe(false);
-  });
-
-  test('removeRoleFromCache tolerates missing data', () => {
-    removeRoleFromCache('missing', 'warn', 'role-none');
-    addRoleToCache('guild-6', 'warn', 'role-remove');
-    removeRoleFromCache('guild-6', 'warn', 'role-remove');
-    expect(roleCache.get('guild-6')).toBeUndefined();
-  });
-
-  test('hasActionPermission returns false when member is null', () => {
-    expect(hasActionPermission('guild-null', null, 'warn')).toBe(false);
-  });
-
-  test('hasActionPermission returns false for unknown action', () => {
-    const member = { permissions: { has: () => true } };
-    expect(hasActionPermission('guild-unknown', member, 'unknown')).toBe(false);
   });
 });
 
@@ -541,156 +445,8 @@ describe('registerAutoBanTrap', () => {
 
 describe('handleModCommand', () => {
   beforeEach(() => {
-    roleCache.clear();
     database.__pool.query.mockReset();
     database.__pool.query.mockResolvedValue([[]]);
-  });
-
-  test('adds a moderation role and updates cache', async () => {
-    const role = { id: 'role-add', toString: () => '@Moderators' };
-    const interaction = {
-      guildId: 'guild-add',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'add',
-        getString: () => 'warn',
-        getRole: () => role
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleModCommand(interaction);
-
-    expect(database.__pool.query).toHaveBeenCalledWith(
-      'INSERT IGNORE INTO moderation_roles (guild_id, action, role_id) VALUES (?, ?, ?)',
-      ['guild-add', 'warn', 'role-add']
-    );
-    const roles = roleCache.get('guild-add').get('warn');
-    expect(roles.has('role-add')).toBe(true);
-    expect(interaction.editReply).toHaveBeenCalledWith('Added @Moderators to the **1. Warn User** role list.');
-  });
-
-  test('adds timeout moderation role without enum failures', async () => {
-    const role = { id: 'role-timeout', toString: () => '@TimeoutMods' };
-    const interaction = {
-      guildId: 'guild-timeout',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'add',
-        getString: () => 'timeout',
-        getRole: () => role
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleModCommand(interaction);
-
-    expect(database.__pool.query).toHaveBeenCalledWith(
-      'INSERT IGNORE INTO moderation_roles (guild_id, action, role_id) VALUES (?, ?, ?)',
-      ['guild-timeout', 'timeout', 'role-timeout']
-    );
-
-    const actionMap = roleCache.get('guild-timeout');
-    expect(actionMap).toBeDefined();
-    expect(actionMap.get('timeout')?.has('role-timeout')).toBe(true);
-    expect(interaction.editReply).toHaveBeenCalledWith('Added @TimeoutMods to the **2. Timeout User** role list.');
-  });
-
-  test('removes moderation role when present', async () => {
-    addRoleToCache('guild-remove', 'kick', 'role-remove');
-    const role = { id: 'role-remove', toString: () => '@TempMods' };
-    database.__pool.query.mockResolvedValueOnce([{ affectedRows: 1 }]);
-
-    const interaction = {
-      guildId: 'guild-remove',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'remove',
-        getString: () => 'kick',
-        getRole: () => role
-      },
-      deferReply: jest.fn().mockResolvedValue(undefined),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleModCommand(interaction);
-
-    expect(database.__pool.query).toHaveBeenCalledWith(
-      'DELETE FROM moderation_roles WHERE guild_id = ? AND action = ? AND role_id = ?',
-      ['guild-remove', 'kick', 'role-remove']
-    );
-    const roles = roleCache.get('guild-remove')?.get('kick') || new Set();
-    expect(roles.has('role-remove')).toBe(false);
-    expect(roleCache.has('guild-remove')).toBe(false);
-    expect(interaction.editReply).toHaveBeenCalledWith('Removed @TempMods from the **3. Kick User** role list.');
-  });
-
-  test('returns when deferReply fails during add', async () => {
-    const role = { id: 'role-fail', toString: () => '@FailRole' };
-    const interaction = {
-      guildId: 'guild-fail',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'add',
-        getString: () => 'warn',
-        getRole: () => role
-      },
-      deferReply: jest.fn().mockRejectedValue(new Error('discord down')),
-      editReply: jest.fn()
-    };
-
-    await handleModCommand(interaction);
-
-    expect(database.__pool.query).not.toHaveBeenCalled();
-    expect(interaction.editReply).not.toHaveBeenCalled();
-  });
-
-  test('surfaces database errors during add', async () => {
-    const role = { id: 'role-db', toString: () => '@DbRole' };
-    database.__pool.query.mockRejectedValueOnce(new Error('db fail'));
-    const interaction = {
-      guildId: 'guild-db',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'add',
-        getString: () => 'warn',
-        getRole: () => role
-      },
-      deferReply: jest.fn().mockImplementation(function () {
-        interaction.deferred = true;
-        return Promise.resolve();
-      }),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleModCommand(interaction);
-
-    expect(interaction.editReply).toHaveBeenLastCalledWith('Failed to add the moderation role. Please try again later.');
-  });
-
-  test('surfaces database errors during remove', async () => {
-    const role = { id: 'role-db-remove', toString: () => '@DbRemove' };
-    database.__pool.query.mockRejectedValueOnce(new Error('db fail'));
-    const interaction = {
-      guildId: 'guild-db-remove',
-      options: {
-        getSubcommandGroup: () => 'roles',
-        getSubcommand: () => 'remove',
-        getString: () => 'warn',
-        getRole: () => role
-      },
-      deferReply: jest.fn().mockImplementation(function () {
-        interaction.deferred = true;
-        return Promise.resolve();
-      }),
-      editReply: jest.fn().mockResolvedValue(undefined)
-    };
-
-    await handleModCommand(interaction);
-
-    expect(interaction.editReply).toHaveBeenLastCalledWith('Failed to remove the moderation role. Please try again later.');
   });
 
   test('returns error for unsupported group', async () => {

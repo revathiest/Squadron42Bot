@@ -1,27 +1,8 @@
 const { MessageFlags } = require('discord.js');
 const { getPool } = require('../database');
 
-let rolesModule;
-
-function getRolesModule() {
-  if (!rolesModule) {
-    rolesModule = require('./handlers/roles');
-  }
-  return rolesModule;
-}
-
 /* istanbul ignore next */
 async function ensureSchema(pool) {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS moderation_roles (
-      guild_id VARCHAR(20) NOT NULL,
-      action VARCHAR(20) NOT NULL,
-      role_id VARCHAR(20) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (guild_id, action, role_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-  `);
-
   await pool.query(`
     CREATE TABLE IF NOT EXISTS moderation_actions (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -68,25 +49,6 @@ async function ensureSchema(pool) {
       PRIMARY KEY (guild_id, channel_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
-
-  await pool.query(`
-    ALTER TABLE moderation_roles
-    MODIFY COLUMN action VARCHAR(20) NOT NULL
-  `).catch(err => {
-    if (err?.code !== 'ER_BAD_FIELD_ERROR' && err?.code !== 'ER_CANT_MODIFY_USED_TABLE') {
-      throw err;
-    }
-  });
-}
-
-/* istanbul ignore next */
-async function loadRoleCache(pool) {
-  const { roleCache, addRoleToCache } = getRolesModule();
-  roleCache.clear();
-  const [rows] = await pool.query('SELECT guild_id, action, role_id FROM moderation_roles');
-  for (const row of rows) {
-    addRoleToCache(row.guild_id, row.action, row.role_id);
-  }
 }
 
 async function respondEphemeral(interaction, payload) {
@@ -130,6 +92,5 @@ async function logAction({ guildId, action, targetUser, moderator, reason }) {
 module.exports = {
   respondEphemeral,
   ensureSchema,
-  loadRoleCache,
   logAction,
 };

@@ -2,32 +2,12 @@ const {
   SlashCommandBuilder,
   ChannelType
 } = require('discord.js');
-const { buildRoleChoices } = require('./handlers/roles');
 
 function buildSlashCommandDefinition() {
   const builder = new SlashCommandBuilder()
     .setName('mod')
-    .setDescription('Manage moderation roles for context actions.')
+    .setDescription('Manage moderation settings.')
     .setDMPermission(false)
-    .addSubcommandGroup(group =>
-      group
-        .setName('roles')
-        .setDescription('Manage which roles can warn, kick, or ban.')
-        .addSubcommand(sub =>
-          buildRoleChoices(
-            sub
-              .setName('add')
-              .setDescription('Allow a role to use a moderation action.')
-          )
-        )
-        .addSubcommand(sub =>
-          buildRoleChoices(
-            sub
-              .setName('remove')
-              .setDescription('Remove a role from a moderation action.')
-          )
-        )
-    )
     .addSubcommandGroup(group =>
       group
         .setName('auto-ban')

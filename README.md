@@ -159,17 +159,18 @@ The Spectrum agent mirrors RSI announcements into Discord:
 
 Admins can quickly validate guild configuration with `/config-status`:
 
-- Displays whether mandatory settings—like moderation roles, referral channels, or announcement targets—are in place.
+- Displays whether mandatory settings—like the auto-ban trap role, referral channels, or announcement targets—are in place.
 - Summarizes engagement scoring weights, announcement destinations, and custom level definitions.
 - Useful during onboarding to ensure each module has run its initialization steps after deployment.
 
 ## Moderation Tools
 
-The moderation agent wraps automated safety nets and manual workflows:
+The moderation agent wraps automated safety nets and a couple of manual workflows:
 
-- Slash commands cover warn/timeout/ban actions, role configuration, and case history queries.
-- Auto-ban traps monitor new members against watchlists; promo/org link handlers keep channels clean.
+- `/mod auto-ban` configures the trap role that triggers an automatic ban when assigned; `/mod org-promos` manages which forum channels allow organization promotion threads.
+- Auto-ban traps monitor member role updates against the configured trap role; promo/org link handlers keep channels clean.
 - Interaction routing is centralised in `moderation/handlers/interaction.js` to keep the module consistent with other agents.
+- The warn/timeout/kick/ban context-menu actions and their per-role permission system have been removed from the bot.
 
 ## Interaction Responses
 

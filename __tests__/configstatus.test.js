@@ -109,7 +109,6 @@ describe('configstatus handleInteraction', () => {
     database.__pool.query
       .mockResolvedValueOnce([[{ channel_id: 'ticket-chan', archive_category_id: 'archive-cat' }]])
       .mockResolvedValueOnce([[{ role_id: 'role-a' }, { role_id: 'role-b' }]])
-      .mockResolvedValueOnce([[{ role_id: 'role-mod-1', action: 'warn' }, { role_id: 'role-mod-2', action: 'ban' }]])
       .mockResolvedValueOnce([[{ channel_id: 'forum-123' }, { channel_id: 'forum-456' }]])
       .mockResolvedValueOnce([[{ count: 4 }]])
       .mockResolvedValueOnce([[{ count: 1 }]])
@@ -145,7 +144,6 @@ describe('configstatus handleInteraction', () => {
     expect(embeds[0].data.fields).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: 'Tickets' }),
-        expect.objectContaining({ name: 'Moderation Roles' }),
         expect.objectContaining({ name: 'Org Promotion Forums' }),
         expect.objectContaining({ name: 'Referral Codes' }),
         expect.objectContaining({ name: 'Honey Trap' }),
@@ -162,7 +160,6 @@ describe('configstatus handleInteraction', () => {
     database.__pool.query
       .mockResolvedValueOnce([[{ channel_id: 'ticket-chan', archive_category_id: null }]])
       .mockResolvedValueOnce([[]])
-      .mockResolvedValueOnce([[{ role_id: 'role-warn-1', action: 'warn' }, { role_id: 'role-warn-2', action: 'warn' }]])
       .mockResolvedValueOnce([[]])
       .mockResolvedValueOnce([[{ count: 2 }]])
       .mockResolvedValueOnce([[{ count: 5 }]])
@@ -212,9 +209,6 @@ describe('configstatus handleInteraction', () => {
     const ticketField = embeds[0].data.fields.find(field => field.name === 'Tickets');
     expect(stripDivider(ticketField?.value)).toContain('Archive Category: Not set');
     expect(stripDivider(ticketField?.value)).toContain('Authorized Roles: No ticket roles configured.');
-
-    const moderationField = embeds[0].data.fields.find(field => field.name === 'Moderation Roles');
-    expect(moderationField?.value).toContain('<@&role-warn-1>, <@&role-warn-2>');
 
     const referralField = embeds[0].data.fields.find(field => field.name === 'Referral Codes');
     expect(referralField?.value).toContain('Available: 0');

@@ -27,7 +27,6 @@ async function showConfigStatus(interaction) {
     const [
       [ticketConfig],
       [ticketRoles],
-      [modRows],
       [orgPromoRows],
       [storedCodes],
       [providedCodes],
@@ -45,10 +44,6 @@ async function showConfigStatus(interaction) {
       ),
       pool.query(
         'SELECT role_id FROM ticket_roles WHERE guild_id = ?',
-        [guildId]
-      ),
-      pool.query(
-        'SELECT role_id, action FROM moderation_roles WHERE guild_id = ?',
         [guildId]
       ),
       pool.query(
@@ -112,28 +107,6 @@ async function showConfigStatus(interaction) {
         value: 'No configuration found.'
       });
     }
-
-    const moderationValue = modRows.length
-      ? Object.entries(
-        modRows.reduce((acc, row) => {
-          if (!acc[row.action]) {
-            acc[row.action] = [];
-          }
-          acc[row.action].push(`<@&${row.role_id}>`);
-          return acc;
-        }, {})
-      )
-        .map(([action, roles]) => {
-          const label = action.charAt(0).toUpperCase() + action.slice(1);
-          return `**${label}:** ${roles.join(', ')}`;
-        })
-        .join('\n')
-      : 'No roles configured.';
-
-    sections.push({
-      name: 'Moderation Roles',
-      value: moderationValue
-    });
 
     const orgForumValue = orgPromoRows.length
       ? orgPromoRows.map(row => `<#${row.channel_id}>`).join('\n')
