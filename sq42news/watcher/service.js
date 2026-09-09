@@ -43,7 +43,7 @@ async function pollCommLinksForGuild(client, guild, items) {
   let highwater = lastCigId;
   let posted = 0;
   for (const item of newItems) {
-    const ok = await postItem(client, guild.channelId, item, 'commlinks');
+    const ok = await postItem(client, guild.channelId, item, 'commlinks', { guildId: guild.guildId });
     if (ok) {
       posted++;
       if (item.numId > highwater) highwater = item.numId;
@@ -82,7 +82,7 @@ async function pollPressForGuild(client, guild, items) {
       title: cleanTitle(item.title),
       url: item.link,
       sourceName: item.resolvedSource,
-    }, 'press');
+    }, 'press', { guildId: guild.guildId });
     if (ok) { posted++; seenSet.add(item.guid); }
   }
 
@@ -118,7 +118,7 @@ async function pollYouTubeForGuild(client, guild, items) {
       url: item.link,
       imageUrl: item.thumbnailUrl,
       description: item.description ? item.description.slice(0, 200) : undefined,
-    }, 'youtube');
+    }, 'youtube', { guildId: guild.guildId });
     if (ok) { posted++; seenSet.add(item.id); }
   }
 

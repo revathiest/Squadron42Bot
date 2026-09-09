@@ -1,4 +1,10 @@
 const { EmbedBuilder } = require('discord.js');
+const stateStore = require('./stateStore');
+const { normalizeTitle } = require('./dedupe');
+
+const DEDUPE_SOURCE = 'dedupe';
+const DEDUPE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+const DEDUPE_MAX_ENTRIES = 200;
 
 const COLORS = {
   commlinks: 0xfdb620, // RSI gold
@@ -45,9 +51,39 @@ function buildEmbed(item, sourceType, botUser) {
   return embed;
 }
 
-async function postItem(client, channelId, item, sourceType) {
+// Tracks stories already posted to a guild (regardless of which source found them) so
+// the same underlying story isn't posted again if a different source surfaces it too.
+async function isDuplicateStory(guildId, title) {
+  const key = normalizeTitle(title);
+  if (!key) return false;
+
+  const state = await stateStore.getState(guildId, DEDUPE_SOURCE);
+  const cutoff = Date.now() - DEDUPE_WINDOW_MS;
+  const entries = (state?.entries ?? []).filter(e => e.postedAt >= cutoff);
+
+  return entries.some(e => e.key === key);
+}
+
+async function recordPostedStory(guildId, title) {
+  const key = normalizeTitle(title);
+  if (!key) return;
+
+  const state = await stateStore.getState(guildId, DEDUPE_SOURCE);
+  const cutoff = Date.now() - DEDUPE_WINDOW_MS;
+  const entries = (state?.entries ?? []).filter(e => e.postedAt >= cutoff);
+  entries.push({ key, postedAt: Date.now() });
+
+  await stateStore.setState(guildId, DEDUPE_SOURCE, { entries: entries.slice(-DEDUPE_MAX_ENTRIES) });
+}
+
+async function postItem(client, channelId, item, sourceType, { guildId } = {}) {
   if (!item.title && !item.url) {
     console.warn(`sq42news/poster: skipping ${sourceType} item with no title or URL`);
+    return false;
+  }
+
+  if (guildId && (await isDuplicateStory(guildId, item.title))) {
+    console.log(`sq42news/poster: skipping duplicate story "${item.title}" (${sourceType}) for guild ${guildId}`);
     return false;
   }
 
@@ -60,6 +96,7 @@ async function postItem(client, channelId, item, sourceType) {
   try {
     const embed = buildEmbed(item, sourceType, client.user);
     await channel.send({ embeds: [embed] });
+    if (guildId) await recordPostedStory(guildId, item.title);
     return true;
   } catch (err) {
     console.error(`sq42news/poster: failed to post ${sourceType} item to ${channelId}`, err);
@@ -67,4 +104,4 @@ async function postItem(client, channelId, item, sourceType) {
   }
 }
 
-module.exports = { postItem, buildEmbed };
+module.exports = { postItem, buildEmbed, __testables: { isDuplicateStory, recordPostedStory } };
